@@ -80,18 +80,20 @@ Options:
 
 Human mode reports progress without emitting prompt/output content. On completion it prints status, fingerprint ID, run store and portable bundle.
 
-`--json` emits:
+`--json` emits, for example with the current `general-diagnostic-starter` v1 suite:
 
 ```json
 {
-  "run_id": "...",
+  "run_id": "run-...",
   "status": "succeeded",
   "fingerprint_id": "...",
   "store_path": ".performance-lab/runs.sqlite3",
-  "bundle_path": ".performance-lab/<run-id>.plab.zip",
-  "sample_count": 20
+  "bundle_path": ".performance-lab/artifacts/run-....plab.zip",
+  "sample_count": 23
 }
 ```
+
+`sample_count` is the number of `SampleExecution` records, not necessarily the number of unique authored source records. In the current starter suite, the 20 unique source records yield 23 executions because the structured dataset is evaluated by two tasks.
 
 Exit code is `0` for a succeeded run, `1` for a terminal non-succeeded run, and `2` for configuration/execution errors handled by the CLI.
 
