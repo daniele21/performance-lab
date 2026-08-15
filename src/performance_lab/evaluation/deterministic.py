@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
 import json
 import math
 import re
 import unicodedata
+from collections.abc import Mapping, Sequence
 
-from jsonschema import SchemaError, ValidationError as JSONSchemaValidationError, validate
+from jsonschema import Draft202012Validator, SchemaError
+from jsonschema import ValidationError as JSONSchemaValidationError
 
 from performance_lab.domain import EvaluatorRef, Score
 
@@ -74,7 +75,12 @@ class NormalizedExactMatchEvaluator(DeterministicEvaluator):
 class NumericToleranceEvaluator(DeterministicEvaluator):
     evaluator_id = "numeric-tolerance"
 
-    def __init__(self, *, absolute_tolerance: float = 0.0, relative_tolerance: float = 0.0) -> None:
+    def __init__(
+        self,
+        *,
+        absolute_tolerance: float = 0.0,
+        relative_tolerance: float = 0.0,
+    ) -> None:
         if absolute_tolerance < 0 or relative_tolerance < 0:
             raise EvaluationError("numeric tolerances must be non-negative")
         self.absolute_tolerance = absolute_tolerance
@@ -113,8 +119,14 @@ class SetPRFEvaluator(DeterministicEvaluator):
         true_positive = len(actual_set & expected_set)
         precision_denominator = len(actual_set)
         recall_denominator = len(expected_set)
-        precision = true_positive / precision_denominator if precision_denominator else float(not expected_set)
-        recall = true_positive / recall_denominator if recall_denominator else float(not actual_set)
+        precision = (
+            true_positive / precision_denominator
+            if precision_denominator
+            else float(not expected_set)
+        )
+        recall = (
+            true_positive / recall_denominator if recall_denominator else float(not actual_set)
+        )
         f1 = 0.0 if precision + recall == 0 else 2 * precision * recall / (precision + recall)
         return (
             Score(
@@ -178,17 +190,16 @@ class JSONSchemaEvaluator(DeterministicEvaluator):
     def __init__(self, schema: Mapping[str, object]) -> None:
         self.schema = dict(schema)
         try:
-            validate(instance=None, schema=self.schema)
+            Draft202012Validator.check_schema(self.schema)
         except SchemaError as exc:
             raise EvaluationError(f"invalid JSON Schema: {exc.message}") from exc
-        except JSONSchemaValidationError:
-            pass
+        self._validator = Draft202012Validator(self.schema)
 
     def evaluate(self, *, actual: object, expected: object) -> tuple[Score, ...]:
         del expected
         try:
             instance = _json_value(actual)
-            validate(instance=instance, schema=self.schema)
+            self._validator.validate(instance)
             value = 1.0
         except (EvaluationError, JSONSchemaValidationError):
             value = 0.0
@@ -230,7 +241,9 @@ def aggregate_scores(scores: Sequence[Score]) -> Score:
         for score in scores[1:]
     ):
         raise EvaluationError("scores must share metric, evaluator and direction")
-    if all(score.numerator is not None and score.denominator is not None for score in scores):
+    if all(
+        score.numerator is not None and score.denominator is not None for score in scores
+    ):
         numerator = sum(score.numerator or 0.0 for score in scores)
         denominator = sum(score.denominator or 0.0 for score in scores)
         if denominator <= 0:
@@ -279,5 +292,7 @@ def _normalized_value(value: object) -> object:
     if isinstance(value, list):
         return tuple(_normalized_value(item) for item in value)
     if isinstance(value, dict):
-        return tuple(sorted((str(key), _normalized_value(item)) for key, item in value.items()))
+        return tuple(
+            sorted((str(key), _normalized_value(item)) for key, item in value.items())
+        )
     return value
