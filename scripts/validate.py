@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 COMMANDS = (
-    (sys.executable, "-m", "ruff", "format", "--check", "--diff", "."),
+    (sys.executable, "-m", "ruff", "format", "--check", "."),
     (sys.executable, "-m", "ruff", "check", "."),
     (sys.executable, "-m", "mypy", "src"),
     (sys.executable, "-m", "pytest"),
