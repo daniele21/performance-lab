@@ -86,14 +86,16 @@ returns a compact pointer object such as:
 
 ```json
 {
-  "run_id": "...",
+  "run_id": "run-...",
   "status": "succeeded",
   "fingerprint_id": "...",
   "store_path": ".performance-lab/runs.sqlite3",
-  "bundle_path": ".performance-lab/<run-id>.plab.zip",
-  "sample_count": 20
+  "bundle_path": ".performance-lab/artifacts/run-....plab.zip",
+  "sample_count": 24
 }
 ```
+
+`sample_count` is illustrative: it is the actual number of `SampleExecution` records produced by the frozen suite/tasks and should not be inferred from the number of unique authored source records.
 
 The durable evidence lives in the store/bundle, not in terminal text. See [`output-and-evidence-reference.md`](output-and-evidence-reference.md).
 
@@ -142,7 +144,7 @@ The two base URL forms are intentional: OpenAI inference uses `/v1/`; Local LLM 
 `performance-lab inspect` accepts a Run JSON or ExecutionFingerprint JSON. A portable bundle contains `manifest.json` and `run.json`, so one simple workflow is:
 
 ```bash
-unzip -p .performance-lab/<run-id>.plab.zip run.json > /tmp/performance-lab-run.json
+unzip -p .performance-lab/artifacts/<run-id>.plab.zip run.json > /tmp/performance-lab-run.json
 performance-lab inspect /tmp/performance-lab-run.json
 ```
 
