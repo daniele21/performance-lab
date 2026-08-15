@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
 from types import MappingProxyType
-from typing import Mapping
 
-from performance_lab.domain import DatasetSnapshot, EvaluationSuite, EvaluatorRef, GenerationConfig, TaskSpec
+from performance_lab.domain import (
+    DatasetSnapshot,
+    EvaluationSuite,
+    EvaluatorRef,
+    GenerationConfig,
+    TaskSpec,
+)
 from performance_lab.evaluation import (
     ClassificationAccuracyEvaluator,
     FieldExtractionEvaluator,
@@ -58,17 +64,35 @@ def build_general_starter_suite() -> StarterSuiteBundle:
         "starter-factual": _dataset(
             "starter-factual",
             (
-                _record("fq-1", "What is the capital of France? Answer with the city only.", "Paris"),
-                _record("fq-2", "What is the chemical formula of water? Answer only the formula.", "H2O"),
-                _record("fq-3", "Which planet is the largest in the Solar System? Name only.", "Jupiter"),
+                _record(
+                    "fq-1", "What is the capital of France? Answer with the city only.", "Paris"
+                ),
+                _record(
+                    "fq-2", "What is the chemical formula of water? Answer only the formula.", "H2O"
+                ),
+                _record(
+                    "fq-3", "Which planet is the largest in the Solar System? Name only.", "Jupiter"
+                ),
             ),
         ),
         "starter-reasoning": _dataset(
             "starter-reasoning",
             (
-                _record("rs-1", "All lorps are mivs. Every miv is a zan. Is every lorp a zan? Answer yes or no.", "yes"),
-                _record("rs-2", "No red object is blue. This object is red. Can it also be blue? Answer yes or no.", "no"),
-                _record("rs-3", "Ana is older than Bea. Bea is older than Cy. Is Ana older than Cy? Answer yes or no.", "yes"),
+                _record(
+                    "rs-1",
+                    "All lorps are mivs. Every miv is a zan. Is every lorp a zan? Answer yes or no.",
+                    "yes",
+                ),
+                _record(
+                    "rs-2",
+                    "No red object is blue. This object is red. Can it also be blue? Answer yes or no.",
+                    "no",
+                ),
+                _record(
+                    "rs-3",
+                    "Ana is older than Bea. Bea is older than Cy. Is Ana older than Cy? Answer yes or no.",
+                    "yes",
+                ),
             ),
         ),
         "starter-math": _dataset(
@@ -83,18 +107,44 @@ def build_general_starter_suite() -> StarterSuiteBundle:
         "starter-classification": _dataset(
             "starter-classification",
             (
-                _record("cl-1", "Classify sentiment as positive or negative: 'The update works perfectly.'", "positive"),
-                _record("cl-2", "Classify sentiment as positive or negative: 'The app crashes every time.'", "negative"),
-                _record("cl-3", "Classify intent as question or command: 'Close the window.'", "command"),
-                _record("cl-4", "Classify intent as question or command: 'Where is the station?'", "question"),
+                _record(
+                    "cl-1",
+                    "Classify sentiment as positive or negative: 'The update works perfectly.'",
+                    "positive",
+                ),
+                _record(
+                    "cl-2",
+                    "Classify sentiment as positive or negative: 'The app crashes every time.'",
+                    "negative",
+                ),
+                _record(
+                    "cl-3", "Classify intent as question or command: 'Close the window.'", "command"
+                ),
+                _record(
+                    "cl-4",
+                    "Classify intent as question or command: 'Where is the station?'",
+                    "question",
+                ),
             ),
         ),
         "starter-structured": _dataset(
             "starter-structured",
             (
-                _record("js-1", 'Return JSON only with name and count: name is "Ada", count is 2.', {"name": "Ada", "count": 2}),
-                _record("js-2", 'Return JSON only with name and count: name is "Lin", count is 5.', {"name": "Lin", "count": 5}),
-                _record("js-3", 'Return JSON only with name and count: name is "Kai", count is 1.', {"name": "Kai", "count": 1}),
+                _record(
+                    "js-1",
+                    'Return JSON only with name and count: name is "Ada", count is 2.',
+                    {"name": "Ada", "count": 2},
+                ),
+                _record(
+                    "js-2",
+                    'Return JSON only with name and count: name is "Lin", count is 5.',
+                    {"name": "Lin", "count": 5},
+                ),
+                _record(
+                    "js-3",
+                    'Return JSON only with name and count: name is "Kai", count is 1.',
+                    {"name": "Kai", "count": 1},
+                ),
             ),
         ),
     }
@@ -112,7 +162,12 @@ def build_general_starter_suite() -> StarterSuiteBundle:
         _task("reasoning", "starter-reasoning", normalized, "normalized_exact_match"),
         _task("basic_math", "starter-math", numeric, "numeric_match"),
         _task("classification", "starter-classification", classification, "accuracy"),
-        _task("structured_json_adherence", "starter-structured", structured_schema, "json_schema_valid"),
+        _task(
+            "structured_json_adherence",
+            "starter-structured",
+            structured_schema,
+            "json_schema_valid",
+        ),
         _task("structured_json_fields", "starter-structured", extraction, "field_accuracy"),
     )
     suite = EvaluationSuite(
