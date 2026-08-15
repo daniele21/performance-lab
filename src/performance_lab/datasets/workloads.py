@@ -51,7 +51,8 @@ STRUCTURED_DOCUMENT_EXTRACTION = WorkloadPackDefinition(
     version=STRUCTURED_DOCUMENT_PACK_VERSION,
     title="Structured document extraction",
     description=(
-        "Diagnostic workload for extracting a fixed invoice-like schema from short authored documents."
+        "Diagnostic workload for extracting a fixed invoice-like schema "
+        "from short authored documents."
     ),
     task_family="structured_extraction",
     suite_id="workload-structured-document-extraction",
