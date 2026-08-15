@@ -9,6 +9,10 @@ from .instrumented import (
     RuntimeTelemetryStartResponse,
     RuntimeTelemetryStopResponse,
 )
+from .local_llm_server import (
+    LOCAL_LLM_SERVER_STATUS_PROTOCOL_VERSION,
+    LocalLLMServerStatusCollector,
+)
 from .session import (
     CollectorOutcome,
     TelemetryAvailability,
@@ -17,9 +21,11 @@ from .session import (
 )
 
 __all__ = [
+    "LOCAL_LLM_SERVER_STATUS_PROTOCOL_VERSION",
     "RUNTIME_TELEMETRY_PROTOCOL_VERSION",
     "CollectorOutcome",
     "InstrumentedEndpointCollector",
+    "LocalLLMServerStatusCollector",
     "PortableHostCollector",
     "RuntimeTelemetryIdentity",
     "RuntimeTelemetryMeasurement",

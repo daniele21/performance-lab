@@ -1,4 +1,4 @@
-"""Versioned configuration for the first executable CLI evaluation path."""
+"""Versioned configuration for the executable CLI evaluation path."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError
 
 from performance_lab.domain import EndpointProfile, HardwareIdentity
 
@@ -15,6 +15,15 @@ RUN_CONFIG_VERSION: Literal[1] = 1
 
 class RunConfigError(ValueError):
     pass
+
+
+class LocalLLMServerTelemetryConfig(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    base_url: HttpUrl
+    model_id: str | None = Field(default=None, min_length=1)
+    sample_interval_seconds: float = Field(default=0.05, gt=0, le=60)
+    timeout_seconds: float = Field(default=2.0, gt=0, le=120)
 
 
 class StarterRunConfig(BaseModel):
@@ -28,6 +37,7 @@ class StarterRunConfig(BaseModel):
     store_path: Path = Path(".performance-lab/runs.sqlite3")
     run_id: str | None = Field(default=None, min_length=1)
     use_host_telemetry: bool = False
+    local_llm_server_telemetry: LocalLLMServerTelemetryConfig | None = None
     hardware: HardwareIdentity = Field(default_factory=HardwareIdentity)
     suite_id: Literal["general-diagnostic-starter"] = "general-diagnostic-starter"
 
