@@ -29,17 +29,21 @@ def comparison(
 ) -> RegressionComparison:
     compatibility = CompatibilityResult(dimension=dimension, comparable=comparable)
     metric_results = (
-        RegressionMetricResult(
-            delta=MetricDelta(
-                metric=metric,
-                baseline_value=1.0,
-                candidate_value=1.0 + absolute_delta,
-                absolute_delta=absolute_delta,
-                relative_delta_pct=relative_delta_pct,
-                higher_is_better=higher_is_better,
-            )
-        ),
-    ) if comparable else ()
+        (
+            RegressionMetricResult(
+                delta=MetricDelta(
+                    metric=metric,
+                    baseline_value=1.0,
+                    candidate_value=1.0 + absolute_delta,
+                    absolute_delta=absolute_delta,
+                    relative_delta_pct=relative_delta_pct,
+                    higher_is_better=higher_is_better,
+                )
+            ),
+        )
+        if comparable
+        else ()
+    )
     return RegressionComparison(
         baseline=BaselineBinding(
             baseline_id="baseline",
