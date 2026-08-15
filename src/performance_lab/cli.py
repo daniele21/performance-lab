@@ -1,4 +1,4 @@
-"""Minimal developer CLI for endpoint probing and evidence inspection."""
+"""Developer CLI for probing, inspection and executable evaluation runs."""
 
 from __future__ import annotations
 
@@ -18,6 +18,9 @@ from performance_lab.domain import (
     Run,
     load_json,
 )
+from performance_lab.engine import ProgressEvent, ProgressPhase
+from performance_lab.run_config import RunConfigError, load_starter_run_config
+from performance_lab.runner import RunExecutionError, execute_starter_run
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -37,6 +40,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     inspect_parser.add_argument("path", type=Path)
     inspect_parser.add_argument("--json", action="store_true", dest="json_output")
+
+    run_parser = subparsers.add_parser(
+        "run", help="Run the bundled diagnostic suite from a versioned JSON config"
+    )
+    run_parser.add_argument("--config", required=True, type=Path)
+    run_parser.add_argument("--json", action="store_true", dest="json_output")
     return parser
 
 
@@ -47,6 +56,8 @@ def main(argv: list[str] | None = None, *, stdout: TextIO | None = None) -> int:
         return asyncio.run(_probe(args, output))
     if args.command == "inspect":
         return _inspect(args, output)
+    if args.command == "run":
+        return asyncio.run(_run(args, output))
     raise AssertionError(f"unhandled command: {args.command}")
 
 
@@ -79,6 +90,55 @@ async def _probe(args: argparse.Namespace, output: TextIO) -> int:
         for name, value in capabilities.items():
             output.write(f"  {name}: {value}\n")
     return 0 if result.healthy else 2
+
+
+async def _run(args: argparse.Namespace, output: TextIO) -> int:
+    try:
+        config = load_starter_run_config(args.config)
+    except RunConfigError as exc:
+        output.write(f"error: {exc}\n")
+        return 2
+
+    def progress(event: ProgressEvent) -> None:
+        if args.json_output:
+            return
+        if event.phase == ProgressPhase.RUN_STARTED:
+            output.write(f"Run started: {event.run_id} ({event.total_samples} samples)\n")
+        elif event.phase == ProgressPhase.SAMPLE_COMPLETED:
+            output.write(
+                f"Progress: {event.completed_samples}/{event.total_samples} "
+                f"[{event.sample_status.value if event.sample_status else 'unknown'}]\n"
+            )
+        elif event.phase == ProgressPhase.RUN_COMPLETED:
+            output.write(f"Run completed: {event.run_id}\n")
+
+    try:
+        result = await execute_starter_run(config, progress_sink=progress)
+    except RunExecutionError as exc:
+        output.write(f"error: {exc}\n")
+        return 2
+
+    if args.json_output:
+        output.write(
+            json.dumps(
+                {
+                    "run_id": result.run.run_id,
+                    "status": result.run.status.value,
+                    "fingerprint_id": result.run.fingerprint.fingerprint_id,
+                    "store_path": str(result.store_path),
+                    "bundle_path": str(result.bundle_path),
+                    "sample_count": len(result.run.samples),
+                },
+                sort_keys=True,
+            )
+            + "\n"
+        )
+    else:
+        output.write(f"Status: {result.run.status.value}\n")
+        output.write(f"Fingerprint: {result.run.fingerprint.fingerprint_id}\n")
+        output.write(f"Run store: {result.store_path}\n")
+        output.write(f"Portable bundle: {result.bundle_path}\n")
+    return 0 if result.run.status.value == "succeeded" else 1
 
 
 def _inspect(args: argparse.Namespace, output: TextIO) -> int:
