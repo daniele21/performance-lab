@@ -71,7 +71,8 @@ def render_ci_summary(report: CiRegressionReport) -> str:
         lines.append("- CI runner hardware identity: controlled; resource rules may be evaluated.")
     else:
         lines.append(
-            "- CI runner hardware identity: uncontrolled; resource rules are forced to NOT_COMPARABLE."
+            "- CI runner hardware identity: uncontrolled; "
+            "resource rules are forced to NOT_COMPARABLE."
         )
 
     lines.extend(
