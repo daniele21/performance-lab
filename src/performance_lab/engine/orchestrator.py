@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from enum import StrEnum
-import json
 from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -16,6 +16,7 @@ from performance_lab.domain import (
     ErrorInfo,
     EvaluationSuite,
     ExecutionFingerprint,
+    GenerationConfig,
     Run,
     RunStatus,
     SampleExecution,
@@ -167,9 +168,7 @@ class EvaluationOrchestrator:
                             sample_status=sample.status,
                         )
                     )
-                    self._save_working(
-                        working.model_copy(update={"samples": tuple(samples)})
-                    )
+                    self._save_working(working.model_copy(update={"samples": tuple(samples)}))
         except asyncio.CancelledError:
             cancelled = True
 
@@ -215,7 +214,9 @@ class EvaluationOrchestrator:
         suite: EvaluationSuite,
         datasets: Mapping[str, MaterializedDataset],
     ) -> None:
-        frozen_snapshots = {snapshot.dataset_id: snapshot for snapshot in fingerprint.dataset_snapshots}
+        frozen_snapshots = {
+            snapshot.dataset_id: snapshot for snapshot in fingerprint.dataset_snapshots
+        }
         for task in suite.tasks:
             dataset = datasets.get(task.dataset_snapshot_id)
             if dataset is None:
@@ -240,15 +241,11 @@ class EvaluationOrchestrator:
         task_id: str,
         sample_id: str,
         model_id: str,
-        generation: object,
+        generation: GenerationConfig,
         input_value: object,
         expected: object,
         evaluator: Evaluator,
     ) -> SampleExecution:
-        from performance_lab.domain import GenerationConfig
-
-        if not isinstance(generation, GenerationConfig):
-            raise OrchestratorError("suite generation configuration is invalid")
         started_at = datetime.now(UTC)
         request = InferenceRequest(
             request_id=f"{run_id}:{task_id}:{sample_id}",
