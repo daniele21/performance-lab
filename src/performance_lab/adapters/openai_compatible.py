@@ -167,7 +167,9 @@ class OpenAICompatibleAdapter:
                             ) from exc
                         yield self._parse_chunk(request.request_id, payload_raw)
             except httpx.TimeoutException as exc:
-                raise self._transport_error(InferenceErrorCode.TIMEOUT, exc, retryable=True) from exc
+                raise self._transport_error(
+                    InferenceErrorCode.TIMEOUT, exc, retryable=True
+                ) from exc
             except httpx.TransportError as exc:
                 raise self._transport_error(
                     InferenceErrorCode.CONNECTION, exc, retryable=True
