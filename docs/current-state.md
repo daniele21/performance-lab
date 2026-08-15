@@ -11,7 +11,7 @@ This is the single operational ledger for AI Performance Lab. Capability history
 
 ## Current phase
 
-**M0 is complete. The planned engine/regression path through DAT-004 and REG-003, CI reproducibility hardening, and the first concrete `local-llm-server` runtime integration are integrated on `dev`. M1-M6 are now primarily evidence-gated rather than implementation-blocked.**
+**M0 is complete. The planned engine/regression path through DAT-004 and REG-003, CI reproducibility hardening, and concrete `local-llm-server` runtime integration are integrated on `dev`. INT-002 adds first-party execution-identity discovery and is in final cross-repository validation. M1-M6 remain primarily evidence-gated rather than implementation-blocked.**
 
 The integrated line covers:
 
@@ -21,12 +21,14 @@ The integrated line covers:
 - deterministic evaluators plus optional provenance-rich rubric judging;
 - single-request, repeatability and concurrent load protocols;
 - optional host and runtime-native telemetry with explicit provenance;
-- client-side runtime polling for `daniele21/local-llm-server` through its existing `/status` endpoint;
+- client-side runtime polling for `daniele21/local-llm-server` through `/status`;
 - immutable SQLite evidence, portable bundles, retention policy and compatible comparison;
 - executable `run`, explicit baseline regression, versioned threshold policy and CI-safe machine-readable automation;
 - constrained CI dependency snapshots validated on Python 3.12 and 3.13.
 
-There is **no active core implementation blocker**. The highest-value next work is a representative evidence campaign against real local models/runtimes/devices. New abstractions should be added only when that evidence reveals a concrete coverage gap.
+The INT-002 candidate additionally consumes Local LLM Server `local-llm-identity-v1` from `GET /v1/runtime/identity`, mapping observed model artifact, runtime configuration and hardware identity into the immutable execution fingerprint before the evaluation lifecycle begins.
+
+There is **no active core implementation blocker**. The highest-value work after INT-002 closes is a representative evidence campaign against real local models/runtimes/devices. New abstractions should be added only when that evidence reveals a concrete coverage gap.
 
 ## Integration lines
 
@@ -40,7 +42,7 @@ There is **no active core implementation blocker**. The highest-value next work 
 ### Foundation — DONE
 
 - **FND-001**: Python 3.12+ package/toolchain, Ruff, mypy strict, pytest and GitHub Actions validation on 3.12/3.13.
-- **FND-002**: immutable/versioned domain schemas, canonical fingerprints and dimension-specific comparability.
+- **FND-002**: immutable/versioned domain schemas, canonical fingerprints and dimension-specific comparability. `RuntimeIdentity` also carries an optional effective serving `config_digest` when explicitly observed.
 - **FND-003**: narrow plugin protocols, explicit registry and deterministic fakes.
 - **FND-004**: evaluation lifecycle, content-safe progress, typed failures and immutable terminal publication.
 
@@ -50,15 +52,16 @@ There is **no active core implementation blocker**. The highest-value next work 
 - **DAT-001..004**: deterministic JSONL/CSV/custom mappings, diagnostic starter suite and first versioned `structured-document-extraction` workload pack.
 - **EVAL-001..002**: deterministic evaluators plus optional LLM/rubric judge with explicit provenance.
 
-### Runtime and telemetry — DONE
+### Runtime, identity and telemetry
 
-- **PERF-001**: setup/total latency, streaming TTFT and token throughput with available/unavailable semantics and cold/warm classification.
-- **PERF-002**: fixed-count/bounded-duration concurrency profiles, throughput/reliability and queue-delay/backpressure evidence.
-- **PERF-003**: repeatability summaries, raw samples and qualified percentile reporting.
-- **TEL-001..003**: optional collector lifecycle, host/process evidence and generic runtime-native telemetry contract.
-- **INT-001**: `local-llm-server` integration using the normal OpenAI-compatible inference API plus optional root-level `/status` polling, with `RUNTIME` provenance and no server-side Performance Lab dependency.
+- **PERF-001**: setup/total latency, streaming TTFT and token throughput with available/unavailable semantics and cold/warm classification — DONE.
+- **PERF-002**: fixed-count/bounded-duration concurrency profiles, throughput/reliability and queue-delay/backpressure evidence — DONE.
+- **PERF-003**: repeatability summaries, raw samples and qualified percentile reporting — DONE.
+- **TEL-001..003**: optional collector lifecycle, host/process evidence and generic runtime-native telemetry contract — DONE.
+- **INT-001**: `local-llm-server` integration using the normal OpenAI-compatible inference API plus optional root-level `/status` polling, with `RUNTIME` provenance and no server-side Performance Lab dependency — DONE.
+- **INT-002**: strict `local-llm-identity-v1` consumer, optional/required identity discovery, runtime config digest, hardware conflict detection and pre-run fingerprint freezing — **VALIDATION**. Consumer tests are green on Python 3.12/3.13; final status requires the aligned producer PR and final documentation heads to be green and merged.
 
-The exact serving contract and run configuration are documented in [`local-llm-server-integration.md`](local-llm-server-integration.md).
+The serving and identity contracts are documented in [`local-llm-server-integration.md`](local-llm-server-integration.md) and [`local-llm-identity-contract.md`](local-llm-identity-contract.md).
 
 ### Persistence, comparison and regression automation — DONE
 
@@ -69,7 +72,7 @@ The exact serving contract and run configuration are documented in [`local-llm-s
 
 ## Validation evidence
 
-Every merged implementation slice above passed the repository gate on Python 3.12 and 3.13:
+Every merged Performance Lab implementation slice above passed the repository gate on Python 3.12 and 3.13:
 
 ```text
 ruff format --check
@@ -78,17 +81,19 @@ mypy --strict
 pytest
 ```
 
-Offline integration tests exercise real local HTTP boundaries where appropriate, including OpenAI-compatible inference, end-to-end CLI execution, runtime telemetry and CI regression behavior. This is **implementation evidence**, not representative benchmark-product evidence.
+INT-002 has deterministic fake-server coverage for direct identity mapping, end-to-end fingerprint freezing, backward-compatible optional discovery and hardware conflicts. Its consumer head has passed the same Python 3.12/3.13 repository gate. Cross-repository completion is intentionally withheld until the aligned Local LLM Server producer and final documentation heads are green.
+
+Offline integration tests exercise real local HTTP boundaries where appropriate, including OpenAI-compatible inference, end-to-end CLI execution, runtime telemetry, identity discovery and CI regression behavior. This is **implementation evidence**, not representative benchmark-product evidence.
 
 ## Evidence still required
 
 The remaining milestone constraints are empirical:
 
-- **M1**: a representative resident local model must complete the frozen end-to-end lifecycle; retain fingerprint and bundle.
+- **M1**: a representative resident local model must complete the frozen end-to-end lifecycle; retain fingerprint and bundle. With INT-002, the campaign should also retain discovered model/runtime/hardware identity when available.
 - **M2**: repeated and concurrent/load runs on representative hardware must demonstrate interpretable latency/TTFT/throughput/reliability and saturation behavior.
-- **M3**: preserve representative compatible and incompatible real-run comparisons beyond fixtures.
+- **M3**: preserve representative compatible and incompatible real-run comparisons beyond fixtures, including identity differences such as quantization/runtime config where available.
 - **M4**: execute the structured-document workload pack against representative models and preserve scenario evidence.
-- **M5**: run the integrated `local-llm-server` runtime collector against an actual serving stack/device and validate the usefulness/correlation of sampled runtime evidence.
+- **M5**: run the integrated `local-llm-server` status collector and identity provider against an actual serving stack/device and validate the usefulness of both dynamic telemetry and frozen execution identity.
 - **M6**: preserve at least one real CI regression-gate run demonstrating PASS/FAIL and safe NOT_COMPARABLE behavior.
 
 ## Workstream status
@@ -103,6 +108,7 @@ The remaining milestone constraints are empirical:
 | PERF-001..003 | DONE | — | request/load/statistical protocols |
 | TEL-001..003 | DONE | — | optional host + generic runtime-native telemetry |
 | INT-001 local-llm-server telemetry | DONE | — | OpenAI inference + optional `/status` polling integrated |
+| INT-002 local-llm-server identity | VALIDATION | no | aligned producer/consumer contract implemented; final cross-repo CI + merge pending |
 | STO-001..003 | DONE | — | immutable storage/comparison/retention |
 | CLI-001..003 | DONE | — | inspect/run/automation surfaces |
 | REG-001..003 | DONE | — | baseline/policy/CI integration complete |
@@ -118,7 +124,7 @@ The remaining milestone constraints are empirical:
           ┌───────────────┼────────────────┐
           ▼               ▼                ▼
   real endpoint        real runtime      real CI
- evidence campaign      telemetry       regression
+ evidence campaign   identity+telemetry  regression
           │               │                │
           └───────────────┬┴────────────────┘
                           ▼
@@ -130,11 +136,12 @@ The remaining milestone constraints are empirical:
 
 ## Immediate next block
 
-1. **Representative endpoint evidence** — run the starter suite and structured-document pack against one or more actual `local-llm-server` resident models and preserve run bundles.
-2. **Performance evidence** — repeat the same target with warm/cold and concurrent profiles to establish repeatability and saturation behavior.
-3. **Real runtime telemetry evidence** — enable `local_llm_server_telemetry`, preserve `/status`-derived evidence and determine whether polling is sufficient before extending the server contract.
-4. **Regression evidence** — select an explicit baseline and run `regress-ci` on a real candidate, preserving JSON artifact and CI summary.
-5. In parallel, progress UI-002 and/or additional workload packs; defer EVAL-003 until evidence demonstrates a real need.
+1. **Close INT-002 cross-repository validation** — require the same `local-llm-identity-v1` producer/consumer contract and green final CI heads in both repositories before marking DONE.
+2. **Representative endpoint evidence** — run the starter suite and structured-document pack against one or more actual `local-llm-server` resident models and preserve run bundles plus frozen identity.
+3. **Performance evidence** — repeat the same target with warm/cold and concurrent profiles to establish repeatability and saturation behavior.
+4. **Real runtime evidence** — preserve both `/v1/runtime/identity` and `/status`-derived evidence and determine whether their current boundaries are sufficient before extending either protocol.
+5. **Regression evidence** — select an explicit baseline and run `regress-ci` on a real candidate, preserving JSON artifact and CI summary.
+6. In parallel, progress UI-002 and/or additional workload packs; defer EVAL-003 until evidence demonstrates a real need.
 
 ## Resolved architectural decisions
 
@@ -145,9 +152,11 @@ The remaining milestone constraints are empirical:
 - SQLite local persistence with working versus immutable completed evidence.
 - Portable ZIP evidence bundle independent from SQLite internals.
 - Deterministic evaluators first; judge/rubric evaluation opt-in with explicit provenance.
-- Black-box evaluation remains valid without telemetry.
+- Black-box evaluation remains valid without telemetry or first-party identity discovery.
 - Runtime-native telemetry is optional and separately provenance-tagged.
-- `local-llm-server` remains independent: Performance Lab consumes `/v1/*` and optional `/status` rather than adding a Performance Lab dependency to the server.
+- `local-llm-server` remains independent: Performance Lab consumes public inference, optional `/status`, and optional versioned identity endpoints rather than adding a Performance Lab dependency to the server.
+- Provider-specific response fields are never guessed into canonical identity.
+- Local LLM Server is authoritative for identity fields it explicitly reports; conflicting explicit hardware metadata fails before fingerprint freeze.
 - Dataset mapping is explicit; source inspection does not guess semantic columns.
 - Workload packs compose normal suites/datasets/evaluators and do not branch the engine by scenario.
 - Baselines are explicit and immutable; no implicit latest-run baseline.
