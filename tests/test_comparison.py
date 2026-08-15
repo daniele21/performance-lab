@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
 
+import pytest
+
 from performance_lab.domain import (
     ComparisonDimension,
     DatasetSnapshot,
@@ -114,13 +116,13 @@ def test_model_change_is_visible_before_compatible_deltas() -> None:
 
     capability = comparison.dimension(ComparisonDimension.CAPABILITY)
     assert capability.compatibility.comparable
-    assert capability.deltas[0].absolute_delta == 0.1
-    assert capability.deltas[0].relative_delta_pct == 12.5
+    assert capability.deltas[0].absolute_delta == pytest.approx(0.1)
+    assert capability.deltas[0].relative_delta_pct == pytest.approx(12.5)
     assert capability.deltas[0].higher_is_better is True
 
     runtime = comparison.dimension(ComparisonDimension.RUNTIME)
     assert runtime.compatibility.comparable
-    assert runtime.deltas[0].absolute_delta == -20.0
+    assert runtime.deltas[0].absolute_delta == pytest.approx(-20.0)
     assert runtime.deltas[0].unit == "ms"
 
 
