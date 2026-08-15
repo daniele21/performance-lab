@@ -7,10 +7,10 @@ empty strings are rejected by validation.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from enum import StrEnum
 from hashlib import sha256
-import json
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
@@ -101,9 +101,7 @@ class Target(VersionedModel):
 
     @field_validator("declared_capabilities")
     @classmethod
-    def unique_capabilities(
-        cls, value: tuple[Capability, ...]
-    ) -> tuple[Capability, ...]:
+    def unique_capabilities(cls, value: tuple[Capability, ...]) -> tuple[Capability, ...]:
         if len(value) != len(set(value)):
             raise ValueError("declared_capabilities must be unique")
         return value
@@ -237,9 +235,7 @@ class ExecutionFingerprint(VersionedModel):
 
     @field_validator("dataset_snapshots")
     @classmethod
-    def require_datasets(
-        cls, value: tuple[DatasetSnapshot, ...]
-    ) -> tuple[DatasetSnapshot, ...]:
+    def require_datasets(cls, value: tuple[DatasetSnapshot, ...]) -> tuple[DatasetSnapshot, ...]:
         if not value:
             raise ValueError("dataset_snapshots cannot be empty")
         ids = [item.dataset_id for item in value]
@@ -249,9 +245,7 @@ class ExecutionFingerprint(VersionedModel):
 
     @field_validator("evaluator_versions")
     @classmethod
-    def require_evaluators(
-        cls, value: tuple[EvaluatorRef, ...]
-    ) -> tuple[EvaluatorRef, ...]:
+    def require_evaluators(cls, value: tuple[EvaluatorRef, ...]) -> tuple[EvaluatorRef, ...]:
         if not value:
             raise ValueError("evaluator_versions cannot be empty")
         ids = [item.evaluator_id for item in value]

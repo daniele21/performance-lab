@@ -18,9 +18,7 @@ class SchemaLoadError(ValueError):
 
 class UnsupportedSchemaVersion(SchemaLoadError):
     def __init__(self, found: object) -> None:
-        super().__init__(
-            f"unsupported schema_version={found!r}; expected {SCHEMA_VERSION}"
-        )
+        super().__init__(f"unsupported schema_version={found!r}; expected {SCHEMA_VERSION}")
         self.found = found
 
 

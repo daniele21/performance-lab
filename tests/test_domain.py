@@ -145,32 +145,22 @@ def test_schema_loader_rejects_future_version() -> None:
 def test_capability_allows_model_change_but_rejects_dataset_change() -> None:
     baseline = fingerprint(model_id="model-a")
     candidate = fingerprint(model_id="model-b")
-    result = compare_fingerprints(
-        baseline, candidate, ComparisonDimension.CAPABILITY
-    )
+    result = compare_fingerprints(baseline, candidate, ComparisonDimension.CAPABILITY)
     assert result.comparable
 
-    changed_dataset = dataset(version="2").model_copy(
-        update={"content_sha256": "b" * 64}
-    )
+    changed_dataset = dataset(version="2").model_copy(update={"content_sha256": "b" * 64})
     candidate = fingerprint(model_id="model-b", dataset_snapshot=changed_dataset)
-    result = compare_fingerprints(
-        baseline, candidate, ComparisonDimension.CAPABILITY
-    )
+    result = compare_fingerprints(baseline, candidate, ComparisonDimension.CAPABILITY)
     assert not result.comparable
     assert result.reasons[0].code == NonComparabilityCode.DATASET
 
 
 def test_runtime_requires_same_hardware_and_load_profile() -> None:
     baseline = fingerprint()
-    candidate = fingerprint(
-        hardware=HardwareIdentity(device_id="device-b", os="linux")
-    )
+    candidate = fingerprint(hardware=HardwareIdentity(device_id="device-b", os="linux"))
     result = compare_fingerprints(baseline, candidate, ComparisonDimension.RUNTIME)
     assert not result.comparable
-    assert {reason.code for reason in result.reasons} == {
-        NonComparabilityCode.HARDWARE
-    }
+    assert {reason.code for reason in result.reasons} == {NonComparabilityCode.HARDWARE}
 
 
 def test_resource_requires_matching_telemetry_provenance_contract() -> None:
@@ -190,9 +180,7 @@ def test_resource_requires_matching_telemetry_provenance_contract() -> None:
     )
     result = compare_fingerprints(baseline, candidate, ComparisonDimension.RESOURCE)
     assert not result.comparable
-    assert NonComparabilityCode.TELEMETRY_PROTOCOL in {
-        reason.code for reason in result.reasons
-    }
+    assert NonComparabilityCode.TELEMETRY_PROTOCOL in {reason.code for reason in result.reasons}
 
 
 def test_terminal_run_requires_completion_time() -> None:
