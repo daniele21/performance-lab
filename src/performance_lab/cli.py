@@ -1,4 +1,4 @@
-"""Developer CLI for probing, inspection and executable evaluation runs."""
+"""Developer CLI for probing, evaluation runs and machine-readable regression gates."""
 
 from __future__ import annotations
 
@@ -10,6 +10,12 @@ from pathlib import Path
 from typing import TextIO
 
 from performance_lab.adapters import OpenAICompatibleAdapter
+from performance_lab.automation import (
+    AutomationErrorReport,
+    AutomationExitCode,
+    evaluate_regression_gate,
+    exit_code_for_decision,
+)
 from performance_lab.domain import (
     AuthConfig,
     AuthStrategy,
@@ -46,6 +52,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run_parser.add_argument("--config", required=True, type=Path)
     run_parser.add_argument("--json", action="store_true", dest="json_output")
+
+    regress = subparsers.add_parser(
+        "regress", help="Evaluate an explicit baseline/candidate pair against a policy"
+    )
+    regress.add_argument("--store", required=True, type=Path)
+    regress.add_argument("--baseline-run", required=True)
+    regress.add_argument("--candidate-run", required=True)
+    regress.add_argument("--policy", required=True, type=Path)
+    regress.add_argument("--baseline-id")
+    regress.add_argument("--json", action="store_true", dest="json_output")
     return parser
 
 
@@ -58,6 +74,8 @@ def main(argv: list[str] | None = None, *, stdout: TextIO | None = None) -> int:
         return _inspect(args, output)
     if args.command == "run":
         return asyncio.run(_run(args, output))
+    if args.command == "regress":
+        return _regress(args, output)
     raise AssertionError(f"unhandled command: {args.command}")
 
 
@@ -139,6 +157,44 @@ async def _run(args: argparse.Namespace, output: TextIO) -> int:
         output.write(f"Run store: {result.store_path}\n")
         output.write(f"Portable bundle: {result.bundle_path}\n")
     return 0 if result.run.status.value == "succeeded" else 1
+
+
+def _regress(args: argparse.Namespace, output: TextIO) -> int:
+    try:
+        report = evaluate_regression_gate(
+            store_path=args.store,
+            baseline_run_id=args.baseline_run,
+            candidate_run_id=args.candidate_run,
+            policy_path=args.policy,
+            baseline_id=args.baseline_id,
+        )
+    except (LookupError, RuntimeError, ValueError) as exc:
+        if args.json_output:
+            error = AutomationErrorReport(
+                error_type=type(exc).__name__,
+                message=str(exc),
+            )
+            output.write(error.model_dump_json() + "\n")
+        else:
+            output.write(f"error: {exc}\n")
+        return int(AutomationExitCode.ERROR)
+
+    if args.json_output:
+        output.write(report.model_dump_json() + "\n")
+    else:
+        output.write(f"Decision: {report.decision.value}\n")
+        output.write(
+            f"Baseline: {report.baseline_run_id} ({report.baseline_fingerprint_id})\n"
+        )
+        output.write(
+            f"Candidate: {report.candidate_run_id} ({report.candidate_fingerprint_id})\n"
+        )
+        output.write(f"Policy: {report.policy_id}@{report.policy_version}\n")
+        for rule in report.evaluation.rule_results:
+            output.write(
+                f"  {rule.rule_id}: {rule.state.value} [{rule.dimension.value}] {rule.metric}\n"
+            )
+    return int(exit_code_for_decision(report.decision))
 
 
 def _inspect(args: argparse.Namespace, output: TextIO) -> int:
