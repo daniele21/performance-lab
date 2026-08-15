@@ -9,9 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from performance_lab.domain import HardwareIdentity, ModelIdentity, RuntimeIdentity
 
-LOCAL_LLM_IDENTITY_PROTOCOL_VERSION: Literal["local-llm-identity-v1"] = (
-    "local-llm-identity-v1"
-)
+LOCAL_LLM_IDENTITY_PROTOCOL_VERSION: Literal["local-llm-identity-v1"] = "local-llm-identity-v1"
 
 
 class LocalLLMServerIdentityError(RuntimeError):
@@ -97,16 +95,12 @@ class LocalLLMServerIdentityClient:
                 response.raise_for_status()
                 raw: object = response.json()
         except (httpx.HTTPError, ValueError) as exc:
-            raise LocalLLMServerIdentityError(
-                "local-llm-server identity request failed"
-            ) from exc
+            raise LocalLLMServerIdentityError("local-llm-server identity request failed") from exc
 
         try:
             document = _IdentityDocument.model_validate(raw)
         except ValidationError as exc:
-            raise LocalLLMServerIdentityError(
-                "invalid local-llm-identity-v1 response"
-            ) from exc
+            raise LocalLLMServerIdentityError("invalid local-llm-identity-v1 response") from exc
 
         runtime_key, entry = _select_entry(document, model_id)
         return ResolvedLocalLLMServerIdentity(
@@ -145,9 +139,7 @@ def _select_entry(
         if direct is not None:
             return model_id, direct
         matches = [
-            (key, entry)
-            for key, entry in document.models.items()
-            if entry.model.id == model_id
+            (key, entry) for key, entry in document.models.items() if entry.model.id == model_id
         ]
         if len(matches) == 1:
             return matches[0]
@@ -165,6 +157,4 @@ def _select_entry(
             return document.default_model, default
     if len(document.models) == 1:
         return next(iter(document.models.items()))
-    raise LocalLLMServerIdentityError(
-        "cannot select a runtime from local-llm-server identity"
-    )
+    raise LocalLLMServerIdentityError("cannot select a runtime from local-llm-server identity")
