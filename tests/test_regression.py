@@ -111,7 +111,7 @@ def test_baseline_binding_is_explicit_and_frozen(tmp_path) -> None:
     assert binding.run_id == "baseline"
     assert binding.fingerprint_id == baseline_run.fingerprint.fingerprint_id
     with pytest.raises(ValidationError):
-        setattr(binding, "run_id", "another-run")
+        binding.run_id = "another-run"
 
 
 def test_compatible_regression_exposes_delta_without_inventing_threshold_result(tmp_path) -> None:
