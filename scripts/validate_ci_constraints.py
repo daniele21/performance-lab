@@ -58,7 +58,9 @@ def validate(pyproject_path: Path, constraints_path: Path) -> list[str]:
             errors.append(f"constrained package is not installed: {name}=={expected}")
             continue
         if installed != expected:
-            errors.append(f"constraint drift for {name}: installed {installed}, expected {expected}")
+            errors.append(
+                f"constraint drift for {name}: installed {installed}, expected {expected}"
+            )
     return errors
 
 
