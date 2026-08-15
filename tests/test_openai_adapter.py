@@ -1,9 +1,9 @@
 import asyncio
+import json
+from collections.abc import Iterator
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-import json
 from threading import Thread
-from typing import Iterator
 
 import pytest
 
@@ -171,7 +171,9 @@ def test_server_errors_are_normalized() -> None:
         asyncio.run(exercise(base_url))
 
 
-def test_missing_environment_credential_fails_before_network(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_missing_environment_credential_fails_before_network(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.delenv("PERF_LAB_TEST_TOKEN", raising=False)
     profile = EndpointProfile(
         profile_id="secured",
