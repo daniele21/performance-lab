@@ -19,9 +19,14 @@ from performance_lab.domain import (
     TelemetryLevel,
 )
 from performance_lab.engine import EvaluationOrchestrator, ProgressEvent
+from performance_lab.plugins import TelemetryCollector
 from performance_lab.run_config import StarterRunConfig
 from performance_lab.storage import SQLiteRunStore
-from performance_lab.telemetry import PortableHostCollector, TelemetrySession
+from performance_lab.telemetry import (
+    LocalLLMServerStatusCollector,
+    PortableHostCollector,
+    TelemetrySession,
+)
 
 
 class RunExecutionError(RuntimeError):
@@ -50,16 +55,7 @@ async def execute_starter_run(
             error_code = probe.metadata.get("error_code", "unknown")
             raise RunExecutionError(f"endpoint probe failed: {error_code}")
 
-        telemetry_descriptor = TelemetryDescriptor()
-        telemetry_session: TelemetrySession | None = None
-        if config.use_host_telemetry:
-            collector = PortableHostCollector()
-            telemetry_descriptor = TelemetryDescriptor(
-                level=TelemetryLevel.HOST,
-                protocol_version=collector.protocol_version,
-                collectors=(collector.collector_id,),
-            )
-            telemetry_session = TelemetrySession([collector])
+        telemetry_descriptor, telemetry_session = _build_telemetry(config)
 
         evaluator_versions = _unique_evaluators(bundle.suite.tasks)
         snapshots = tuple(
@@ -113,6 +109,38 @@ async def execute_starter_run(
         )
     finally:
         await adapter.aclose()
+
+
+def _build_telemetry(
+    config: StarterRunConfig,
+) -> tuple[TelemetryDescriptor, TelemetrySession | None]:
+    collectors: list[TelemetryCollector] = []
+    if config.use_host_telemetry:
+        collectors.append(PortableHostCollector())
+    if config.local_llm_server_telemetry is not None:
+        runtime = config.local_llm_server_telemetry
+        collectors.append(
+            LocalLLMServerStatusCollector(
+                str(runtime.base_url),
+                model_id=runtime.model_id or config.model_id,
+                sample_interval_seconds=runtime.sample_interval_seconds,
+                timeout_seconds=runtime.timeout_seconds,
+            )
+        )
+    if not collectors:
+        return TelemetryDescriptor(), None
+
+    has_runtime_collector = config.local_llm_server_telemetry is not None
+    level = TelemetryLevel.INSTRUMENTED if has_runtime_collector else TelemetryLevel.HOST
+    protocol_version = (
+        collectors[0].protocol_version if len(collectors) == 1 else "telemetry-session-v1"
+    )
+    descriptor = TelemetryDescriptor(
+        level=level,
+        protocol_version=protocol_version,
+        collectors=tuple(collector.collector_id for collector in collectors),
+    )
+    return descriptor, TelemetrySession(collectors)
 
 
 def _unique_evaluators(tasks: tuple[object, ...]) -> tuple[EvaluatorRef, ...]:
