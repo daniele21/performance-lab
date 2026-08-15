@@ -183,12 +183,8 @@ def _regress(args: argparse.Namespace, output: TextIO) -> int:
         output.write(report.model_dump_json() + "\n")
     else:
         output.write(f"Decision: {report.decision.value}\n")
-        output.write(
-            f"Baseline: {report.baseline_run_id} ({report.baseline_fingerprint_id})\n"
-        )
-        output.write(
-            f"Candidate: {report.candidate_run_id} ({report.candidate_fingerprint_id})\n"
-        )
+        output.write(f"Baseline: {report.baseline_run_id} ({report.baseline_fingerprint_id})\n")
+        output.write(f"Candidate: {report.candidate_run_id} ({report.candidate_fingerprint_id})\n")
         output.write(f"Policy: {report.policy_id}@{report.policy_version}\n")
         for rule in report.evaluation.rule_results:
             output.write(
