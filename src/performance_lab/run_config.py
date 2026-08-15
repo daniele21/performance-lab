@@ -26,6 +26,15 @@ class LocalLLMServerTelemetryConfig(BaseModel):
     timeout_seconds: float = Field(default=2.0, gt=0, le=120)
 
 
+class LocalLLMServerIdentityConfig(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    base_url: HttpUrl
+    model_id: str | None = Field(default=None, min_length=1)
+    timeout_seconds: float = Field(default=2.0, gt=0, le=120)
+    required: bool = False
+
+
 class StarterRunConfig(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -38,6 +47,7 @@ class StarterRunConfig(BaseModel):
     run_id: str | None = Field(default=None, min_length=1)
     use_host_telemetry: bool = False
     local_llm_server_telemetry: LocalLLMServerTelemetryConfig | None = None
+    local_llm_server_identity: LocalLLMServerIdentityConfig | None = None
     hardware: HardwareIdentity = Field(default_factory=HardwareIdentity)
     suite_id: Literal["general-diagnostic-starter"] = "general-diagnostic-starter"
 
