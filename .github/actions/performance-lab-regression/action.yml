@@ -1,0 +1,59 @@
+name: Performance Lab regression gate
+description: Run an explicit Performance Lab baseline/candidate regression gate in CI.
+inputs:
+  store:
+    description: Path to the SQLite run store.
+    required: true
+  baseline-run:
+    description: Explicit completed baseline run ID.
+    required: true
+  candidate-run:
+    description: Explicit completed candidate run ID.
+    required: true
+  policy:
+    description: Path to the versioned regression policy JSON.
+    required: true
+  artifact-path:
+    description: Path for the machine-readable regression artifact.
+    required: false
+    default: performance-lab-regression.json
+  runner-identity-controlled:
+    description: Set true only when CI runner hardware identity is controlled and comparable.
+    required: false
+    default: "false"
+outputs:
+  artifact-path:
+    description: Machine-readable artifact path.
+    value: ${{ inputs.artifact-path }}
+  exit-code:
+    description: Performance Lab regression exit code.
+    value: ${{ steps.gate.outputs.exit-code }}
+runs:
+  using: composite
+  steps:
+    - id: gate
+      shell: bash
+      env:
+        PL_STORE: ${{ inputs.store }}
+        PL_BASELINE_RUN: ${{ inputs.baseline-run }}
+        PL_CANDIDATE_RUN: ${{ inputs.candidate-run }}
+        PL_POLICY: ${{ inputs.policy }}
+        PL_ARTIFACT: ${{ inputs.artifact-path }}
+        PL_RUNNER_IDENTITY_CONTROLLED: ${{ inputs.runner-identity-controlled }}
+      run: |
+        set +e
+        args=(
+          regress-ci
+          --store "$PL_STORE"
+          --baseline-run "$PL_BASELINE_RUN"
+          --candidate-run "$PL_CANDIDATE_RUN"
+          --policy "$PL_POLICY"
+          --artifact "$PL_ARTIFACT"
+        )
+        if [[ "$PL_RUNNER_IDENTITY_CONTROLLED" == "true" ]]; then
+          args+=(--runner-identity-controlled)
+        fi
+        performance-lab "${args[@]}"
+        status=$?
+        echo "exit-code=$status" >> "$GITHUB_OUTPUT"
+        exit "$status"
