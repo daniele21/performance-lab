@@ -107,7 +107,9 @@ async def benchmark_single_request(
     elif streaming:
         metrics.append(_unavailable("ttft_ms", "stream emitted no text token"))
     else:
-        metrics.append(_unavailable("ttft_ms", "non-streaming endpoint has no observable first token"))
+        metrics.append(
+            _unavailable("ttft_ms", "non-streaming endpoint has no observable first token")
+        )
 
     input_tokens = usage.input_tokens if usage is not None else None
     output_tokens = usage.output_tokens if usage is not None else None
