@@ -9,10 +9,27 @@ Last reviewed: 2026-08-15
 
 Documentation uses progressive disclosure. Read only the source that owns the question, then follow focused links as needed. A fact should have one canonical owner; summaries link to that owner rather than duplicating detailed truth.
 
+## Start here if you want to use the product
+
+For operational use rather than architecture/planning, read in this order:
+
+1. [`getting-started.md`](getting-started.md) — install, probe, first run, first comparison and CI gate.
+2. [`run-config-reference.md`](run-config-reference.md) — every supported starter-run config field and validation rule.
+3. [`cli-reference.md`](cli-reference.md) — commands, machine-readable outputs and exit codes.
+4. [`output-and-evidence-reference.md`](output-and-evidence-reference.md) — Run/fingerprint/measurement semantics, SQLite and `.plab.zip` contents.
+5. [`troubleshooting.md`](troubleshooting.md) — common endpoint, identity, telemetry, bundle and regression failures.
+
+For Local LLM Server specifically, continue with [`local-llm-server-integration.md`](local-llm-server-integration.md) and [`local-llm-identity-contract.md`](local-llm-identity-contract.md).
+
 ## Canonical sources
 
 | Question | Canonical source |
 | --- | --- |
+| How do I get from install to a first run? | [`getting-started.md`](getting-started.md) |
+| What fields can I put in a run config? | [`run-config-reference.md`](run-config-reference.md) |
+| What commands, JSON outputs and exit codes exist? | [`cli-reference.md`](cli-reference.md) |
+| What exactly is persisted/exported and how do I interpret it? | [`output-and-evidence-reference.md`](output-and-evidence-reference.md) |
+| How do I diagnose a failed or non-comparable run? | [`troubleshooting.md`](troubleshooting.md) |
 | What is integrated, blocked or next? | [`current-state.md`](current-state.md) |
 | What exactly are we building? | [`implementation-plan.md`](implementation-plan.md) |
 | What can run in parallel and what depends on what? | [`implementation-plan.md`](implementation-plan.md) |
@@ -23,10 +40,20 @@ Documentation uses progressive disclosure. Read only the source that owns the qu
 | How should resource/device telemetry work? | [`telemetry.md`](telemetry.md) |
 | What does Performance Lab require from `local-llm-server` and how is it configured? | [`local-llm-server-integration.md`](local-llm-server-integration.md) |
 | How is Local LLM Server model/runtime/hardware identity mapped into the execution fingerprint? | [`local-llm-identity-contract.md`](local-llm-identity-contract.md) |
+| How does the CI regression gate behave? | [`ci-regression.md`](ci-regression.md) |
 | What is required before something is considered complete? | [`definition-of-done.md`](definition-of-done.md) |
 | Where should a durable architectural decision be recorded? | [`adr/README.md`](adr/README.md) |
 
 ## Active source index
+
+### Operational use
+
+- [`getting-started.md`](getting-started.md) — clean-checkout-to-evidence workflow, including richer Local LLM Server integration.
+- [`run-config-reference.md`](run-config-reference.md) — strict version-1 run config, endpoint auth indirection, hardware and identity/telemetry options.
+- [`cli-reference.md`](cli-reference.md) — `probe`, `inspect`, `run`, `regress`, `regress-ci`, JSON output and deterministic exit codes.
+- [`output-and-evidence-reference.md`](output-and-evidence-reference.md) — canonical Run, ExecutionFingerprint, scores, measurements, immutable SQLite and portable bundle semantics.
+- [`troubleshooting.md`](troubleshooting.md) — diagnosis while preserving unknown/unavailable/comparability/privacy semantics.
+- [`ci-regression.md`](ci-regression.md) — GitHub Actions gate, artifact and controlled-runner rules.
 
 ### Product and delivery
 
@@ -46,6 +73,10 @@ Documentation uses progressive disclosure. Read only the source that owns the qu
 - [`adr/README.md`](adr/README.md) — durable architectural decision log and template.
 
 ## Document ownership rules
+
+### Operational references
+
+Own how a user or automation actually invokes the current integrated product. They must match executable contracts and avoid speculative future options. When a CLI/config/output shape changes, update the relevant operational reference in the same integration cycle.
 
 ### `current-state`
 
@@ -101,6 +132,7 @@ For a normal implementation change:
 
 ```text
 code/tests
+  + operational docs if invocation/config/output changed
   + current-state status update
   + focused spec if behavior changed
   + roadmap only if milestone changed
@@ -117,10 +149,11 @@ When documentation conflicts, prefer in this order:
 1. executable tests/contracts;
 2. accepted ADRs;
 3. architecture/focused feature specifications;
-4. implementation plan;
-5. current state;
-6. roadmap;
-7. root README;
-8. historical/archive material.
+4. operational references for current invocation/serialization behavior;
+5. implementation plan;
+6. current state;
+7. roadmap;
+8. root README;
+9. historical/archive material.
 
 A contradiction that changes behavior should be corrected in the canonical owner, not silently reconciled in a summary.
