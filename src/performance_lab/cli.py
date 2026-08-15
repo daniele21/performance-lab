@@ -14,6 +14,7 @@ from performance_lab.adapters import OpenAICompatibleAdapter
 from performance_lab.automation import (
     AutomationErrorReport,
     AutomationExitCode,
+    RegressionGateReport,
     evaluate_regression_gate,
     exit_code_for_decision,
 )
@@ -179,7 +180,7 @@ async def _run(args: argparse.Namespace, output: TextIO) -> int:
     return 0 if result.run.status.value == "succeeded" else 1
 
 
-def _evaluate_regression_from_args(args: argparse.Namespace):
+def _evaluate_regression_from_args(args: argparse.Namespace) -> RegressionGateReport:
     return evaluate_regression_gate(
         store_path=args.store,
         baseline_run_id=args.baseline_run,
