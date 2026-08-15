@@ -82,7 +82,7 @@ Machine-readable form:
 performance-lab run --config run.json --json
 ```
 
-returns a compact pointer object such as:
+With the current `general-diagnostic-starter` v1 suite, a representative pointer object is:
 
 ```json
 {
@@ -91,11 +91,11 @@ returns a compact pointer object such as:
   "fingerprint_id": "...",
   "store_path": ".performance-lab/runs.sqlite3",
   "bundle_path": ".performance-lab/artifacts/run-....plab.zip",
-  "sample_count": 24
+  "sample_count": 23
 }
 ```
 
-`sample_count` is illustrative: it is the actual number of `SampleExecution` records produced by the frozen suite/tasks and should not be inferred from the number of unique authored source records.
+The suite contains 20 unique authored records but produces 23 `SampleExecution` records because the three structured records are evaluated by two separate tasks: JSON schema adherence and field accuracy. Future suite versions may change that count.
 
 The durable evidence lives in the store/bundle, not in terminal text. See [`output-and-evidence-reference.md`](output-and-evidence-reference.md).
 
