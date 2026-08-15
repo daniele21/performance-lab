@@ -121,8 +121,7 @@ def test_status_collector_preserves_runtime_metric_semantics() -> None:
     assert by_name["peak_chunks_per_second"].value == 12.5
     assert by_name["max_concurrent_requests_reported"].value == 4
     assert all(
-        measurement.provenance == MeasurementProvenance.RUNTIME
-        for measurement in result.measurements
+        measurement.provenance == MeasurementProvenance.RUNTIME for measurement in result.measurements
     )
     assert "tokens_per_second" not in by_name
 
