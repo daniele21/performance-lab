@@ -44,7 +44,9 @@ class PluginRegistry:
         return plugin
 
     def ids(self, kind: PluginKind) -> tuple[str, ...]:
-        return tuple(sorted(plugin_id for plugin_kind, plugin_id in self._plugins if plugin_kind == kind))
+        return tuple(
+            sorted(plugin_id for plugin_kind, plugin_id in self._plugins if plugin_kind == kind)
+        )
 
     def items(self) -> Iterator[tuple[PluginKind, str, object]]:
         for (kind, plugin_id), plugin in sorted(
