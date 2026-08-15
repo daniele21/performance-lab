@@ -36,20 +36,22 @@ Comparison and regression consume immutable completed evidence; they do not infe
 
 ## `performance-lab run --json`
 
-The CLI emits a compact locator object:
+The CLI emits a compact locator object. With the default store and current `general-diagnostic-starter` v1 suite, a representative result is:
 
 ```json
 {
-  "run_id": "...",
+  "run_id": "run-...",
   "status": "succeeded",
   "fingerprint_id": "...",
   "store_path": ".performance-lab/runs.sqlite3",
-  "bundle_path": ".performance-lab/<run-id>.plab.zip",
-  "sample_count": 20
+  "bundle_path": ".performance-lab/artifacts/run-....plab.zip",
+  "sample_count": 23
 }
 ```
 
-This object tells automation where the durable evidence lives. It is not the full benchmark result.
+The current suite contains 20 unique authored records but produces 23 `SampleExecution` records because the structured dataset is evaluated by two separate tasks. Future suite versions may change that count.
+
+This locator object tells automation where the durable evidence lives. It is not the full benchmark result.
 
 ## Canonical `Run`
 
@@ -178,6 +180,13 @@ A runtime-reported metric is not silently relabelled as a client-measured metric
 
 ## Portable `.plab.zip`
 
+The starter runner writes bundles beside the SQLite store under an `artifacts/` directory. With the default store path:
+
+```text
+.performance-lab/runs.sqlite3
+.performance-lab/artifacts/<run-id>.plab.zip
+```
+
 A version-1 bundle contains exactly two files:
 
 ```text
@@ -251,9 +260,9 @@ Do not add plaintext credentials, raw private endpoint configuration or prompt/o
 ## How to inspect a bundle manually
 
 ```bash
-unzip -l result.plab.zip
-unzip -p result.plab.zip manifest.json | python -m json.tool
-unzip -p result.plab.zip run.json > /tmp/run.json
+unzip -l .performance-lab/artifacts/<run-id>.plab.zip
+unzip -p .performance-lab/artifacts/<run-id>.plab.zip manifest.json | python -m json.tool
+unzip -p .performance-lab/artifacts/<run-id>.plab.zip run.json > /tmp/run.json
 performance-lab inspect /tmp/run.json
 ```
 
