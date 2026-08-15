@@ -22,8 +22,8 @@ from performance_lab.domain import (
 from performance_lab.storage import (
     RetentionPolicy,
     RetentionRunSink,
-    SQLiteRunStore,
     SampleEvidenceRetention,
+    SQLiteRunStore,
     prepare_run_for_publication,
 )
 
