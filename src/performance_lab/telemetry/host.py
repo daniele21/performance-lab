@@ -54,7 +54,11 @@ class PortableHostCollector:
         self._start_overhead_ns = perf_counter_ns() - overhead_started
 
     async def stop(self) -> tuple[Measurement, ...]:
-        if self._run_id is None or self._wall_started_ns is None or self._process_cpu_started is None:
+        if (
+            self._run_id is None
+            or self._wall_started_ns is None
+            or self._process_cpu_started is None
+        ):
             raise RuntimeError("host collector has not started")
         overhead_started = perf_counter_ns()
         wall_completed_ns = perf_counter_ns()
