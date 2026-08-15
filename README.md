@@ -35,9 +35,69 @@ POST /v1/chat/completions
 
 `POST /v1/chat/completions` must accept an OpenAI-style `messages` request and return the selected model's completion. Streaming/token usage/capability details are discovered when available rather than assumed.
 
+The minimum model-list response consumed by Performance Lab is:
+
+```json
+{
+  "data": [
+    {"id": "my-model"}
+  ]
+}
+```
+
+For a non-streaming chat completion, the only response field required to score the model output is `choices[0].message.content` as text:
+
+```json
+{
+  "model": "my-model",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "The model answer"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 42,
+    "completion_tokens": 17
+  }
+}
+```
+
+Current consumption rules are deliberately narrow:
+
+| Response field | Status | Performance Lab use |
+| --- | --- | --- |
+| `choices[0].message.content` | **required** | model output passed to evaluators |
+| `model` | optional | normalized response model identifier |
+| `choices[0].finish_reason` | optional | normalized completion metadata |
+| `usage.prompt_tokens` | optional | observed input-token count |
+| `usage.completion_tokens` | optional | observed output-token count / token-based performance evidence |
+| provider-specific extra fields | ignored unless explicitly adapted | never guessed into the fingerprint |
+
+For streaming, the adapter requests `stream_options.include_usage=true` and consumes Server-Sent Events with OpenAI-style `data:` frames. Text arrives through `choices[0].delta.content`; `finish_reason` and `usage` may arrive in later frames, followed by `data: [DONE]`.
+
+A compact example is:
+
+```text
+data: {"choices":[{"delta":{"content":"hel"},"finish_reason":null}]}
+
+data: {"choices":[{"delta":{"content":"lo"},"finish_reason":"stop"}]}
+
+data: {"choices":[],"usage":{"prompt_tokens":3,"completion_tokens":2}}
+
+data: [DONE]
+```
+
+These are **wire-response fields**, not the complete experiment identity. Quantization, artifact revision/digest, runtime name/version and hardware are not inferred from arbitrary response metadata. If they are not supplied through an explicit identity/configuration/telemetry contract, they remain `unknown` in the execution fingerprint.
+
 ### `local-llm-server` integration
 
-`daniele21/local-llm-server` already provides the OpenAI-compatible inference surface above. Performance Lab can additionally collect runtime-native evidence by polling its public root-level endpoint:
+`daniele21/local-llm-server` already provides the OpenAI-compatible inference surface above. Its chat response also exposes useful provider-specific fields such as `backend` and `stats`; the current reference adapter intentionally does **not** treat those fields as canonical Performance Lab identity or performance evidence. This prevents provider-specific metadata from silently changing comparison semantics.
+
+Performance Lab can additionally collect runtime-native evidence by polling the server's public root-level endpoint:
 
 ```text
 GET /status
@@ -45,7 +105,7 @@ GET /status
 
 This additional endpoint is **not required for evaluation**. If runtime telemetry is disabled or unavailable, the black-box run remains valid.
 
-The useful selected-model status fields are:
+The useful selected-model status fields currently consumed are:
 
 ```json
 {
@@ -60,7 +120,9 @@ The useful selected-model status fields are:
 
 `/status` may expose that object directly or, as current `local-llm-server` does, under `models[model_id]` together with `default_model`. `chunks_per_second` is observational runtime evidence and is deliberately **not** relabeled as token throughput.
 
-See [`docs/local-llm-server-integration.md`](docs/local-llm-server-integration.md) for the exact run configuration, selection rules, metrics and limitations.
+`local-llm-server` currently exposes additional fields such as `model`, `backend`, `loaded_at` and `state`. They are useful candidate identity evidence, but the v1 `/status` collector does not currently promote them into `ExecutionFingerprint.runtime` or model quantization/revision fields. The dedicated integration specification documents exactly what is consumed today versus what remains intentionally unbound.
+
+See [`docs/local-llm-server-integration.md`](docs/local-llm-server-integration.md) for the exact request/response contract, run configuration, metadata ownership, selection rules, metrics and limitations.
 
 ## Quick start
 
@@ -101,7 +163,7 @@ Then execute:
 performance-lab run --config local-llm-server-run.json
 ```
 
-The run is persisted in SQLite and exported as a portable `.plab.zip` evidence bundle. The execution fingerprint records the endpoint/model/generation/dataset/evaluator/hardware/telemetry identity needed for later comparison.
+The run is persisted in SQLite and exported as a portable `.plab.zip` evidence bundle. The execution fingerprint records the endpoint/model/generation/dataset/evaluator/hardware/telemetry identity needed for later comparison. Identity fields that were not explicitly observed remain unknown rather than being guessed from provider-specific response fields.
 
 ## Current implemented baseline
 
