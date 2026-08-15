@@ -22,7 +22,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - name: Install package and development dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+      - name: Install constrained package and development dependencies
+        run: |
+          python -m pip install "pip==26.2.1"
+          python -m pip install -c requirements/ci-constraints.txt -e ".[dev]"
+      - name: Validate CI dependency snapshot
+        run: python scripts/validate_ci_constraints.py requirements/ci-constraints.txt
       - name: Validate repository
         run: python scripts/validate.py
