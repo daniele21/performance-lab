@@ -1,13 +1,13 @@
-"""Stable domain contracts for Performance Lab."""
+"""Stable public domain contracts for Performance Lab."""
 
-from .compatibility import (  # noqa: F401
+from .compatibility import (
     ComparisonDimension,
     CompatibilityResult,
     NonComparabilityCode,
     NonComparabilityReason,
     compare_fingerprints,
 )
-from .schemas import (  # noqa: F401
+from .schemas import (
     SCHEMA_VERSION,
     AuthConfig,
     AuthStrategy,
@@ -37,10 +37,51 @@ from .schemas import (  # noqa: F401
     TelemetryDescriptor,
     TelemetryLevel,
 )
-from .serialization import (  # noqa: F401
+from .serialization import (
     InvalidSerializedModel,
     SchemaLoadError,
     UnsupportedSchemaVersion,
     load_dict,
     load_json,
 )
+
+__all__ = [
+    "SCHEMA_VERSION",
+    "AuthConfig",
+    "AuthStrategy",
+    "BenchmarkProtocol",
+    "Capability",
+    "ComparisonDimension",
+    "CompatibilityResult",
+    "DatasetSnapshot",
+    "EndpointProfile",
+    "ErrorInfo",
+    "EvaluationSuite",
+    "EvaluatorRef",
+    "ExecutionFingerprint",
+    "GenerationConfig",
+    "HardwareIdentity",
+    "InvalidSerializedModel",
+    "LoadProfile",
+    "Measurement",
+    "MeasurementProvenance",
+    "MeasurementScope",
+    "ModelIdentity",
+    "NonComparabilityCode",
+    "NonComparabilityReason",
+    "Run",
+    "RunStatus",
+    "RuntimeIdentity",
+    "SampleExecution",
+    "SampleStatus",
+    "SchemaLoadError",
+    "Score",
+    "Target",
+    "TaskSpec",
+    "TelemetryDescriptor",
+    "TelemetryLevel",
+    "UnsupportedSchemaVersion",
+    "compare_fingerprints",
+    "load_dict",
+    "load_json",
+]
