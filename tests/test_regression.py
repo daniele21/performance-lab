@@ -142,8 +142,10 @@ def test_incompatible_dimension_returns_not_comparable_before_thresholds(tmp_pat
     )
     binding = bind_baseline(store, baseline_id="release-baseline", run_id="baseline")
 
-    capability = BaselineRegressionEngine(store).compare(binding, "candidate").dimension(
-        ComparisonDimension.CAPABILITY
+    capability = (
+        BaselineRegressionEngine(store)
+        .compare(binding, "candidate")
+        .dimension(ComparisonDimension.CAPABILITY)
     )
 
     assert capability.state == RegressionDimensionState.NOT_COMPARABLE
