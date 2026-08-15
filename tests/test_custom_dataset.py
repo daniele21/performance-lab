@@ -13,7 +13,7 @@ from performance_lab.datasets import (
 def test_source_inspection_exposes_shape_without_guessing_mapping(tmp_path) -> None:
     source = tmp_path / "dataset.jsonl"
     source.write_text(
-        '\n'.join(
+        "\n".join(
             (
                 json.dumps({"uid": "1", "question": "A", "answer": "x", "split": "test"}),
                 json.dumps({"uid": "2", "question": "B", "answer": "y", "split": "train"}),
