@@ -80,17 +80,26 @@ def build_general_starter_suite() -> StarterSuiteBundle:
             (
                 _record(
                     "rs-1",
-                    "All lorps are mivs. Every miv is a zan. Is every lorp a zan? Answer yes or no.",
+                    (
+                        "All lorps are mivs. Every miv is a zan. "
+                        "Is every lorp a zan? Answer yes or no."
+                    ),
                     "yes",
                 ),
                 _record(
                     "rs-2",
-                    "No red object is blue. This object is red. Can it also be blue? Answer yes or no.",
+                    (
+                        "No red object is blue. This object is red. "
+                        "Can it also be blue? Answer yes or no."
+                    ),
                     "no",
                 ),
                 _record(
                     "rs-3",
-                    "Ana is older than Bea. Bea is older than Cy. Is Ana older than Cy? Answer yes or no.",
+                    (
+                        "Ana is older than Bea. Bea is older than Cy. "
+                        "Is Ana older than Cy? Answer yes or no."
+                    ),
                     "yes",
                 ),
             ),
