@@ -7,751 +7,478 @@ Canonical scope: target.repository
 Read when: planning implementation work, checking dependencies, deciding what can run in parallel, or changing acceptance criteria
 Last reviewed: 2026-08-15
 
-This document is the canonical implementation plan for AI Performance Lab. It defines the target product boundary, work breakdown, dependencies, parallel execution lanes, acceptance criteria and milestone exit gates.
-
-Operational status belongs in [`current-state.md`](current-state.md). Capability sequencing belongs in [`roadmap.md`](roadmap.md). Changes to this plan must be recorded in [`plan-changelog.md`](plan-changelog.md).
+This document is the canonical implementation plan for AI Performance Lab. It owns product boundaries, task decomposition, dependencies and acceptance criteria. Live task status belongs in [`current-state.md`](current-state.md); capability sequencing belongs in [`roadmap.md`](roadmap.md); material plan changes belong in [`plan-changelog.md`](plan-changelog.md).
 
 ## 1. Product target
 
-AI Performance Lab evaluates AI inference endpoints independently from the model runtime that serves them.
+AI Performance Lab is an independent, hardware-aware evaluation and benchmarking layer for AI inference endpoints.
 
-The core product must answer four separate questions:
+It must answer four separate questions:
 
-1. **Capability** — how well does this endpoint solve a defined task or benchmark?
+1. **Capability** — how well does a model solve a defined task or benchmark?
 2. **Runtime performance** — how fast and reliable is inference under a defined load profile?
-3. **Resource efficiency** — how much memory, compute, energy/thermal budget does the complete serving configuration consume when telemetry is available?
-4. **Regression** — did a change in model, quantization, runtime, prompt, configuration, hardware or code improve or degrade a compatible baseline?
+3. **Resource efficiency** — what resource cost is observed when trustworthy telemetry is available?
+4. **Regression** — did a model/runtime/configuration/code change improve or degrade a compatible baseline?
 
-The primary unit of comparison is not a model name. It is an immutable **execution fingerprint** representing the complete evaluated configuration.
+The evaluated unit is an immutable **execution fingerprint**, not a model name.
 
-## 2. Non-goals for the first product slice
+## 2. Ownership boundaries
 
-The first release does not:
+Performance Lab owns:
 
-- load GGUF, MLX, safetensors or other model artifacts itself;
-- own llama.cpp, Ollama, MLX, vLLM, SGLang or vendor-specific runtime lifecycle;
-- provide a public model hosting service;
-- infer that two runs are comparable when critical identity fields differ;
-- collapse quality, speed and resource consumption into one authoritative score;
-- require an LLM-as-a-judge to evaluate deterministic tasks;
-- require privileged host telemetry for basic endpoint evaluation;
-- target multimodal, ASR, embedding or reranking evaluation before the text-generation core is stable.
+- datasets, workload packs and sampling policy;
+- benchmark/evaluator protocols;
+- generation/load configuration;
+- execution fingerprint assembly;
+- client-boundary performance measurement;
+- telemetry normalization/provenance;
+- immutable run evidence;
+- compatibility/comparison/regression semantics;
+- CLI/CI/UI control surfaces.
 
-## 3. Product layers
+Performance Lab does **not** own:
+
+- model loading or backend lifecycle;
+- GGUF/MLX/safetensors execution;
+- backend resource allocation;
+- provider-specific runtime truth that has not been exposed through a versioned contract;
+- a universal opaque model score;
+- inference hosting.
+
+Generic OpenAI-compatible evaluation must remain valid without any Local LLM Server-specific integration.
+
+## 3. Core invariants
+
+### Execution identity
+
+At minimum, the fingerprint can represent:
+
+- target/adapter and safe endpoint identity;
+- model ID, revision, artifact digest and quantization when known;
+- runtime name, version and effective runtime-config digest when known;
+- hardware/device identity when known;
+- generation configuration;
+- prompt/template version;
+- dataset snapshots;
+- evaluator versions;
+- benchmark protocol;
+- load profile;
+- telemetry protocol/collectors.
+
+Unknown remains unknown. Values are never inferred from suggestive filenames, arbitrary provider fields or unrelated counters.
+
+### Result dimensions
+
+Quality, runtime and resources remain separate. Compatibility is evaluated before deltas or thresholds.
+
+Changing model/runtime/quantization/configuration is often the independent variable and therefore does not automatically make all result dimensions incomparable. Changes to dataset/evaluator/protocol/hardware that invalidate a dimension produce typed non-comparability.
+
+### Evidence
+
+Completed runs are immutable. Raw sensitive prompt/output retention is policy-controlled and minimized. Portable evidence must be independent from SQLite internals.
+
+### Telemetry and identity
+
+Black-box inference, frozen execution identity and dynamic telemetry are different concerns:
+
+```text
+inference response      -> answer / usage
+identity provider       -> stable pre-run execution identity
+telemetry collector     -> dynamic measurements during run
+```
+
+No one channel silently substitutes for another.
+
+## 4. Product layers
 
 ```text
 User / CI / UI
       |
-CLI + local API
+CLI + local control surface
       |
 Evaluation Orchestrator
       |
-+--------------------+--------------------+
-|                    |                    |
-Capability Engine    Runtime Benchmarks   Resource Correlator
-|                    |                    |
-Dataset Registry     Inference Adapter    Telemetry Adapter
-         \             |                 /
-          \------------+----------------/
-                       |
-                 External endpoint
-
-All run inputs/results -> Run Store -> Comparison/Regression Engine -> Reports
++---------------------+----------------------+---------------------+
+|                     |                      |                     |
+Capability Engine     Runtime Benchmarks     Identity Providers    Telemetry
+|                     |                      |                     |
+Dataset Registry      Inference Adapter      Versioned mapping     Collectors
+         \             |                     |                    /
+          \------------+---------------------+-------------------/
+                                |
+                         External endpoint
+                                |
+                   Run Store / portable evidence
+                                |
+                  Comparison / Regression Engine
 ```
-
-The core must preserve these boundaries so that adding a new endpoint adapter, dataset family, evaluator or telemetry source does not require rewriting the orchestrator.
-
-## 4. Canonical domain objects
-
-Implementation may refine names, but these concepts must remain explicit.
-
-### Target
-
-A logical endpoint under test. Contains connection metadata and declared capabilities but no benchmark result state.
-
-### EndpointProfile
-
-Transport-specific configuration such as base URL, authentication strategy, model selector and timeout policy. Secrets must never be persisted in exported run artifacts.
-
-### ExecutionFingerprint
-
-Immutable identity of an evaluation configuration. At minimum:
-
-- target/adapter type;
-- endpoint identity safe for persistence;
-- model identifier returned/selected;
-- model artifact/revision/quantization when known;
-- runtime name and version when known;
-- hardware/device identity when known;
-- generation configuration;
-- prompt/template version;
-- dataset snapshot/version;
-- evaluator version;
-- benchmark protocol version;
-- concurrency/load profile;
-- telemetry availability and measurement protocol.
-
-Unknown fields remain explicitly unknown. They are never fabricated.
-
-### EvaluationSuite
-
-Versioned ordered set of tasks plus sample-selection policy, generation policy and evaluation rules.
-
-### DatasetSnapshot
-
-Immutable logical version of a dataset used by a run, including source, split, filtering/sampling policy and content digest or equivalent stable identity.
-
-### Run
-
-Top-level immutable evaluation execution with lifecycle state, fingerprint, suite, timestamps, environment, aggregate results and links to per-sample evidence.
-
-### SampleExecution
-
-One attempt against one dataset sample, with timing, response metadata, safe error state and evaluator output.
-
-### Measurement
-
-Typed runtime/resource measurement with unit, timestamp/scope and provenance.
-
-### Score
-
-Typed quality metric with evaluator identity, numerator/denominator where applicable and aggregation rules.
-
-### Baseline
-
-Explicit user- or policy-selected run used for compatible regression comparison. "Latest" must not silently become the baseline.
 
 ## 5. Status vocabulary
 
-Every implementation item uses one of:
+Live status uses:
 
-- `PLANNED` — defined but not dependency-ready;
-- `READY` — dependencies satisfied and can start;
-- `IN_PROGRESS` — implementation active;
-- `BLOCKED` — cannot proceed; blocker must be named;
-- `VALIDATION` — implementation exists but acceptance evidence is incomplete;
-- `DONE` — acceptance criteria and documentation complete;
-- `DEFERRED` — intentionally outside the current milestone.
+- `PLANNED`
+- `READY`
+- `IN_PROGRESS`
+- `BLOCKED`
+- `VALIDATION`
+- `DONE`
+- `DEFERRED`
 
-The status shown in this file is the planning baseline only. Live status is maintained in [`current-state.md`](current-state.md).
+This file does not duplicate live statuses. See [`current-state.md`](current-state.md).
 
-## 6. Parallelization model
-
-Work is organized into lanes. Tasks in different lanes may execute concurrently once their listed dependencies are satisfied.
+## 6. Parallel work lanes
 
 | Lane | Workstream | Parallel intent |
 | --- | --- | --- |
-| `FND` | repository/contracts | establishes shared contracts; early critical path |
-| `ADP` | inference adapters | parallel after core request/response contracts exist |
-| `DAT` | datasets/suites | parallel after dataset/task schemas exist |
-| `EVAL` | capability evaluation | parallel with runtime benchmarking after adapter contract exists |
-| `PERF` | latency/throughput/load | parallel with capability evaluation |
-| `TEL` | host/device telemetry | independent optional lane after measurement schema |
-| `STO` | persistence/comparison | parallel after run/fingerprint schemas |
-| `CLI` | command-line/API control plane | can start with fakes after orchestrator interface |
-| `UI` | local visual interface | starts after query/read models stabilize; not on MVP critical path |
-| `REG` | baselines/regression/CI | depends on stable run store and comparison semantics |
-| `INT` | external-framework integrations | starts only after native task/evaluator contracts stabilize |
-| `DOC` | docs/governance/evidence | continuous alongside every lane |
+| `FND` | repository/contracts/orchestrator | shared critical contracts |
+| `ADP` | inference adapters | parallel after request/response domain |
+| `DAT` | datasets/suites/workload packs | independent after dataset schema |
+| `EVAL` | capability evaluation | parallel with runtime measurement |
+| `PERF` | latency/throughput/load/statistics | parallel with evaluation |
+| `TEL` | host/runtime telemetry | optional parallel instrumentation |
+| `STO` | persistence/comparison/retention | parallel after run/fingerprint schemas |
+| `CLI` | developer/automation control plane | converges existing engine pieces |
+| `REG` | baseline/regression/CI | depends on comparison semantics |
+| `UI` | local visual product | downstream of stable read models |
+| `INT` | external runtime/framework integrations | versioned optional integrations |
+| `REL` | release/reproducibility | cross-cutting hardening |
+| `DOC` | governance/evidence | continuous |
 
-### Critical path to first useful MVP
+## 7. Task registry and acceptance
 
-```text
-FND-001 repository skeleton
-  -> FND-002 core domain contracts
-  -> ADP-001 adapter contract + OpenAI-compatible adapter
-  -> FND-004 orchestrator lifecycle
-  -> +--------------------+
-     |                    |
-     EVAL-001             PERF-001
-     |                    |
-     +---------+----------+
-               |
-             STO-002 comparable run queries
-               |
-             REG-001 regression comparison
-               |
-             CLI-003 machine-readable run command
-```
-
-`DAT`, `TEL`, `STO` foundations and `CLI` scaffolding can progress in parallel with much of this path.
-
-## 7. Work breakdown
-
-### FND — repository and core contracts
+### FND — foundation
 
 #### FND-001 — repository foundation
-
-Status baseline: `READY`
 Dependencies: none
-Parallel: no; first repository task
-
-Deliverables:
-
-- source/test/package skeleton;
-- dependency and environment management;
-- lint/format/type-check/test commands;
-- CI validation workflow;
-- license decision;
-- branch/contribution policy;
-- architecture-safe package naming.
 
 Acceptance:
 
-- clean checkout can install dependencies and run the repository validation command;
-- no runtime/model dependency is embedded merely to make the skeleton compile;
-- CI and local validation use the same core commands.
+- clean checkout installs and runs the shared validation gate;
+- local and CI validation use the same commands;
+- no inference runtime is embedded merely to satisfy the package skeleton.
 
-#### FND-002 — domain schemas and compatibility rules
-
-Status baseline: `PLANNED`
+#### FND-002 — canonical domain and compatibility
 Dependencies: FND-001
-Parallel: unlocks `ADP`, `DAT`, `TEL`, `STO`
-
-Deliverables:
-
-- typed schemas for Target, EndpointProfile, ExecutionFingerprint, EvaluationSuite, DatasetSnapshot, Run, SampleExecution, Measurement and Score;
-- schema/version fields;
-- serialization rules;
-- secret/privacy classification;
-- explicit unknown/null semantics;
-- compatibility rules for run comparison.
 
 Acceptance:
 
-- round-trip serialization tests;
-- schema migrations/version rejection behavior is explicit;
-- incompatible fingerprints produce typed non-comparability reasons rather than best-effort comparison.
+- immutable/versioned schemas for endpoint, fingerprint, suite, dataset, run, sample, measurement and score;
+- explicit unknown semantics;
+- secrets cannot be serialized as endpoint credentials;
+- dimension-specific compatibility returns typed reasons;
+- runtime identity can include effective configuration identity when explicitly observed.
 
-#### FND-003 — plugin/registry contracts
-
-Status baseline: `PLANNED`
+#### FND-003 — plugin/registry boundaries
 Dependencies: FND-002
-Parallel: yes
-
-Define narrow replaceable interfaces for:
-
-- inference adapters;
-- task loaders;
-- evaluators;
-- telemetry collectors;
-- result exporters;
-- external benchmark runners.
 
 Acceptance:
 
-- deterministic fakes can exercise orchestrator tests without network/model dependencies;
-- a plugin cannot mutate an immutable completed run.
+- narrow adapter/dataset/evaluator/telemetry/export contracts;
+- deterministic fakes exercise orchestration without network/model dependencies;
+- plugins cannot mutate completed runs.
 
-#### FND-004 — evaluation orchestrator lifecycle
-
-Status baseline: `PLANNED`
-Dependencies: FND-002, ADP-001 interface portion
-Parallel: partially with adapter implementation
+#### FND-004 — evaluation orchestrator
+Dependencies: FND-002, ADP-001 interface
 
 Lifecycle:
 
 ```text
-validate configuration
--> resolve target capabilities
--> freeze dataset snapshot + execution fingerprint
+validate
+-> probe/resolve target
+-> resolve optional first-party identity
+-> freeze suite + fingerprint
 -> optional warmup
 -> execute samples
--> capture measurements
--> evaluate responses
--> aggregate
--> persist immutable run
--> compare to optional baseline
--> export/report
+-> capture telemetry
+-> evaluate + aggregate
+-> publish immutable run
+-> optional compare/regress
+-> export
 ```
 
-Acceptance:
+Acceptance includes typed cancellation/timeout/failure outcomes and content-safe progress events.
 
-- cancellation, timeout, partial sample failure and total endpoint failure have typed outcomes;
-- resumability policy is explicit: either resume a partial run under the same frozen identity or create a new run; never silently mix identities;
-- progress events are observable without exposing prompt/output content by default.
+### ADP — inference endpoints
 
----
-
-### ADP — inference endpoint adapters
-
-#### ADP-001 — generic adapter contract + OpenAI-compatible reference adapter
-
-Status baseline: `PLANNED`
+#### ADP-001 — OpenAI-compatible reference adapter
 Dependencies: FND-002
-Parallel: yes with DAT-001, TEL-001, STO-001
-
-Required adapter capabilities:
-
-- health/probe;
-- model/capability discovery when available;
-- non-streaming generation;
-- streaming generation for TTFT;
-- request cancellation;
-- normalized token usage when returned;
-- normalized typed errors;
-- timeout and retry metadata;
-- generation parameter capability map.
 
 Acceptance:
 
-- adapter tests use a local fake HTTP server;
-- unsupported generation options fail or are reported explicitly; they are not silently dropped unless policy explicitly permits it and the run records the effective configuration;
-- streaming timestamps allow TTFT measurement at the lab boundary.
+- probe, model discovery, non-streaming, streaming, cancellation and normalized errors;
+- normalized token usage when returned;
+- local fake HTTP coverage;
+- unsupported options are explicit rather than silently discarded.
 
-#### ADP-002 — endpoint capability probe
-
-Status baseline: `PLANNED`
+#### ADP-002 — evidence-based capability probe
 Dependencies: ADP-001
-Parallel: yes
 
-Probe should distinguish declared, observed and unknown capabilities, including streaming, seed, response format/schema, token usage and model discovery.
+Acceptance:
+
+- declared, observed and unknown are distinct;
+- streaming, usage, seed and structured-output checks preserve uncertainty.
 
 #### ADP-003 — additional transport adapters
+Dependencies: stable ADP-001
 
-Status baseline: `DEFERRED`
-Dependencies: ADP-001 stable contract
+Add only when real behavior cannot be represented through the reference adapter. Otherwise defer.
 
-Candidates: native Ollama semantics, custom local server telemetry handshake, vendor-specific APIs. Add only when a real behavioral difference cannot be represented cleanly through the reference adapter.
-
----
-
-### DAT — datasets and suite definition
+### DAT — datasets and suites
 
 #### DAT-001 — dataset/task schema
-
-Status baseline: `PLANNED`
 Dependencies: FND-002
-Parallel: yes
 
-Support:
+Acceptance:
 
-- bundled datasets;
-- user local files;
-- deterministic sampling by seed;
-- split selection;
-- sample caps in configurable increments, with UI presets allowed but no core restriction to multiples of ten;
-- task metadata and expected output contract;
-- content digest/version provenance.
+- local/bundled sources;
+- immutable source/split/version/content identity;
+- deterministic sample selection;
+- explicit expected-output/evaluator mapping.
 
-#### DAT-002 — general-purpose starter suite
+#### DAT-002 — general diagnostic starter suite
+Dependencies: DAT-001, EVAL-001
 
-Status baseline: `PLANNED`
-Dependencies: DAT-001, EVAL-001 evaluator primitives
-Parallel: partial
-
-The starter suite must be compact enough for local-device testing and broad enough to detect obvious trade-offs. Initial categories:
-
-- instruction following;
-- factual/closed-form QA;
-- reasoning;
-- basic mathematics;
-- classification;
-- structured JSON extraction/adherence;
-- lightweight code generation/evaluation where sandboxing is safe.
-
-The suite must be documented as a diagnostic sample, not a universal model ranking.
+Must remain a compact diagnostic suite, not a universal ranking. Initial coverage includes instruction following, closed-form QA, reasoning, basic math, classification and structured output.
 
 #### DAT-003 — custom dataset import
-
-Status baseline: `PLANNED`
 Dependencies: DAT-001
-Parallel: yes
 
-Initial formats should prioritize JSONL/CSV with an explicit mapping wizard/config rather than heuristic field guessing.
+JSONL/CSV mapping is explicit and reusable; semantic columns are not guessed.
 
 #### DAT-004 — workload packs
+Dependencies: DAT-003, EVAL evaluator primitives
 
-Status baseline: `PLANNED`
-Dependencies: DAT-003, EVAL-002
-Parallel: yes after core evaluators
-
-Versioned workload-specific suites such as meeting intelligence, PII extraction or domain classification. Workload packs must not leak product-specific logic into the generic execution engine.
-
----
+Workload-specific suites compose normal dataset/evaluator contracts and do not branch the generic engine.
 
 ### EVAL — capability evaluation
 
 #### EVAL-001 — deterministic evaluator primitives
-
-Status baseline: `PLANNED`
 Dependencies: FND-003, DAT-001
-Parallel: yes with PERF-001
-
-Implement typed evaluators for:
-
-- exact match / normalized exact match;
-- numeric tolerance;
-- classification accuracy;
-- precision/recall/F1;
-- regex/pattern validity where appropriate;
-- JSON parsing and JSON Schema adherence;
-- deterministic field-level extraction scoring.
 
 Acceptance:
 
-- metric aggregation is testable from static fixtures;
-- normalization behavior is versioned;
-- evaluator failures are distinct from model failures.
+- exact/normalized match;
+- numeric tolerance;
+- classification/F1;
+- pattern validity where appropriate;
+- JSON/JSON Schema;
+- deterministic field extraction;
+- evaluator failures remain distinct from model failures.
 
-#### EVAL-002 — rubric and judge-based evaluation
+#### EVAL-002 — rubric/LLM judge
+Dependencies: stable score model
 
-Status baseline: `PLANNED`
-Dependencies: EVAL-001 stable score model
-Parallel: yes
+Judge evaluation is opt-in and records judge model, adapter, rubric/prompt version and sampling configuration. Deterministic metrics remain preferred when objective ground truth exists.
 
-Judge-based evaluation is optional and must record judge model, prompt/rubric version and sampling configuration. Deterministic metrics remain preferred when the task has an objective ground truth.
+#### EVAL-003 — external benchmark bridge
+Dependencies: stable import/export/evaluator contracts
 
-#### EVAL-003 — benchmark-framework bridge
+Bridge established frameworks through adapters rather than copying their tasks into core. Framework/task/version provenance must survive import.
 
-Status baseline: `PLANNED`
-Dependencies: FND-003, EVAL-001, stable run import/export schema
-Parallel: `INT` lane
+### PERF — runtime benchmarking
 
-Integrate established evaluation frameworks through adapters rather than copying their task implementations into core. External results must retain framework/version/task provenance.
-
----
-
-### PERF — endpoint runtime benchmarking
-
-#### PERF-001 — single-request latency protocol
-
-Status baseline: `PLANNED`
+#### PERF-001 — single-request protocol
 Dependencies: ADP-001, FND-002
-Parallel: yes with EVAL-001
 
-Capture separately:
+Capture setup/TTFT/total latency and token throughput only when the necessary evidence exists. Cold/warm/warmup semantics are explicit.
 
-- request setup time;
-- TTFT when streaming is available;
-- total latency;
-- prompt/input token count when known;
-- generated token count when known;
-- output tokens/second;
-- endpoint-reported prefill/decode metrics when available, marked as endpoint-originated rather than lab-measured.
-
-Protocol must distinguish cold, warmup and measured warm runs.
-
-#### PERF-002 — throughput and concurrency profiles
-
-Status baseline: `PLANNED`
+#### PERF-002 — concurrency/load protocol
 Dependencies: PERF-001
-Parallel: yes
 
-Support fixed request counts, fixed concurrency and bounded-duration load profiles. Capture latency distribution, throughput, success/error/timeout rate and backpressure behavior.
+Support fixed-count and bounded-duration profiles with throughput, reliability, queue/backpressure and latency-distribution evidence.
 
 #### PERF-003 — repeatability/statistics
-
-Status baseline: `PLANNED`
 Dependencies: PERF-001
 
-Report median, p90/p95 where sample sizes justify them, dispersion and raw sample counts. The UI/report must not display misleading percentiles for tiny samples without qualification.
+Report raw sample counts, dispersion and qualified percentiles; tiny samples must not be presented with misleading confidence.
 
----
+### TEL — optional telemetry
 
-### TEL — optional host/device telemetry
-
-#### TEL-001 — telemetry collector contract
-
-Status baseline: `PLANNED`
+#### TEL-001 — telemetry collector lifecycle
 Dependencies: FND-002 measurement schema
-Parallel: yes with ADP/DAT/STO
 
-Collectors must be optional and capability-reported. A run remains valid when telemetry is unavailable.
+Collectors are optional and capability-reported; collector failure does not fabricate zeros.
 
-#### TEL-002 — local host collector
-
-Status baseline: `PLANNED`
+#### TEL-002 — host collector
 Dependencies: TEL-001
-Parallel: yes
 
-Initial portable metrics:
+Portable CPU/memory/load evidence where attribution is possible. Platform-specific GPU/energy/thermal collectors remain separate.
 
-- process/system memory where attribution is possible;
-- CPU utilization;
-- host load;
-- collector overhead metadata.
-
-Platform-specific GPU/VRAM/energy/thermal collectors must remain separate adapters.
-
-#### TEL-003 — instrumented endpoint telemetry protocol
-
-Status baseline: `PLANNED`
+#### TEL-003 — generic instrumented runtime protocol
 Dependencies: TEL-001, ADP-002
-Parallel: yes
 
-Define an optional safe contract for local servers to expose runtime/model/hardware/resource metadata. This enables deeper integration with projects such as Local LLM Server or Android Local LLM Harness without making it mandatory for third-party endpoints.
+Safe versioned runtime-originated measurements and optional explicit identity, without making instrumentation mandatory for third-party endpoints.
 
----
+### STO — persistence/comparison
 
-### STO — run persistence, evidence and comparison
-
-#### STO-001 — immutable local run store
-
-Status baseline: `PLANNED`
+#### STO-001 — immutable SQLite run store
 Dependencies: FND-002
-Parallel: yes
 
-Requirements:
+Acceptance:
 
-- atomic run publication;
-- partial/in-progress state separated from completed immutable evidence;
-- schema versioning;
-- bounded handling of raw response content according to privacy mode;
-- export/import of portable run bundles;
+- working state separated from completed evidence;
+- atomic terminal publication;
+- versioned portable ZIP bundle with integrity verification;
 - no plaintext credentials.
 
-#### STO-002 — compatible comparison queries
+#### STO-002 — compatible comparison
+Dependencies: STO-001, compatibility rules, result models
 
-Status baseline: `PLANNED`
-Dependencies: STO-001, fingerprint compatibility rules, EVAL-001/PERF-001 result models
+Identity differences surface before deltas; quality/runtime/resource dimensions are independently comparable.
 
-Compare quality and runtime dimensions independently. Surface identity differences before deltas.
-
-#### STO-003 — retention and artifact policy
-
-Status baseline: `PLANNED`
+#### STO-003 — retention policy
 Dependencies: STO-001
-Parallel: yes
 
-Define retention for per-sample text, logs, telemetry series and aggregate metrics. Default mode should minimize sensitive prompt/output persistence while preserving enough evidence for reproducibility.
+Retention is explicit for sample evidence, text/logs and aggregates, applied before immutable publication.
 
----
+### CLI — control plane
 
-### CLI — developer control plane
+#### CLI-001 — probe/inspect
+Dependencies: adapter/dataset interfaces
 
-#### CLI-001 — target and suite inspection
+Human-readable target/suite inspection without model-runtime ownership.
 
-Status baseline: `PLANNED`
-Dependencies: FND-003, ADP-001/DAT-001 interfaces
-Parallel: yes using fakes
+#### CLI-002 — end-to-end run
+Dependencies: FND-004, evaluation/performance path
 
-Commands should include target probe, dataset/suite list/inspect and configuration validation.
+Versioned config drives endpoint -> suite -> fingerprint -> orchestration -> SQLite -> `.plab.zip`.
 
-#### CLI-002 — interactive run command
-
-Status baseline: `PLANNED`
-Dependencies: FND-004, EVAL-001 or PERF-001
-
-Provide progress, cancellation and clear result location.
-
-#### CLI-003 — machine-readable automation mode
-
-Status baseline: `PLANNED`
+#### CLI-003 — machine-readable regression automation
 Dependencies: CLI-002, REG-001
 
-Required for CI:
+Stable JSON output and deterministic exit codes for PASS/FAIL/ERROR/NOT_COMPARABLE/NOT_EVALUATED.
 
-- stable exit codes;
-- JSON output;
-- baseline selection;
-- threshold policies;
-- no ANSI dependence;
-- deterministic configuration file support.
+### REG — regression and CI
 
----
-
-### REG — comparison, regression and CI gates
-
-#### REG-001 — baseline and compatibility engine
-
-Status baseline: `PLANNED`
+#### REG-001 — explicit immutable baseline engine
 Dependencies: STO-002
 
-A baseline must be explicit and immutable. Comparison result includes:
+No implicit latest baseline. Compatibility is evaluated before metric deltas.
 
-- compatible dimensions;
-- incompatible/unknown dimensions;
-- absolute and relative deltas;
-- significance/uncertainty where supported;
-- threshold result per metric.
-
-#### REG-002 — regression policy file
-
-Status baseline: `PLANNED`
+#### REG-002 — versioned threshold policy
 Dependencies: REG-001
 
-Example policy concepts:
-
-```yaml
-quality:
-  overall_accuracy:
-    max_relative_drop_pct: 1.0
-runtime:
-  ttft_ms:
-    max_regression_pct: 10
-  output_tokens_per_second:
-    max_regression_pct: 5
-reliability:
-  error_rate:
-    max_absolute: 0.01
-```
-
-Exact schema will be versioned during implementation.
+Metric direction and absolute/relative tolerance are explicit. Unknown evidence yields `NOT_EVALUATED` rather than an invented verdict.
 
 #### REG-003 — CI integration
-
-Status baseline: `PLANNED`
 Dependencies: CLI-003, REG-002
 
-Publish a concise pass/fail summary plus machine-readable artifact. CI must not claim hardware comparability when runner hardware is uncontrolled or identity differs.
+Machine-readable artifact plus concise CI summary. Resource comparisons are conservative on uncontrolled runners.
 
----
+### INT — external integrations
 
-### UI — local product interface
+#### INT-001 — Local LLM Server runtime telemetry
+Dependencies: ADP-001, TEL-001
 
-#### UI-001 — information architecture and run setup
+Use normal OpenAI-compatible inference plus optional public `/status` polling. Preserve `chunks_per_second` as chunk evidence rather than relabeling it token throughput. Local LLM Server does not import Performance Lab.
 
-Status baseline: `PLANNED`
-Dependencies: domain/read-model stability; can prototype earlier with mocks
-Parallel: not on MVP critical path
+Canonical spec: [`local-llm-server-integration.md`](local-llm-server-integration.md).
 
-Primary surfaces:
+#### INT-002 — Local LLM Server execution identity
+Dependencies: FND-002, INT-001 integration boundary; aligned Local LLM Server producer
+Parallel: producer and consumer can implement against the same frozen protocol
 
-- Targets;
-- New Evaluation;
-- Live Run;
-- Results;
-- Compare;
-- Datasets/Suites;
-- Baselines/Regression Policies;
-- Settings/Telemetry.
+Contract:
 
-#### UI-002 — results and comparison visualization
+```text
+GET /v1/runtime/identity
+protocol = local-llm-identity-v1
+```
 
-Status baseline: `PLANNED`
+Acceptance:
+
+- strict versioned parsing with no arbitrary provider-field fallback;
+- model ID/revision/digest/quantization -> `ModelIdentity`;
+- backend name/version/effective config digest -> `RuntimeIdentity`;
+- safe hardware characteristics -> `HardwareIdentity`;
+- identity resolves before fingerprint freeze;
+- explicit `required` mode can fail an evidence campaign when identity is unavailable;
+- generic endpoints and older Local LLM Server versions remain valid when identity is optional;
+- conflicting configured vs first-party hardware fails rather than silently selecting one source;
+- `/status` telemetry remains independent;
+- deterministic direct-client and end-to-end runner tests;
+- producer and consumer use the same protocol/endpoint documentation.
+
+Canonical spec: [`local-llm-identity-contract.md`](local-llm-identity-contract.md).
+
+Future runtime-specific integrations require their own versioned contracts only when generic inference/telemetry/identity boundaries are insufficient.
+
+### UI — local product surface
+
+#### UI-001 — run setup IA
+Dependencies: stable domain/read models
+
+Primary surfaces: Targets, New Evaluation, Live Run, Results, Compare, Datasets/Suites, Baselines/Policies, Settings/Telemetry.
+
+#### UI-002 — comparison visualization
 Dependencies: STO-002, REG-001
 
-Quality, speed and resources remain visually separate. Comparison UI must foreground incompatible identities and confidence limitations.
+Quality, speed and resources remain visually separate; incompatible identity is foregrounded.
 
----
+### REL — reproducibility/release
 
-## 8. Recommended execution waves
+#### REL-001 — constrained CI dependency snapshot
+Dependencies: repository validation stack
 
-### Wave 0 — bootstrap contracts
+Supported CI Python environments install through a committed exact constraint snapshot and validate that direct dependencies/resolved versions match it. This is CI resolver reproducibility, not a claim of universal cross-platform lock reproducibility.
 
-Sequential core:
+## 8. Execution waves
 
-- FND-001
-- FND-002
+The historical bootstrap waves are complete in implementation. The active dependency structure is now evidence-oriented:
 
-Can begin as soon as FND-002 schemas settle:
+```text
+             integrated engine + regression core
+                         |
+       +-----------------+------------------+
+       |                 |                  |
+       v                 v                  v
+real endpoint        real runtime       real CI gate
+quality/perf         identity+telemetry  baseline/candidate
+       |                 |                  |
+       +-----------------+------------------+
+                         |
+                  retained evidence set
+```
 
-- FND-003
-- ADP-001
-- DAT-001
-- TEL-001
-- STO-001
-- CLI-001 using fakes
+Parallel non-blocking work can continue on UI-002, additional workload packs and selected platform telemetry. EVAL-003 should start only when representative evidence exposes a real benchmark-coverage gap.
 
-### Wave 1 — first executable run
+## 9. MVP/evidence exit criteria
 
-Parallel streams:
+The useful engine MVP requires a user to be able to:
 
-**Stream A — quality:** DAT-001 -> EVAL-001 -> DAT-002
+1. probe an OpenAI-compatible endpoint;
+2. choose a versioned bundled suite or explicit local custom dataset;
+3. execute deterministic quality/runtime evaluation without modifying the inference service;
+4. persist a complete honest execution fingerprint plus immutable run results;
+5. observe unavailable identity/telemetry rather than fabricated values;
+6. compare compatible result dimensions and surface identity differences;
+7. select an immutable baseline and apply versioned regression policy;
+8. run the same workflow from CLI/CI with machine-readable outcomes;
+9. preserve a portable evidence bundle;
+10. for an instrumented Local LLM Server target, optionally freeze first-party model/runtime/hardware identity and correlate dynamic runtime telemetry.
 
-**Stream B — runtime:** ADP-001 -> PERF-001 -> PERF-003
+Implementation completion does not by itself close evidence milestones. Representative model/device/load/CI runs must be retained according to [`roadmap.md`](roadmap.md) and [`definition-of-done.md`](definition-of-done.md).
 
-**Stream C — evidence:** STO-001 -> STO-003
+## 10. Plan maintenance
 
-**Stream D — optional observability:** TEL-001 -> TEL-002
+For each coherent implementation change:
 
-Convergence: FND-004 orchestrates all streams into one immutable run.
+- update [`current-state.md`](current-state.md) when live status or immediate next work changes;
+- update this plan only when target/task/dependency/acceptance changes;
+- update [`roadmap.md`](roadmap.md) when milestone scope/status changes;
+- append [`plan-changelog.md`](plan-changelog.md) for material plan changes;
+- create/update a focused specification only for a durable bounded concern;
+- do not create temporary task-completion documents when the information belongs in an existing canonical owner.
 
-### Wave 2 — comparison and practical usage
+## 11. Immediate planned implementation boundary
 
-Parallel:
+No new core abstraction is the default next step. Close the aligned Local LLM Server identity integration, then prioritize representative evidence:
 
-- PERF-002 concurrency/load;
-- DAT-003 custom datasets;
-- STO-002 comparison;
-- CLI-002;
-- TEL-003 instrumented telemetry;
-- UI-001 prototype against stable read models.
+1. real resident-model starter/workload runs with retained `.plab.zip` and frozen identity;
+2. repeated/concurrent performance evidence on controlled hardware;
+3. Local LLM Server identity + `/status` telemetry correlation;
+4. real baseline/candidate `regress-ci` evidence;
+5. UI-002/additional workload packs in parallel where useful.
 
-Convergence: REG-001 compatible baseline comparison.
-
-### Wave 3 — regression product
-
-Parallel:
-
-- REG-002 threshold policies;
-- CLI-003 automation mode;
-- UI-002 compare/regression views;
-- DAT-004 workload packs;
-- EVAL-002 judge/rubric evaluation.
-
-Convergence: REG-003 CI gate.
-
-### Wave 4 — ecosystem and expansion
-
-After native contracts are stable:
-
-- EVAL-003 external benchmark bridges;
-- additional inference adapters;
-- device-specific telemetry collectors;
-- remote/distributed runner architecture if justified;
-- ASR/embedding/reranking/vision task families through new task contracts rather than special cases in text-generation core.
-
-## 9. MVP exit criteria
-
-The first useful MVP is complete only when a user can:
-
-1. register/probe an OpenAI-compatible local endpoint;
-2. choose a versioned bundled suite or local custom dataset;
-3. select a deterministic sample count/seed;
-4. execute quality and runtime evaluation without modifying the inference service;
-5. obtain per-task quality metrics and per-run latency/throughput/reliability metrics;
-6. persist the complete execution fingerprint and immutable run results;
-7. compare two compatible runs with explicit identity differences;
-8. select a baseline and apply at least simple regression thresholds;
-9. run the same workflow from CLI with machine-readable output;
-10. understand when resource telemetry is unavailable rather than seeing fabricated zero values.
-
-UI completion is desirable but is not required to prove the engine MVP if the CLI covers the workflow cleanly.
-
-## 10. v0.1 target
-
-Suggested v0.1 boundary:
-
-- FND-001 through FND-004;
-- ADP-001 and ADP-002;
-- DAT-001 through DAT-003;
-- EVAL-001;
-- PERF-001 through PERF-003;
-- TEL-001 and a basic TEL-002 where portable;
-- STO-001 through STO-003;
-- CLI-001 through CLI-003;
-- REG-001 through REG-002;
-- basic documentation, examples and deterministic integration tests.
-
-REG-003 CI integration may ship in v0.1 if runner identity semantics are sufficiently clear; otherwise it becomes the first v0.2 item.
-
-## 11. Plan maintenance rules
-
-Every implementation change must update documentation in the same change when it affects status, scope, dependencies or acceptance criteria.
-
-When work completes:
-
-1. update live status in [`current-state.md`](current-state.md);
-2. update the relevant milestone in [`roadmap.md`](roadmap.md);
-3. change this plan only if the target, task decomposition, dependency or acceptance criteria changed;
-4. append a dated entry to [`plan-changelog.md`](plan-changelog.md) whenever this plan changes materially;
-5. add or update a focused specification when a workstream becomes too detailed for this repository-level plan;
-6. never erase a blocker or deferred gate by marking the parent task done.
-
-### Required plan-changelog entry
-
-A material plan update records:
-
-- date;
-- affected task IDs;
-- previous assumption;
-- new decision;
-- reason/evidence;
-- dependency impact;
-- roadmap/milestone impact.
-
-## 12. Immediate next implementation block
-
-Start with **FND-001 repository foundation** and **FND-002 domain schemas**. As soon as the FND-002 interfaces are stable enough, open parallel work on **ADP-001**, **DAT-001**, **TEL-001** and **STO-001** rather than serializing those independent workstreams.
+Only add a new adapter, telemetry source or benchmark bridge when those runs expose a concrete missing capability.
