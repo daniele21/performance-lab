@@ -13,58 +13,55 @@ This document tracks capability-level milestones. Live task status and the immed
 
 | Milestone | Status | Main outcome | Parallel opportunities |
 | --- | --- | --- | --- |
-| M0 — Repository and contracts | In progress | validated foundation + remaining plugin/registry/fake boundary | adapters, datasets, telemetry and storage are now unlocked in parallel |
-| M1 — First black-box evaluation | Planned | run a deterministic quality suite against an OpenAI-compatible endpoint | quality and runtime benchmark engines in parallel |
-| M2 — Runtime performance evidence | Planned | TTFT/latency/throughput/reliability with repeatable protocols | runs alongside M1 quality engine work |
-| M3 — Run store and comparison | Planned | immutable fingerprints, history and compatible run comparison | storage can begin during M1/M2 |
-| M4 — Custom workload evaluation | Planned | import local datasets and create reusable workload suites | parallel with comparison/telemetry |
-| M5 — Resource-aware local evaluation | Planned | host/device telemetry and instrumented endpoint correlation | telemetry lane is mostly independent |
-| M6 — Regression automation | Planned | explicit baselines, threshold policies and machine-readable CLI | UI work may run in parallel |
+| M0 — Repository and contracts | **Done** | validated foundation, domain contracts, plugin interfaces/fakes and orchestration boundary | completed fan-out enables all engine lanes |
+| M1 — First black-box evaluation | **In progress** | run a deterministic quality suite against an OpenAI-compatible endpoint | capability probe, starter suite and executable run path in parallel |
+| M2 — Runtime performance evidence | **In progress** | TTFT/latency/throughput/reliability with repeatable protocols | concurrency and statistics now parallel |
+| M3 — Run store and comparison | **In progress** | immutable fingerprints, history and compatible run comparison | comparison and retention policies in parallel |
+| M4 — Custom workload evaluation | Planned | import local datasets and create reusable workload suites | custom mapping can progress beside comparison/telemetry |
+| M5 — Resource-aware local evaluation | **In progress** | host/device telemetry and instrumented endpoint correlation | runtime-native telemetry can progress independently |
+| M6 — Regression automation | Planned | explicit baselines, threshold policies and machine-readable CLI | begins after compatible comparison queries |
 | M7 — Local product UI | Planned | configure, run, inspect and compare evaluations visually | not on engine MVP critical path |
-| M8 — External benchmark ecosystem | Planned | bridge established evaluation frameworks without duplicating them | after native contracts stabilize |
+| M8 — External benchmark ecosystem | Planned | bridge established evaluation frameworks without duplicating them | after native end-to-end evidence stabilizes |
 | M9 — Additional AI task families | Future | ASR, embeddings, reranking, vision through generic task extensions | independent task-family workstreams after text core |
 
-## M0 — Repository and contracts
+## M0 — Repository and contracts — DONE
 
 Goal: establish a project that can evolve without coupling the core to a model runtime or UI.
 
 Implemented and validated:
 
-- repository toolchain, lint/type/test/CI foundation;
-- branch and contribution policy;
-- MIT license;
-- immutable domain schemas and schema versioning;
-- deterministic execution fingerprint identity;
-- dimension-specific compatibility semantics;
+- Python 3.12+ repository/toolchain with common local/CI validation;
+- branch/contribution policy and MIT license;
+- immutable versioned domain schemas and explicit unknown semantics;
+- deterministic execution fingerprint identity and dimension-specific compatibility;
 - privacy-safe endpoint credential references;
+- narrow plugin protocols and explicit registry;
+- deterministic fakes for inference, datasets, evaluation, telemetry, export and external runners;
+- evaluation orchestration lifecycle with typed progress/failure boundaries;
 - clean-checkout validation on Python 3.12 and 3.13.
 
-Remaining before M0 closes:
+Exit gate: **satisfied**. Adapter, dataset, evaluation, telemetry and storage implementations now share stable boundaries without concrete cross-lane imports.
 
-- plugin interfaces for inference, datasets/evaluators, telemetry, stores/exporters;
-- deterministic fakes for orchestration tests;
-- integration-line bootstrap for parallel work.
-
-Exit gate:
-
-- clean checkout validation works;
-- core domain serialization tests pass;
-- adapter, dataset, telemetry and storage lanes can implement against stable enough contracts without importing one another;
-- FND-003 contracts/fakes are usable by the first downstream implementations.
-
-## M1 — First black-box capability evaluation
+## M1 — First black-box capability evaluation — IN PROGRESS
 
 Goal: connect to an OpenAI-compatible endpoint and obtain trustworthy quality scores from a versioned suite.
 
-Required outcomes:
+Integrated:
 
-- OpenAI-compatible adapter with streaming/non-streaming normalized behavior;
-- endpoint capability probe;
-- dataset snapshotting and deterministic sampling;
-- deterministic evaluators;
-- compact general-purpose starter suite;
-- orchestrator lifecycle with cancellation/failure semantics;
-- per-sample and aggregate results.
+- OpenAI-compatible adapter with streaming/non-streaming normalization;
+- model listing/basic endpoint probe;
+- deterministic dataset materialization and sampling;
+- deterministic evaluator primitives;
+- orchestrator lifecycle with partial failure semantics;
+- per-sample and aggregate quality results;
+- immutable result publication primitive.
+
+Remaining:
+
+- richer endpoint capability discovery with declared/observed/unknown states;
+- compact versioned general-purpose starter suite;
+- executable `run` control-plane path using the integrated primitives;
+- representative real-endpoint end-to-end evidence.
 
 Exit gate:
 
@@ -72,58 +69,73 @@ Exit gate:
 - the completed run has a reproducible fingerprint and immutable result bundle;
 - unsupported/unknown endpoint features are explicit.
 
-## M2 — Runtime performance evidence
+## M2 — Runtime performance evidence — IN PROGRESS
 
 Goal: measure serving behavior independently from quality scoring.
 
-Required outcomes:
+Integrated:
 
-- client-observed total latency;
+- client-observed request setup and total latency;
 - TTFT for streaming endpoints;
-- reliable output token throughput when token counts are valid;
-- warmup/repetition policy;
-- controlled versus uncontrolled cold-start semantics;
-- repeated timing statistics;
-- fixed-concurrency load profile;
-- typed reliability/error metrics.
+- output token throughput when usage/timing are observable;
+- explicit unavailable metric semantics;
+- cold/warmup/measured-warm classification.
+
+Remaining:
+
+- fixed-concurrency load protocol and reliability counters;
+- repeated-run statistics and percentiles;
+- repeatability evidence and protocol summaries;
+- broader endpoint validation under load.
 
 Exit gate:
 
 - quality and runtime metrics are reported separately;
 - no unavailable metric is represented as zero;
-- benchmark protocol identity is persisted in the fingerprint.
+- benchmark protocol identity is persisted in the fingerprint;
+- repeated/load protocols provide reproducible evidence rather than one-shot timing only.
 
-## M3 — Run store and compatible comparison
+## M3 — Run store and compatible comparison — IN PROGRESS
 
 Goal: make results useful across changes rather than disposable single runs.
 
-Required outcomes:
+Integrated:
 
-- durable immutable completed-run store;
-- partial-run working state separated from completed evidence;
-- aggregate and per-sample query model;
-- portable run export/import;
+- SQLite durable store;
+- working state separated from completed immutable evidence;
+- atomic terminal publication;
+- portable run ZIP export/import with integrity manifest;
+- domain-owned dimension-specific compatibility semantics.
+
+Remaining:
+
+- aggregate/per-sample comparison query model;
 - run identity diff;
-- dimension-specific compatibility rules;
-- quality/runtime/resource delta reporting.
+- capability/runtime/resource delta reporting;
+- retention/artifact policy;
+- comparison evidence tests across compatible and incompatible runs.
 
 Exit gate:
 
-- a user can select two runs and understand both the metric deltas and the configuration differences that produced them;
-- incompatible comparisons return reasons rather than misleading percentages.
+- a user can select two runs and understand both metric deltas and configuration differences;
+- incompatible comparisons return typed reasons rather than misleading percentages.
 
 ## M4 — Custom workload evaluation
 
 Goal: answer "which model is best for my scenario?" rather than only public benchmark questions.
 
-Required outcomes:
+Foundation already available:
 
-- JSONL/CSV import;
-- explicit column/schema mapping;
+- JSONL/CSV ingestion;
+- explicit field mapping;
+- deterministic local dataset snapshot identity.
+
+Remaining milestone outcomes:
+
 - reusable mapping configuration;
-- local dataset snapshot identity;
 - task/evaluator templates for classification, extraction, QA and structured output;
-- workload-pack versioning.
+- workload-pack versioning;
+- first practical workload packs.
 
 Candidate first workload packs:
 
@@ -135,24 +147,25 @@ Exit gate:
 
 - a user can run the same workload dataset against multiple endpoints/configurations and compare task-relevant quality plus runtime metrics.
 
-## M5 — Resource-aware local evaluation
+## M5 — Resource-aware local evaluation — IN PROGRESS
 
 Goal: correlate inference quality/performance with device resource cost.
 
-Required outcomes:
+Integrated:
 
 - telemetry collector interface and typed availability states;
-- portable local host CPU/memory evidence where attributable;
-- optional instrumented inference telemetry protocol;
-- run-window correlation;
-- peak/average resource summaries with provenance;
-- first real integration with a local/device serving project.
+- optional telemetry lifecycle that does not block black-box evaluation;
+- portable process CPU/CPU-core evidence;
+- peak RSS where the host exposes it;
+- host load where available;
+- collector overhead measurement and provenance.
 
-Later within the milestone:
+Remaining:
 
-- GPU/VRAM/unified-memory collectors;
-- thermal state;
-- power/energy where reliable.
+- instrumented inference/runtime telemetry protocol;
+- stronger run-window correlation and summary semantics;
+- first real integration with a local/device serving project;
+- later GPU/VRAM/unified-memory, thermal and reliable energy evidence.
 
 Exit gate:
 
@@ -238,11 +251,11 @@ The core extension should add task-family contracts, not provider-specific speci
 
 ### Engine MVP
 
-M0 through the essential parts of M1, M2 and M3 plus a CLI execution path.
+M0 complete + essential M1/M2/M3 outcomes + executable CLI run path.
 
 ### Practical local evaluation product
 
-Engine MVP + M4 custom datasets + basic M5 telemetry + baseline comparison.
+Engine MVP + M4 custom workloads + M5 resource evidence + baseline comparison.
 
 ### Engineering regression platform
 
