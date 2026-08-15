@@ -9,7 +9,7 @@ Last reviewed: 2026-08-15
 
 Use ADRs for decisions that should remain understandable after the implementation context is gone.
 
-Good ADR candidates for the initial foundation include:
+Good ADR candidates include:
 
 - primary implementation language/runtime;
 - package/module structure when it establishes dependency boundaries;
@@ -73,4 +73,7 @@ What evidence validates the choice, and what future evidence would justify revis
 
 ## Index
 
-No ADR has been accepted yet. Initial implementation decisions will be added during FND-001/FND-002.
+| ADR | Status | Decision |
+| --- | --- | --- |
+| [`0001-python-core-and-toolchain.md`](0001-python-core-and-toolchain.md) | accepted | Python 3.12+ core, lightweight PEP 621 toolchain, shared validation gate, MIT |
+| [`0002-versioned-immutable-domain-contracts.md`](0002-versioned-immutable-domain-contracts.md) | accepted | immutable schema-v1 evidence and dimension-specific comparability |

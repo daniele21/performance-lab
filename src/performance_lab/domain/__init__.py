@@ -1,0 +1,46 @@
+"""Stable domain contracts for Performance Lab."""
+
+from .compatibility import (
+    ComparisonDimension,
+    CompatibilityResult,
+    NonComparabilityCode,
+    NonComparabilityReason,
+    compare_fingerprints,
+)
+from .schemas import (  # noqa: F401
+    SCHEMA_VERSION,
+    AuthConfig,
+    AuthStrategy,
+    BenchmarkProtocol,
+    Capability,
+    DatasetSnapshot,
+    EndpointProfile,
+    ErrorInfo,
+    EvaluationSuite,
+    EvaluatorRef,
+    ExecutionFingerprint,
+    GenerationConfig,
+    HardwareIdentity,
+    LoadProfile,
+    Measurement,
+    MeasurementProvenance,
+    MeasurementScope,
+    ModelIdentity,
+    Run,
+    RunStatus,
+    RuntimeIdentity,
+    SampleExecution,
+    SampleStatus,
+    Score,
+    Target,
+    TaskSpec,
+    TelemetryDescriptor,
+    TelemetryLevel,
+)
+from .serialization import (
+    InvalidSerializedModel,
+    SchemaLoadError,
+    UnsupportedSchemaVersion,
+    load_dict,
+    load_json,
+)

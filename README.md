@@ -20,19 +20,36 @@ The lab does not own model loading or inference runtimes. It connects to an infe
 
 ## Initial scope
 
-The first product slice targets text-generation LLM endpoints, with an OpenAI-compatible adapter as the reference integration. The architecture must remain extensible to other transport adapters and, later, other AI task families such as ASR, embeddings, reranking and vision without coupling the core to one provider.
+The first product slice targets text-generation LLM endpoints, with an OpenAI-compatible adapter as the reference integration. The architecture remains extensible to other transports and later AI task families such as ASR, embeddings, reranking and vision.
 
-The first useful version should support:
+The first useful version should support endpoint registration/probing, general-purpose and custom datasets, capability scoring, latency/TTFT/throughput/reliability measurements, optional resource telemetry, immutable run storage, compatible comparison/regression, CLI automation and a lightweight local UI.
 
-1. endpoint registration and capability probing;
-2. general-purpose and custom evaluation datasets;
-3. capability scoring;
-4. latency, TTFT, throughput and reliability measurements;
-5. optional host/device resource telemetry;
-6. immutable run storage and strict execution fingerprints;
-7. compatible run comparison and regression rules;
-8. CLI execution suitable for automation;
-9. a lightweight local UI for configuration, progress, results and comparisons.
+## Foundation
+
+The executable foundation is Python 3.12+ with strict immutable Pydantic domain contracts. The core package intentionally has no HTTP client, database, CLI/UI or model-runtime dependency yet.
+
+Implemented contracts include:
+
+- target and endpoint profile identity;
+- model/runtime/hardware/generation/load identity;
+- evaluation suites and immutable dataset snapshots;
+- execution fingerprints with deterministic SHA-256 identity;
+- run/sample/measurement/score evidence;
+- explicit schema versioning and unsupported-version rejection;
+- dimension-specific typed comparability.
+
+See [ADR 0001](docs/adr/0001-python-core-and-toolchain.md) and [ADR 0002](docs/adr/0002-versioned-immutable-domain-contracts.md).
+
+## Development
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+python scripts/validate.py
+```
+
+The validation command is shared by local development and GitHub Actions and runs formatting checks, lint, strict typing and tests.
 
 ## Documentation
 
@@ -53,8 +70,8 @@ The documentation follows progressive disclosure inspired by `android-local-llm-
 
 ## Project status
 
-**Foundation / planning.** The repository is being bootstrapped around documented contracts before implementation starts. See [`docs/current-state.md`](docs/current-state.md) for the operational ledger.
+**M0 — repository and contracts is in implementation/validation.** FND-001 and FND-002 are implemented; the next fan-out is FND-003 + ADP-001 + DAT-001 + TEL-001 + STO-001. See [`docs/current-state.md`](docs/current-state.md) for the live ledger.
 
 ## License
 
-A license has not yet been selected. License selection is tracked as a repository-foundation task in the implementation plan.
+MIT. See [`LICENSE`](LICENSE).

@@ -82,3 +82,41 @@ Roadmap impact:
 - M5 adds resource-aware local-device evidence.
 - M6 turns the engine into a regression/CI system.
 - M7-M9 expand usability and ecosystem only after core evidence semantics stabilize.
+
+## 2026-08-15 — Python foundation and dimension-specific compatibility fixed
+
+Affected: FND-001, FND-002, M0, downstream ADP/DAT/TEL/STO/REG
+
+Previous assumption:
+
+- The primary language, schema library, license and exact comparability invariants were intentionally open until implementation began.
+- A naive compatibility rule could have treated any execution-fingerprint difference as non-comparable.
+
+Decision:
+
+- Use Python 3.12+ with Pydantic v2, Ruff, mypy strict, pytest and a shared `python scripts/validate.py` local/CI gate.
+- Adopt MIT licensing.
+- Persist/export immutable versioned domain values; unsupported schema versions are rejected rather than guessed.
+- Treat unknown identity as explicit null/not-observed state.
+- Make raw endpoint credentials unrepresentable in persisted endpoint configuration.
+- Compare fingerprints by result dimension: dataset/evaluator/template/protocol invariants for capability; hardware/load/protocol invariants for runtime; hardware/telemetry/protocol invariants for resource evidence.
+- Do **not** automatically reject comparisons because model, quantization, runtime or generation configuration changed: those are expected experimental variables.
+
+Reason / evidence:
+
+- The product must evaluate differences between model/runtime/configuration choices, so full-fingerprint equality would defeat its core use case.
+- Dataset/evaluator/hardware/measurement-protocol changes can create misleading deltas and therefore require typed non-comparability reasons.
+- Python provides the lowest-friction path to benchmark/dataset ecosystems while keeping model serving external.
+- Immutable schema-first values let storage, adapters and telemetry lanes proceed independently without coupling the domain to a database or transport.
+
+Dependency impact:
+
+- FND-002 now unlocks FND-003, ADP-001, DAT-001, TEL-001 and STO-001 in parallel.
+- STO-002/REG-001 must consume the domain compatibility contract rather than inventing separate rules.
+- PERF-001 can begin as soon as ADP-001 defines normalized streaming events.
+- Release reproducibility still needs an exact dependency-lock strategy before a release candidate; this does not block M0 implementation.
+
+Roadmap impact:
+
+- M0 moves from planning-only into implementation/validation.
+- No milestone scope changes; M0 still requires plugin/registry interfaces and deterministic fakes before exit.
