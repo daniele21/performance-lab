@@ -71,7 +71,9 @@ class SQLiteRunStore:
 
     def save_working(self, run: Run) -> None:
         if run.status in _TERMINAL_STATUSES:
-            raise InvalidRunStateError("terminal runs must be published, not saved as working state")
+            raise InvalidRunStateError(
+                "terminal runs must be published, not saved as working state"
+            )
         payload = run.canonical_json()
         with self._connect() as connection:
             existing = connection.execute(
@@ -185,7 +187,9 @@ class SQLiteRunStore:
             with ZipFile(source, "r") as archive:
                 names = set(archive.namelist())
                 if names != {"manifest.json", "run.json"}:
-                    raise InvalidRunBundleError("bundle must contain only manifest.json and run.json")
+                    raise InvalidRunBundleError(
+                        "bundle must contain only manifest.json and run.json"
+                    )
                 manifest_raw: object = json.loads(archive.read("manifest.json"))
                 run_json = archive.read("run.json").decode("utf-8")
         except (OSError, BadZipFile, UnicodeDecodeError, json.JSONDecodeError) as exc:
