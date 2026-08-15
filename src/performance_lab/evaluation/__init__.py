@@ -1,4 +1,4 @@
-"""Capability evaluation primitives."""
+"""Capability evaluation primitives and optional judge-based evaluation."""
 
 from .deterministic import (
     ClassificationAccuracyEvaluator,
@@ -14,6 +14,14 @@ from .deterministic import (
     aggregate_scores,
     normalize_text,
 )
+from .judge import (
+    JudgeConfig,
+    JudgeEvaluationError,
+    JudgeEvaluationResult,
+    JudgeProvenance,
+    JudgeResponse,
+    LLMRubricJudge,
+)
 
 __all__ = [
     "ClassificationAccuracyEvaluator",
@@ -22,6 +30,12 @@ __all__ = [
     "FieldExtractionEvaluator",
     "JSONParseEvaluator",
     "JSONSchemaEvaluator",
+    "JudgeConfig",
+    "JudgeEvaluationError",
+    "JudgeEvaluationResult",
+    "JudgeProvenance",
+    "JudgeResponse",
+    "LLMRubricJudge",
     "NormalizedExactMatchEvaluator",
     "NumericToleranceEvaluator",
     "RegexValidityEvaluator",
