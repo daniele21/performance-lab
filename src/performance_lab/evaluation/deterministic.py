@@ -124,9 +124,7 @@ class SetPRFEvaluator(DeterministicEvaluator):
             if precision_denominator
             else float(not expected_set)
         )
-        recall = (
-            true_positive / recall_denominator if recall_denominator else float(not actual_set)
-        )
+        recall = true_positive / recall_denominator if recall_denominator else float(not actual_set)
         f1 = 0.0 if precision + recall == 0 else 2 * precision * recall / (precision + recall)
         return (
             Score(
@@ -241,9 +239,7 @@ def aggregate_scores(scores: Sequence[Score]) -> Score:
         for score in scores[1:]
     ):
         raise EvaluationError("scores must share metric, evaluator and direction")
-    if all(
-        score.numerator is not None and score.denominator is not None for score in scores
-    ):
+    if all(score.numerator is not None and score.denominator is not None for score in scores):
         numerator = sum(score.numerator or 0.0 for score in scores)
         denominator = sum(score.denominator or 0.0 for score in scores)
         if denominator <= 0:
@@ -292,7 +288,5 @@ def _normalized_value(value: object) -> object:
     if isinstance(value, list):
         return tuple(_normalized_value(item) for item in value)
     if isinstance(value, dict):
-        return tuple(
-            sorted((str(key), _normalized_value(item)) for key, item in value.items())
-        )
+        return tuple(sorted((str(key), _normalized_value(item)) for key, item in value.items()))
     return value
