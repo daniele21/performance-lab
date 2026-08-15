@@ -10,7 +10,13 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from performance_lab.domain import DatasetSnapshot, EvaluationSuite, EvaluatorRef, GenerationConfig, TaskSpec
+from performance_lab.domain import (
+    DatasetSnapshot,
+    EvaluationSuite,
+    EvaluatorRef,
+    GenerationConfig,
+    TaskSpec,
+)
 from performance_lab.evaluation import FieldExtractionEvaluator, JSONSchemaEvaluator
 from performance_lab.plugins import Evaluator
 
