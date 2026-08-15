@@ -99,12 +99,13 @@ def materialize_local_dataset(
     dataset_version: str,
     split: str,
     mapping: FieldMapping,
-    sampling: SamplingSpec = SamplingSpec(),
+    sampling: SamplingSpec | None = None,
     source_label: str | None = None,
     loader: LocalDatasetLoader | None = None,
 ) -> MaterializedDataset:
     """Freeze the exact selected records and their provenance into a snapshot."""
 
+    active_sampling = sampling or SamplingSpec()
     active_loader = loader or LocalDatasetLoader()
     raw_rows = active_loader.load(source)
     records: list[DatasetRecord] = []
@@ -123,15 +124,15 @@ def materialize_local_dataset(
         raise DatasetLoadError(f"no records available for split {split!r}")
 
     selected = records
-    if sampling.sample_limit is not None and sampling.sample_limit < len(records):
-        randomizer = random.Random(sampling.seed)
-        selected = randomizer.sample(records, sampling.sample_limit)
+    if active_sampling.sample_limit is not None and active_sampling.sample_limit < len(records):
+        randomizer = random.Random(active_sampling.seed)
+        selected = randomizer.sample(records, active_sampling.sample_limit)
 
     frozen_records = tuple(selected)
     digest = _records_digest(frozen_records)
     policy = (
-        f"seeded-sample-v1:seed={sampling.seed}:limit="
-        f"{sampling.sample_limit if sampling.sample_limit is not None else 'all'}"
+        f"seeded-sample-v1:seed={active_sampling.seed}:limit="
+        f"{active_sampling.sample_limit if active_sampling.sample_limit is not None else 'all'}"
     )
     snapshot = DatasetSnapshot(
         dataset_id=dataset_id,
