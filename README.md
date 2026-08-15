@@ -64,7 +64,7 @@ The documentation follows progressive disclosure inspired by `android-local-llm-
 
 ## Project status
 
-**M0 — repository and contracts in progress.** The executable Python foundation and canonical domain schemas are complete and validated. Plugin contracts and the first adapter/dataset/telemetry/storage lanes are the current implementation wave. See [`docs/current-state.md`](docs/current-state.md) for the operational ledger.
+**M0 is complete; M1/M2/M3/M5 are in parallel implementation.** The repository now contains a validated OpenAI-compatible inference path, deterministic dataset/evaluator primitives, orchestration, client-boundary runtime measurement, optional local-host telemetry, immutable SQLite run evidence and the first developer CLI. The next wave focuses on capability discovery, a starter suite, load/repeatability evidence, compatible comparisons and an executable `run` path. See [`docs/current-state.md`](docs/current-state.md) for the operational ledger.
 
 ## License
 
