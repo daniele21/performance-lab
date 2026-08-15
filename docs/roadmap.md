@@ -13,7 +13,7 @@ This document tracks capability-level milestones. Live task status and the immed
 
 | Milestone | Status | Main outcome | Parallel opportunities |
 | --- | --- | --- | --- |
-| M0 — Repository and contracts | Ready | reproducible project skeleton + canonical domain schemas | after schemas: adapters, datasets, telemetry and storage can split |
+| M0 — Repository and contracts | In progress | validated foundation + remaining plugin/registry/fake boundary | adapters, datasets, telemetry and storage are now unlocked in parallel |
 | M1 — First black-box evaluation | Planned | run a deterministic quality suite against an OpenAI-compatible endpoint | quality and runtime benchmark engines in parallel |
 | M2 — Runtime performance evidence | Planned | TTFT/latency/throughput/reliability with repeatable protocols | runs alongside M1 quality engine work |
 | M3 — Run store and comparison | Planned | immutable fingerprints, history and compatible run comparison | storage can begin during M1/M2 |
@@ -28,21 +28,29 @@ This document tracks capability-level milestones. Live task status and the immed
 
 Goal: establish a project that can evolve without coupling the core to a model runtime or UI.
 
-Required outcomes:
+Implemented and validated:
 
 - repository toolchain, lint/type/test/CI foundation;
 - branch and contribution policy;
-- license decision;
-- domain schemas and schema versioning;
-- execution fingerprint and compatibility semantics;
-- plugin interfaces for inference, datasets/evaluators, telemetry and exporters;
-- deterministic fakes for orchestration tests.
+- MIT license;
+- immutable domain schemas and schema versioning;
+- deterministic execution fingerprint identity;
+- dimension-specific compatibility semantics;
+- privacy-safe endpoint credential references;
+- clean-checkout validation on Python 3.12 and 3.13.
+
+Remaining before M0 closes:
+
+- plugin interfaces for inference, datasets/evaluators, telemetry, stores/exporters;
+- deterministic fakes for orchestration tests;
+- integration-line bootstrap for parallel work.
 
 Exit gate:
 
 - clean checkout validation works;
 - core domain serialization tests pass;
-- adapter, dataset, telemetry and storage lanes can implement against stable enough contracts without importing one another.
+- adapter, dataset, telemetry and storage lanes can implement against stable enough contracts without importing one another;
+- FND-003 contracts/fakes are usable by the first downstream implementations.
 
 ## M1 — First black-box capability evaluation
 
