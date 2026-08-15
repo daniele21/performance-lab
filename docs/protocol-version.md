@@ -1,1 +1,0 @@
-`local-llm-identity-v1` is the current Local LLM Server execution-identity wire protocol consumed by AI Performance Lab. Incompatible producer changes require a new protocol identifier and matching consumer support.
