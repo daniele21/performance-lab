@@ -20,36 +20,30 @@ The lab does not own model loading or inference runtimes. It connects to an infe
 
 ## Initial scope
 
-The first product slice targets text-generation LLM endpoints, with an OpenAI-compatible adapter as the reference integration. The architecture remains extensible to other transports and later AI task families such as ASR, embeddings, reranking and vision.
+The first product slice targets text-generation LLM endpoints, with an OpenAI-compatible adapter as the reference integration. The architecture must remain extensible to other transport adapters and, later, other AI task families such as ASR, embeddings, reranking and vision without coupling the core to one provider.
 
-The first useful version should support endpoint registration/probing, general-purpose and custom datasets, capability scoring, latency/TTFT/throughput/reliability measurements, optional resource telemetry, immutable run storage, compatible comparison/regression, CLI automation and a lightweight local UI.
+The first useful version should support:
 
-## Foundation
-
-The executable foundation is Python 3.12+ with strict immutable Pydantic domain contracts. The core package intentionally has no HTTP client, database, CLI/UI or model-runtime dependency yet.
-
-Implemented contracts include:
-
-- target and endpoint profile identity;
-- model/runtime/hardware/generation/load identity;
-- evaluation suites and immutable dataset snapshots;
-- execution fingerprints with deterministic SHA-256 identity;
-- run/sample/measurement/score evidence;
-- explicit schema versioning and unsupported-version rejection;
-- dimension-specific typed comparability.
-
-See [ADR 0001](docs/adr/0001-python-core-and-toolchain.md) and [ADR 0002](docs/adr/0002-versioned-immutable-domain-contracts.md).
+1. endpoint registration and capability probing;
+2. general-purpose and custom evaluation datasets;
+3. capability scoring;
+4. latency, TTFT, throughput and reliability measurements;
+5. optional host/device resource telemetry;
+6. immutable run storage and strict execution fingerprints;
+7. compatible run comparison and regression rules;
+8. CLI execution suitable for automation;
+9. a lightweight local UI for configuration, progress, results and comparisons.
 
 ## Development
 
+Requires Python 3.12+.
+
 ```bash
-python -m venv .venv
-source .venv/bin/activate
 python -m pip install -e ".[dev]"
 python scripts/validate.py
 ```
 
-The validation command is shared by local development and GitHub Actions and runs formatting checks, lint, strict typing and tests.
+The validation command is the shared local/CI gate and runs formatting checks, linting, strict type checking and tests.
 
 ## Documentation
 
@@ -70,7 +64,7 @@ The documentation follows progressive disclosure inspired by `android-local-llm-
 
 ## Project status
 
-**M0 — repository and contracts is in implementation/validation.** FND-001 and FND-002 are implemented; the next fan-out is FND-003 + ADP-001 + DAT-001 + TEL-001 + STO-001. See [`docs/current-state.md`](docs/current-state.md) for the live ledger.
+**M0 — repository and contracts in progress.** The executable Python foundation and canonical domain schemas are complete and validated. Plugin contracts and the first adapter/dataset/telemetry/storage lanes are the current implementation wave. See [`docs/current-state.md`](docs/current-state.md) for the operational ledger.
 
 ## License
 
