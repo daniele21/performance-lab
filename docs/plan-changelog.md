@@ -120,3 +120,72 @@ Roadmap impact:
 
 - M0 moves from planning-only into implementation/validation.
 - No milestone scope changes; M0 still requires plugin/registry interfaces and deterministic fakes before exit.
+
+## 2026-08-15 — SQLite accepted for first local evidence store
+
+Affected: STO-001, STO-002, STO-003, M3
+
+Previous assumption:
+
+- Durable local persistence technology was intentionally open.
+- The implementation plan required immutable completed evidence, working-state separation and portable export/import, but did not prescribe a database.
+
+Decision:
+
+- Use Python stdlib SQLite for the first local run store.
+- Keep mutable `working_runs` physically/logically separate from immutable `completed_runs`.
+- Publish terminal evidence atomically in one transaction; conflicting replacement of an existing completed `run_id` is rejected.
+- Keep portable exchange independent from SQLite using a versioned ZIP bundle with `manifest.json`, canonical `run.json` and SHA-256 integrity verification.
+- Do not automatically store large raw telemetry/binary artifacts in the primary SQLite payload.
+
+Reason / evidence:
+
+- The MVP needs transactional evidence publication and local queryability, not a distributed database.
+- SQLite adds no service/deployment burden and is sufficient for local-first CLI/desktop use.
+- A separate portable bundle prevents database internals from becoming the external evidence format.
+- This choice is documented in ADR 0003 and validated through store/bundle tests.
+
+Dependency impact:
+
+- STO-002 can now build comparison/read queries over a concrete durable store.
+- STO-003 can define retention/artifact boundaries without changing the public `Run` schema.
+- Distributed scheduling remains explicitly deferred; it would justify revisiting the persistence architecture later.
+
+Roadmap impact:
+
+- M3 moves into active implementation; storage/publishing outcomes are complete while comparison/read-model outcomes remain.
+
+## 2026-08-15 — Foundation exit reached; engine critical path fans out again
+
+Affected: M0, M1, M2, M3, M5; ADP-002, DAT-002, PERF-002, PERF-003, STO-002, CLI-002, REG-001
+
+Previous assumption:
+
+- Early development was gated by domain/plugin/orchestrator contracts and therefore required a relatively narrow FND critical path.
+- CLI execution, load testing and comparison work were intentionally held until core contracts existed.
+
+Decision:
+
+- Close M0 after FND-001 through FND-004 passed the shared validation gate and downstream lanes demonstrated those boundaries with real implementations.
+- Move the immediate critical path from foundation work to six parallel product/evidence streams: ADP-002, DAT-002, PERF-002, PERF-003, STO-002 and CLI-002.
+- Keep DAT-003, TEL-003, STO-003 and EVAL-002 as additional non-critical parallel lanes.
+- Start REG-001 only after STO-002 makes compatible comparison semantics queryable end to end.
+
+Reason / evidence:
+
+- OpenAI-compatible inference, deterministic dataset materialization, deterministic evaluation, orchestration, single-request timing, telemetry, immutable storage and CLI inspection/probing are all integrated primitives now.
+- Serializing the next tasks would create artificial idle time because they own separate packages/interfaces and have satisfied dependencies.
+- The main remaining MVP risk is integration/evidence quality, not missing foundation abstractions.
+
+Dependency impact:
+
+- FND is no longer the active bottleneck.
+- CLI-002 can wire existing components while ADP/DAT/PERF/STO capabilities deepen independently.
+- DAT-002 + CLI-002 unlock the first representative end-to-end engine scenario.
+- STO-002 becomes the direct predecessor for REG-001.
+
+Roadmap impact:
+
+- M0 becomes Done.
+- M1, M2, M3 and M5 move to In progress.
+- Engine MVP completion now depends on closing the remaining M1/M2/M3 evidence gaps rather than additional repository bootstrap.
