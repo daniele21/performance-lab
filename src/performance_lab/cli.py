@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import TextIO
 
 from performance_lab.adapters import OpenAICompatibleAdapter
@@ -32,7 +32,9 @@ def build_parser() -> argparse.ArgumentParser:
     auth_group.add_argument("--api-key-env", help="Environment variable containing API key")
     probe.add_argument("--json", action="store_true", dest="json_output")
 
-    inspect_parser = subparsers.add_parser("inspect", help="Inspect a Run or ExecutionFingerprint JSON")
+    inspect_parser = subparsers.add_parser(
+        "inspect", help="Inspect a Run or ExecutionFingerprint JSON"
+    )
     inspect_parser.add_argument("path", type=Path)
     inspect_parser.add_argument("--json", action="store_true", dest="json_output")
     return parser
