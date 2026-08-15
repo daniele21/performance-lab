@@ -127,6 +127,7 @@ def test_protocol_mismatch_is_isolated_by_telemetry_session() -> None:
     thread.start()
     host, port = server.server_address
     try:
+
         async def exercise() -> object:
             session = TelemetrySession([InstrumentedEndpointCollector(f"http://{host}:{port}")])
             await session.start("run-2")
