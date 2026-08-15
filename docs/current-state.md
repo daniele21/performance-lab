@@ -11,9 +11,9 @@ This is the single operational ledger for AI Performance Lab. Capability history
 
 ## Current phase
 
-**M0 is complete. The planned engine/regression implementation path through DAT-004 and REG-003 is integrated on `dev`. M1-M6 remain evidence-gated rather than implementation-blocked.**
+**M0 is complete. The planned engine/regression path through DAT-004 and REG-003, CI reproducibility hardening, and the first concrete `local-llm-server` runtime integration are integrated on `dev`. M1-M6 are now primarily evidence-gated rather than implementation-blocked.**
 
-The integrated line now covers:
+The integrated line covers:
 
 - runtime-agnostic domain/fingerprint/plugin contracts and orchestration;
 - OpenAI-compatible black-box inference with evidence-based capability probing;
@@ -21,10 +21,12 @@ The integrated line now covers:
 - deterministic evaluators plus optional provenance-rich rubric judging;
 - single-request, repeatability and concurrent load protocols;
 - optional host and runtime-native telemetry with explicit provenance;
+- client-side runtime polling for `daniele21/local-llm-server` through its existing `/status` endpoint;
 - immutable SQLite evidence, portable bundles, retention policy and compatible comparison;
-- executable `run`, explicit baseline regression, versioned threshold policy and CI-safe machine-readable automation.
+- executable `run`, explicit baseline regression, versioned threshold policy and CI-safe machine-readable automation;
+- constrained CI dependency snapshots validated on Python 3.12 and 3.13.
 
-There is **no active core implementation blocker**. The highest-value next work is a representative evidence campaign against real local inference endpoints/runtimes. New abstractions or integrations should be added only when that evidence reveals a concrete coverage gap.
+There is **no active core implementation blocker**. The highest-value next work is a representative evidence campaign against real local models/runtimes/devices. New abstractions should be added only when that evidence reveals a concrete coverage gap.
 
 ## Integration lines
 
@@ -42,43 +44,32 @@ There is **no active core implementation blocker**. The highest-value next work 
 - **FND-003**: narrow plugin protocols, explicit registry and deterministic fakes.
 - **FND-004**: evaluation lifecycle, content-safe progress, typed failures and immutable terminal publication.
 
-### Endpoint, datasets and evaluation — implementation slice DONE
+### Endpoint, datasets and evaluation — DONE
 
-- **ADP-001**: OpenAI-compatible probe/generation/SSE streaming, auth-by-env, usage/error normalization and cancellation.
-- **ADP-002**: declared/observed/effective capability evidence with explicit `UNKNOWN` semantics and optional active checks.
-- **DAT-001**: JSONL/CSV loading, explicit mapping, split filtering, seeded sampling and exact-sample SHA-256 identity.
-- **DAT-002**: authored diagnostic starter suite across instruction following, factual QA, reasoning, math, classification and structured JSON.
-- **DAT-003**: versioned reusable custom-dataset import mapping plus source-shape inspection without semantic field guessing.
-- **DAT-004**: versioned workload-pack contract plus first `structured-document-extraction` pack with schema and field-correctness evaluation.
-- **EVAL-001**: deterministic evaluators and score aggregation.
-- **EVAL-002**: optional rubric/LLM judge with explicit judge model, rubric, prompt-template and generation provenance; deterministic scoring remains the default.
+- **ADP-001..002**: OpenAI-compatible inference plus evidence-based capability discovery.
+- **DAT-001..004**: deterministic JSONL/CSV/custom mappings, diagnostic starter suite and first versioned `structured-document-extraction` workload pack.
+- **EVAL-001..002**: deterministic evaluators plus optional LLM/rubric judge with explicit provenance.
 
-### Runtime and telemetry — implementation slice DONE
+### Runtime and telemetry — DONE
 
 - **PERF-001**: setup/total latency, streaming TTFT and token throughput with available/unavailable semantics and cold/warm classification.
 - **PERF-002**: fixed-count/bounded-duration concurrency profiles, throughput/reliability and queue-delay/backpressure evidence.
 - **PERF-003**: repeatability summaries, raw samples and qualified percentile reporting.
-- **TEL-001**: optional collector lifecycle and failure isolation.
-- **TEL-002**: stdlib host/process CPU, RSS/load where available and collector overhead.
-- **TEL-003**: optional versioned runtime-native telemetry handshake with runtime/model/hardware identity and `RUNTIME` provenance.
+- **TEL-001..003**: optional collector lifecycle, host/process evidence and generic runtime-native telemetry contract.
+- **INT-001**: `local-llm-server` integration using the normal OpenAI-compatible inference API plus optional root-level `/status` polling, with `RUNTIME` provenance and no server-side Performance Lab dependency.
 
-No unavailable metric is silently represented as zero.
+The exact serving contract and run configuration are documented in [`local-llm-server-integration.md`](local-llm-server-integration.md).
 
-### Persistence, comparison and regression automation — implementation slice DONE
+### Persistence, comparison and regression automation — DONE
 
-- **STO-001**: SQLite working/completed separation, atomic immutable publication and portable ZIP evidence bundles with integrity checks.
-- **STO-002**: identity-first compatible run comparison and per-dimension deltas only when interpretable.
-- **STO-003**: versioned pre-publication evidence retention; raw prompt/output content remains structurally non-persistable.
-- **CLI-001**: endpoint `probe` and run/fingerprint `inspect`.
-- **CLI-002**: end-to-end `run --config` path from endpoint probe through suite/orchestrator to SQLite and `.plab.zip`.
-- **CLI-003**: stable JSON regression gate and deterministic exit codes: PASS=0, FAIL=1, ERROR=2, NOT_COMPARABLE=3, NOT_EVALUATED=4.
-- **REG-001**: explicit immutable baseline binding and compatibility-first regression read model.
-- **REG-002**: versioned threshold policy with `PASS`, `FAIL`, `NOT_COMPARABLE` and `NOT_EVALUATED` semantics.
-- **REG-003**: CI regression command, JSON artifact, GitHub Step Summary and reusable composite action; resource rules are forced to `NOT_COMPARABLE` on uncontrolled CI runners.
+- **STO-001..003**: immutable SQLite publication, portable evidence bundles, compatible comparison and pre-publication retention policy.
+- **CLI-001..003**: probe/inspect, end-to-end `run --config`, and machine-readable regression automation.
+- **REG-001..003**: explicit immutable baseline, versioned threshold policy and CI regression gate with safe `NOT_COMPARABLE` semantics.
+- **REL-001**: committed CI dependency constraints plus validation that direct dependencies and installed versions match the reproducibility snapshot on the supported Python matrix.
 
 ## Validation evidence
 
-Every task marked `DONE` above passed the repository gate on Python 3.12 and 3.13 before merge:
+Every merged implementation slice above passed the repository gate on Python 3.12 and 3.13:
 
 ```text
 ruff format --check
@@ -87,17 +78,17 @@ mypy --strict
 pytest
 ```
 
-Offline integration tests exercise real local HTTP boundaries where appropriate, including OpenAI-compatible streaming, end-to-end CLI execution, runtime-native telemetry and CI regression behavior. This is **implementation evidence**, not representative benchmark-product evidence.
+Offline integration tests exercise real local HTTP boundaries where appropriate, including OpenAI-compatible inference, end-to-end CLI execution, runtime telemetry and CI regression behavior. This is **implementation evidence**, not representative benchmark-product evidence.
 
 ## Evidence still required
 
 The remaining milestone constraints are empirical:
 
-- **M1**: a representative local-model endpoint must complete the frozen end-to-end lifecycle; retain fingerprint and bundle.
-- **M2**: repeated and concurrent/load runs on a representative endpoint must demonstrate interpretable latency/TTFT/throughput/reliability and saturation behavior.
+- **M1**: a representative resident local model must complete the frozen end-to-end lifecycle; retain fingerprint and bundle.
+- **M2**: repeated and concurrent/load runs on representative hardware must demonstrate interpretable latency/TTFT/throughput/reliability and saturation behavior.
 - **M3**: preserve representative compatible and incompatible real-run comparisons beyond fixtures.
 - **M4**: execute the structured-document workload pack against representative models and preserve scenario evidence.
-- **M5**: integrate runtime-native telemetry with at least one real local serving stack/device and validate correlation.
+- **M5**: run the integrated `local-llm-server` runtime collector against an actual serving stack/device and validate the usefulness/correlation of sampled runtime evidence.
 - **M6**: preserve at least one real CI regression-gate run demonstrating PASS/FAIL and safe NOT_COMPARABLE behavior.
 
 ## Workstream status
@@ -110,13 +101,14 @@ The remaining milestone constraints are empirical:
 | EVAL-001..002 | DONE | — | deterministic + optional judge |
 | EVAL-003 external benchmark bridge | PLANNED | later | only after evidence shows a concrete coverage gap |
 | PERF-001..003 | DONE | — | request/load/statistical protocols |
-| TEL-001..003 | DONE | — | optional host + runtime-native telemetry |
+| TEL-001..003 | DONE | — | optional host + generic runtime-native telemetry |
+| INT-001 local-llm-server telemetry | DONE | — | OpenAI inference + optional `/status` polling integrated |
 | STO-001..003 | DONE | — | immutable storage/comparison/retention |
 | CLI-001..003 | DONE | — | inspect/run/automation surfaces |
 | REG-001..003 | DONE | — | baseline/policy/CI integration complete |
-| UI-001 run setup IA | PLANNED | yes | not required for engine evidence |
+| REL-001 CI reproducibility snapshot | DONE | — | constrained dependency environment validated on 3.12/3.13 |
+| UI-001 run setup IA | PLANNED | yes | not required for evidence campaign |
 | UI-002 comparison visualization | READY | yes | stable comparison/regression read models available |
-| Release reproducibility / dependency lock | READY | yes | required before release candidate |
 
 ## Parallel work now unlocked
 
@@ -133,16 +125,16 @@ The remaining milestone constraints are empirical:
                  release evidence set
 
  Parallel, non-blocking:
- UI-002 comparison UI / additional workload packs / release lock
+ UI-002 comparison UI / additional workload packs
 ```
 
 ## Immediate next block
 
-1. **Representative endpoint evidence** — run the starter suite and structured-document pack against one or more real OpenAI-compatible local endpoints and preserve run bundles.
+1. **Representative endpoint evidence** — run the starter suite and structured-document pack against one or more actual `local-llm-server` resident models and preserve run bundles.
 2. **Performance evidence** — repeat the same target with warm/cold and concurrent profiles to establish repeatability and saturation behavior.
-3. **Real telemetry evidence** — attach the runtime-native protocol to a real local serving stack where possible; keep black-box runs valid when unavailable.
-4. **Regression evidence** — select an explicit baseline and run `regress-ci` on a real candidate, preserving the JSON artifact and CI summary.
-5. In parallel, prepare release reproducibility and/or UI-002; defer EVAL-003 until evidence demonstrates need.
+3. **Real runtime telemetry evidence** — enable `local_llm_server_telemetry`, preserve `/status`-derived evidence and determine whether polling is sufficient before extending the server contract.
+4. **Regression evidence** — select an explicit baseline and run `regress-ci` on a real candidate, preserving JSON artifact and CI summary.
+5. In parallel, progress UI-002 and/or additional workload packs; defer EVAL-003 until evidence demonstrates a real need.
 
 ## Resolved architectural decisions
 
@@ -155,6 +147,7 @@ The remaining milestone constraints are empirical:
 - Deterministic evaluators first; judge/rubric evaluation opt-in with explicit provenance.
 - Black-box evaluation remains valid without telemetry.
 - Runtime-native telemetry is optional and separately provenance-tagged.
+- `local-llm-server` remains independent: Performance Lab consumes `/v1/*` and optional `/status` rather than adding a Performance Lab dependency to the server.
 - Dataset mapping is explicit; source inspection does not guess semantic columns.
 - Workload packs compose normal suites/datasets/evaluators and do not branch the engine by scenario.
 - Baselines are explicit and immutable; no implicit latest-run baseline.
@@ -165,11 +158,11 @@ The remaining milestone constraints are empirical:
 
 Still intentionally open:
 
-- dependency lock/release reproducibility mechanism before release candidate;
 - local UI/control-plane topology;
 - representative real-endpoint/device/CI evidence campaign;
 - additional workload packs based on real use cases;
-- external benchmark bridge only if native evidence exposes a coverage gap.
+- external benchmark bridge only if native evidence exposes a coverage gap;
+- a stronger cross-platform release lock mechanism only if the release process requires more than the current validated CI constraint snapshot.
 
 ## Update protocol
 
