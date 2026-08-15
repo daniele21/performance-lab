@@ -33,9 +33,10 @@ def test_structured_document_pack_is_deterministic_and_uses_objective_evaluators
     )
     dataset = first.datasets["workload-structured-document-extraction"]
     assert dataset.snapshot.sample_count == 6
-    assert dataset.snapshot.content_sha256 == second.datasets[
-        "workload-structured-document-extraction"
-    ].snapshot.content_sha256
+    assert (
+        dataset.snapshot.content_sha256
+        == second.datasets["workload-structured-document-extraction"].snapshot.content_sha256
+    )
     assert all("Document:" in record.input for record in dataset.records)
 
 
