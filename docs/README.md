@@ -21,6 +21,7 @@ Documentation uses progressive disclosure. Read only the source that owns the qu
 | What architectural boundary owns this behavior? | [`architecture.md`](architecture.md) |
 | How should datasets, evaluators and benchmark protocols work? | [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) |
 | How should resource/device telemetry work? | [`telemetry.md`](telemetry.md) |
+| What does Performance Lab require from `local-llm-server` and how is it configured? | [`local-llm-server-integration.md`](local-llm-server-integration.md) |
 | What is required before something is considered complete? | [`definition-of-done.md`](definition-of-done.md) |
 | Where should a durable architectural decision be recorded? | [`adr/README.md`](adr/README.md) |
 
@@ -39,6 +40,7 @@ Documentation uses progressive disclosure. Read only the source that owns the qu
 - [`architecture.md`](architecture.md) — dependency direction, domain objects, inference adapter, run lifecycle, fingerprint, persistence and extension rules.
 - [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) — dataset snapshots, sampling, evaluator semantics, performance protocols, workload suites and regression comparability.
 - [`telemetry.md`](telemetry.md) — black-box/host/instrumented telemetry levels, metric provenance, sampling and resource comparison.
+- [`local-llm-server-integration.md`](local-llm-server-integration.md) — OpenAI-compatible inference requirements, optional `/status` runtime evidence contract, run configuration and measurement limitations for `daniele21/local-llm-server`.
 - [`adr/README.md`](adr/README.md) — durable architectural decision log and template.
 
 ## Document ownership rules
@@ -61,7 +63,7 @@ Owns rationale for material planning changes. Append decisions; do not use it fo
 
 ### Feature specifications
 
-Own durable behavior for one bounded domain such as evaluation or telemetry. New focused specs should be created only when a real concern becomes too detailed for the existing owner.
+Own durable behavior for one bounded domain such as evaluation, telemetry or one runtime integration. New focused specs should be created only when a real concern becomes too detailed for the existing owner.
 
 ### ADRs
 
