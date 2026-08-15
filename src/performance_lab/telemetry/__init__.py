@@ -1,5 +1,6 @@
-"""Optional telemetry lifecycle and availability semantics."""
+"""Optional telemetry lifecycle and host collectors."""
 
+from .host import PortableHostCollector
 from .session import (
     CollectorOutcome,
     TelemetryAvailability,
@@ -9,6 +10,7 @@ from .session import (
 
 __all__ = [
     "CollectorOutcome",
+    "PortableHostCollector",
     "TelemetryAvailability",
     "TelemetryRunResult",
     "TelemetrySession",
