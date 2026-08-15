@@ -17,6 +17,7 @@ from performance_lab.domain import (
     EvaluationSuite,
     ExecutionFingerprint,
     GenerationConfig,
+    Measurement,
     Run,
     RunStatus,
     SampleExecution,
@@ -172,7 +173,7 @@ class EvaluationOrchestrator:
         except asyncio.CancelledError:
             cancelled = True
 
-        telemetry_measurements = ()
+        telemetry_measurements: tuple[Measurement, ...] = ()
         if self.telemetry is not None:
             telemetry_result = await self.telemetry.stop()
             telemetry_measurements = telemetry_result.measurements
