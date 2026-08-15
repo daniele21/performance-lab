@@ -169,8 +169,7 @@ def _evaluate_metric(
         and absolute_regression > rule.max_absolute_regression
     ):
         failures.append(
-            f"absolute regression {absolute_regression:g} exceeds "
-            f"{rule.max_absolute_regression:g}"
+            f"absolute regression {absolute_regression:g} exceeds {rule.max_absolute_regression:g}"
         )
     if rule.max_relative_regression_pct is not None:
         if relative_regression is None:
