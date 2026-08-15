@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 from typing import TextIO
@@ -13,9 +14,11 @@ from performance_lab.adapters import OpenAICompatibleAdapter
 from performance_lab.automation import (
     AutomationErrorReport,
     AutomationExitCode,
+    RegressionGateReport,
     evaluate_regression_gate,
     exit_code_for_decision,
 )
+from performance_lab.ci import append_ci_summary, build_ci_regression_report, write_ci_artifact
 from performance_lab.domain import (
     AuthConfig,
     AuthStrategy,
@@ -27,6 +30,14 @@ from performance_lab.domain import (
 from performance_lab.engine import ProgressEvent, ProgressPhase
 from performance_lab.run_config import RunConfigError, load_starter_run_config
 from performance_lab.runner import RunExecutionError, execute_starter_run
+
+
+def _add_regression_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--store", required=True, type=Path)
+    parser.add_argument("--baseline-run", required=True)
+    parser.add_argument("--candidate-run", required=True)
+    parser.add_argument("--policy", required=True, type=Path)
+    parser.add_argument("--baseline-id")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -56,12 +67,20 @@ def build_parser() -> argparse.ArgumentParser:
     regress = subparsers.add_parser(
         "regress", help="Evaluate an explicit baseline/candidate pair against a policy"
     )
-    regress.add_argument("--store", required=True, type=Path)
-    regress.add_argument("--baseline-run", required=True)
-    regress.add_argument("--candidate-run", required=True)
-    regress.add_argument("--policy", required=True, type=Path)
-    regress.add_argument("--baseline-id")
+    _add_regression_arguments(regress)
     regress.add_argument("--json", action="store_true", dest="json_output")
+
+    regress_ci = subparsers.add_parser(
+        "regress-ci", help="Run a regression gate with conservative CI runner semantics"
+    )
+    _add_regression_arguments(regress_ci)
+    regress_ci.add_argument(
+        "--artifact",
+        type=Path,
+        default=Path("performance-lab-regression.json"),
+    )
+    regress_ci.add_argument("--runner-identity-controlled", action="store_true")
+    regress_ci.add_argument("--json", action="store_true", dest="json_output")
     return parser
 
 
@@ -76,6 +95,8 @@ def main(argv: list[str] | None = None, *, stdout: TextIO | None = None) -> int:
         return asyncio.run(_run(args, output))
     if args.command == "regress":
         return _regress(args, output)
+    if args.command == "regress-ci":
+        return _regress_ci(args, output)
     raise AssertionError(f"unhandled command: {args.command}")
 
 
@@ -159,15 +180,19 @@ async def _run(args: argparse.Namespace, output: TextIO) -> int:
     return 0 if result.run.status.value == "succeeded" else 1
 
 
+def _evaluate_regression_from_args(args: argparse.Namespace) -> RegressionGateReport:
+    return evaluate_regression_gate(
+        store_path=args.store,
+        baseline_run_id=args.baseline_run,
+        candidate_run_id=args.candidate_run,
+        policy_path=args.policy,
+        baseline_id=args.baseline_id,
+    )
+
+
 def _regress(args: argparse.Namespace, output: TextIO) -> int:
     try:
-        report = evaluate_regression_gate(
-            store_path=args.store,
-            baseline_run_id=args.baseline_run,
-            candidate_run_id=args.candidate_run,
-            policy_path=args.policy,
-            baseline_id=args.baseline_id,
-        )
+        report = _evaluate_regression_from_args(args)
     except (LookupError, RuntimeError, ValueError) as exc:
         if args.json_output:
             error = AutomationErrorReport(
@@ -190,6 +215,45 @@ def _regress(args: argparse.Namespace, output: TextIO) -> int:
             output.write(
                 f"  {rule.rule_id}: {rule.state.value} [{rule.dimension.value}] {rule.metric}\n"
             )
+    return int(exit_code_for_decision(report.decision))
+
+
+def _regress_ci(args: argparse.Namespace, output: TextIO) -> int:
+    try:
+        regression = _evaluate_regression_from_args(args)
+        report = build_ci_regression_report(
+            regression,
+            runner_identity_controlled=args.runner_identity_controlled,
+        )
+        write_ci_artifact(report, args.artifact)
+        summary_destination = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary_destination:
+            append_ci_summary(report, Path(summary_destination))
+    except (LookupError, OSError, RuntimeError, ValueError) as exc:
+        error = AutomationErrorReport(
+            error_type=type(exc).__name__,
+            message=str(exc),
+        )
+        args.artifact.parent.mkdir(parents=True, exist_ok=True)
+        args.artifact.write_text(error.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        summary_destination = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary_destination:
+            with Path(summary_destination).open("a", encoding="utf-8") as handle:
+                handle.write("## Performance Lab regression gate — ERROR\n\n")
+                handle.write(f"{type(exc).__name__}: {exc}\n")
+        if args.json_output:
+            output.write(error.model_dump_json() + "\n")
+        else:
+            output.write(f"error: {exc}\n")
+        return int(AutomationExitCode.ERROR)
+
+    if args.json_output:
+        output.write(report.model_dump_json() + "\n")
+    else:
+        output.write(f"Decision: {report.decision.value}\n")
+        output.write(f"Artifact: {args.artifact}\n")
+        if not report.runner_identity_controlled:
+            output.write("Resource rules: NOT_COMPARABLE unless CI runner identity is controlled\n")
     return int(exit_code_for_decision(report.decision))
 
 
