@@ -210,6 +210,8 @@ def _merge_evidence(
     details: dict[CapabilityName, str],
 ) -> CapabilityEvidence:
     observed_state = observed or SupportState.UNKNOWN
+    effective: SupportState
+    source: EvidenceSource
     if observed_state != SupportState.UNKNOWN:
         effective = observed_state
         source = EvidenceSource.OBSERVED
