@@ -189,3 +189,40 @@ Roadmap impact:
 - M0 becomes Done.
 - M1, M2, M3 and M5 move to In progress.
 - Engine MVP completion now depends on closing the remaining M1/M2/M3 evidence gaps rather than additional repository bootstrap.
+
+## 2026-08-15 — Local LLM Server identity becomes a versioned first-party contract
+
+Affected: INT-001, INT-002, FND-002, M1, M3, M5
+
+Previous assumption:
+
+- Local LLM Server integration used OpenAI-compatible inference plus `/status` polling.
+- Model revision/digest/quantization, runtime name/version and hardware identity either came from explicit run configuration or remained unknown.
+- Provider-specific response/status fields were intentionally not promoted into `ExecutionFingerprint` because their semantics were not owned by a stable contract.
+
+Decision:
+
+- Add `INT-002` as a distinct external-integration task after INT-001.
+- Use Local LLM Server as the source of truth for resident execution identity through a versioned, path-free `local-llm-identity-v1` document at `GET /v1/runtime/identity`.
+- Keep identity discovery independent from both inference and dynamic `/status` telemetry.
+- Map explicit model revision/digest/quantization, backend name/version, effective runtime-config digest and safe hardware identity into `ExecutionFingerprint` before evaluation starts.
+- Extend `RuntimeIdentity` with `config_digest` so same-backend runs with different effective serving settings retain distinct immutable identities.
+- Keep the integration optional for generic endpoints; allow `required: true` for evidence campaigns that must fail on missing first-party identity.
+
+Reason / evidence:
+
+- Local LLM Server already owned artifact/backend/config/hardware identity primitives, so duplicating discovery logic in Performance Lab would create divergent sources of truth.
+- `/status` is dynamic observational telemetry and is the wrong ownership boundary for stable run identity.
+- Filename/path inference for quantization or artifact identity would be fragile and could silently corrupt comparison semantics.
+
+Dependency impact:
+
+- Local LLM Server producer and Performance Lab consumer can be implemented/tested in parallel against the same schema.
+- INT-002 depends on FND-002 and the existing Local LLM Server integration boundary but does not block black-box evaluation.
+- Representative M1/M3/M5 evidence should now preserve identity discovery together with the run bundle when Local LLM Server is the target.
+
+Roadmap impact:
+
+- No new milestone is created.
+- M1/M3/M5 evidence quality improves because real Local LLM Server runs can distinguish model artifact, quantization, backend/config and hardware identity without manual duplication.
+- Milestones remain evidence-gated until representative resident-model/device runs are retained.

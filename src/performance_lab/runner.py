@@ -12,13 +12,19 @@ from performance_lab.datasets import build_general_starter_suite
 from performance_lab.domain import (
     EvaluatorRef,
     ExecutionFingerprint,
+    HardwareIdentity,
     LoadProfile,
     ModelIdentity,
     Run,
+    RuntimeIdentity,
     TelemetryDescriptor,
     TelemetryLevel,
 )
 from performance_lab.engine import EvaluationOrchestrator, ProgressEvent
+from performance_lab.integrations import (
+    LocalLLMServerIdentityClient,
+    LocalLLMServerIdentityError,
+)
 from performance_lab.plugins import TelemetryCollector
 from performance_lab.run_config import StarterRunConfig
 from performance_lab.storage import SQLiteRunStore
@@ -40,6 +46,13 @@ class RunExecutionResult:
     bundle_path: Path
 
 
+@dataclass(frozen=True, slots=True)
+class _ResolvedExecutionIdentity:
+    model: ModelIdentity
+    runtime: RuntimeIdentity
+    hardware: HardwareIdentity
+
+
 async def execute_starter_run(
     config: StarterRunConfig,
     *,
@@ -55,6 +68,7 @@ async def execute_starter_run(
             error_code = probe.metadata.get("error_code", "unknown")
             raise RunExecutionError(f"endpoint probe failed: {error_code}")
 
+        identity = await _resolve_execution_identity(config)
         telemetry_descriptor, telemetry_session = _build_telemetry(config)
 
         evaluator_versions = _unique_evaluators(bundle.suite.tasks)
@@ -71,8 +85,9 @@ async def execute_starter_run(
             target_id=config.target_id,
             adapter_type=adapter.adapter_id,
             endpoint_identity=config.endpoint_identity,
-            model=ModelIdentity(model_id=config.model_id),
-            hardware=config.hardware,
+            model=identity.model,
+            runtime=identity.runtime,
+            hardware=identity.hardware,
             generation=bundle.suite.generation,
             prompt_template_version="direct-user-v1",
             dataset_snapshots=snapshots,
@@ -109,6 +124,64 @@ async def execute_starter_run(
         )
     finally:
         await adapter.aclose()
+
+
+async def _resolve_execution_identity(config: StarterRunConfig) -> _ResolvedExecutionIdentity:
+    fallback = _ResolvedExecutionIdentity(
+        model=ModelIdentity(model_id=config.model_id),
+        runtime=RuntimeIdentity(),
+        hardware=config.hardware,
+    )
+    identity_config = config.local_llm_server_identity
+    required = False
+    if identity_config is not None:
+        base_url = str(identity_config.base_url)
+        model_id = identity_config.model_id or config.model_id
+        timeout_seconds = identity_config.timeout_seconds
+        required = identity_config.required
+    elif config.local_llm_server_telemetry is not None:
+        telemetry_config = config.local_llm_server_telemetry
+        base_url = str(telemetry_config.base_url)
+        model_id = telemetry_config.model_id or config.model_id
+        timeout_seconds = telemetry_config.timeout_seconds
+    else:
+        return fallback
+
+    try:
+        discovered = await LocalLLMServerIdentityClient(
+            base_url,
+            timeout_seconds=timeout_seconds,
+        ).resolve(model_id=model_id)
+    except LocalLLMServerIdentityError as exc:
+        if required:
+            raise RunExecutionError("required local-llm-server identity is unavailable") from exc
+        return fallback
+
+    return _ResolvedExecutionIdentity(
+        model=discovered.model,
+        runtime=discovered.runtime,
+        hardware=_merge_hardware_identity(config.hardware, discovered.hardware),
+    )
+
+
+def _merge_hardware_identity(
+    configured: HardwareIdentity,
+    discovered: HardwareIdentity,
+) -> HardwareIdentity:
+    values: dict[str, object | None] = {}
+    for field_name in HardwareIdentity.model_fields:
+        configured_value = getattr(configured, field_name)
+        discovered_value = getattr(discovered, field_name)
+        if (
+            configured_value is not None
+            and discovered_value is not None
+            and configured_value != discovered_value
+        ):
+            raise RunExecutionError(
+                f"configured hardware conflicts with local-llm-server identity: {field_name}"
+            )
+        values[field_name] = discovered_value if discovered_value is not None else configured_value
+    return HardwareIdentity.model_validate(values)
 
 
 def _build_telemetry(

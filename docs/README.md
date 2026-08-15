@@ -22,6 +22,7 @@ Documentation uses progressive disclosure. Read only the source that owns the qu
 | How should datasets, evaluators and benchmark protocols work? | [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) |
 | How should resource/device telemetry work? | [`telemetry.md`](telemetry.md) |
 | What does Performance Lab require from `local-llm-server` and how is it configured? | [`local-llm-server-integration.md`](local-llm-server-integration.md) |
+| How is Local LLM Server model/runtime/hardware identity mapped into the execution fingerprint? | [`local-llm-identity-contract.md`](local-llm-identity-contract.md) |
 | What is required before something is considered complete? | [`definition-of-done.md`](definition-of-done.md) |
 | Where should a durable architectural decision be recorded? | [`adr/README.md`](adr/README.md) |
 
@@ -40,7 +41,8 @@ Documentation uses progressive disclosure. Read only the source that owns the qu
 - [`architecture.md`](architecture.md) — dependency direction, domain objects, inference adapter, run lifecycle, fingerprint, persistence and extension rules.
 - [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) — dataset snapshots, sampling, evaluator semantics, performance protocols, workload suites and regression comparability.
 - [`telemetry.md`](telemetry.md) — black-box/host/instrumented telemetry levels, metric provenance, sampling and resource comparison.
-- [`local-llm-server-integration.md`](local-llm-server-integration.md) — OpenAI-compatible inference requirements, optional `/status` runtime evidence contract, run configuration and measurement limitations for `daniele21/local-llm-server`.
+- [`local-llm-server-integration.md`](local-llm-server-integration.md) — OpenAI-compatible inference requirements, optional `/status` runtime evidence, optional execution-identity discovery, run configuration and measurement limitations for `daniele21/local-llm-server`.
+- [`local-llm-identity-contract.md`](local-llm-identity-contract.md) — strict `local-llm-identity-v1` producer/consumer mapping for model artifact, runtime configuration and hardware identity.
 - [`adr/README.md`](adr/README.md) — durable architectural decision log and template.
 
 ## Document ownership rules
