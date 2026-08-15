@@ -93,9 +93,7 @@ async def probe_endpoint_capabilities(
         )
 
     evidence = tuple(
-        _merge_evidence(
-            name, declared.get(name, SupportState.UNKNOWN), observed.get(name), details
-        )
+        _merge_evidence(name, declared.get(name, SupportState.UNKNOWN), observed.get(name), details)
         for name in CapabilityName
     )
     return EndpointCapabilityReport(
