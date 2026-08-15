@@ -47,7 +47,7 @@ class _StatusSample:
 
 
 class LocalLLMServerStatusCollector:
-    """Poll the existing `/status` endpoint without requiring server-side instrumentation changes."""
+    """Poll `/status` without requiring server-side instrumentation changes."""
 
     collector_id = "local-llm-server-status"
     protocol_version = LOCAL_LLM_SERVER_STATUS_PROTOCOL_VERSION
