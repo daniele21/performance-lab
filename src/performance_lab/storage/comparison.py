@@ -84,8 +84,7 @@ def compare_runs(baseline: Run, candidate: Run) -> RunComparison:
         )
     )
     dimensions = tuple(
-        _compare_dimension(baseline, candidate, dimension)
-        for dimension in ComparisonDimension
+        _compare_dimension(baseline, candidate, dimension) for dimension in ComparisonDimension
     )
     return RunComparison(
         baseline_run_id=baseline.run_id,
@@ -134,8 +133,7 @@ def _compare_dimension(
     candidate_keys = set(candidate_metrics)
     shared = sorted(baseline_keys & candidate_keys)
     deltas = tuple(
-        _metric_delta(key, baseline_metrics[key], candidate_metrics[key])
-        for key in shared
+        _metric_delta(key, baseline_metrics[key], candidate_metrics[key]) for key in shared
     )
     return DimensionComparison(
         dimension=dimension,
