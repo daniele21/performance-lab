@@ -45,6 +45,13 @@ class RegressionGateReport(AutomationModel):
     evaluation: RegressionPolicyEvaluation
 
 
+class AutomationErrorReport(AutomationModel):
+    schema_version: Literal[1] = AUTOMATION_SCHEMA_VERSION
+    decision: Literal["error"] = "error"
+    error_type: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+
+
 def evaluate_regression_gate(
     *,
     store_path: Path,
