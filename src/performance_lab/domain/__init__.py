@@ -1,11 +1,11 @@
 """Stable domain contracts for Performance Lab."""
 
 from .compatibility import (
-    ComparisonDimension,
-    CompatibilityResult,
-    NonComparabilityCode,
-    NonComparabilityReason,
-    compare_fingerprints,
+    ComparisonDimension as ComparisonDimension,
+    CompatibilityResult as CompatibilityResult,
+    NonComparabilityCode as NonComparabilityCode,
+    NonComparabilityReason as NonComparabilityReason,
+    compare_fingerprints as compare_fingerprints,
 )
 from .schemas import (  # noqa: F401
     SCHEMA_VERSION,
@@ -38,9 +38,9 @@ from .schemas import (  # noqa: F401
     TelemetryLevel,
 )
 from .serialization import (
-    InvalidSerializedModel,
-    SchemaLoadError,
-    UnsupportedSchemaVersion,
-    load_dict,
-    load_json,
+    InvalidSerializedModel as InvalidSerializedModel,
+    SchemaLoadError as SchemaLoadError,
+    UnsupportedSchemaVersion as UnsupportedSchemaVersion,
+    load_dict as load_dict,
+    load_json as load_json,
 )

@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import json
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from pydantic import ValidationError
 
 from .schemas import SCHEMA_VERSION, VersionedModel
-
-T = TypeVar("T", bound=VersionedModel)
 
 
 class SchemaLoadError(ValueError):
@@ -31,7 +29,7 @@ def _check_version(payload: dict[str, Any]) -> None:
         raise UnsupportedSchemaVersion(payload.get("schema_version"))
 
 
-def load_dict(model_type: type[T], payload: dict[str, Any]) -> T:
+def load_dict[T: VersionedModel](model_type: type[T], payload: dict[str, Any]) -> T:
     """Load one current-version model without guessing migrations."""
     _check_version(payload)
     try:
@@ -40,7 +38,7 @@ def load_dict(model_type: type[T], payload: dict[str, Any]) -> T:
         raise InvalidSerializedModel(str(exc)) from exc
 
 
-def load_json(model_type: type[T], payload: str | bytes) -> T:
+def load_json[T: VersionedModel](model_type: type[T], payload: str | bytes) -> T:
     try:
         raw = json.loads(payload)
     except (TypeError, json.JSONDecodeError) as exc:

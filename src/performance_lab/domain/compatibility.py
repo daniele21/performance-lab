@@ -51,7 +51,7 @@ class CompatibilityResult(FrozenModel):
         cls,
         dimension: ComparisonDimension,
         reasons: list[NonComparabilityReason],
-    ) -> "CompatibilityResult":
+    ) -> CompatibilityResult:
         return cls(
             dimension=dimension,
             comparable=not reasons,

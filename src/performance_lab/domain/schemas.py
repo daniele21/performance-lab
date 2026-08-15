@@ -63,7 +63,7 @@ class AuthConfig(FrozenModel):
     header_name: NonEmptyStr | None = None
 
     @model_validator(mode="after")
-    def validate_auth_shape(self) -> "AuthConfig":
+    def validate_auth_shape(self) -> AuthConfig:
         if self.strategy == AuthStrategy.NONE:
             if self.credential_env is not None or self.header_name is not None:
                 raise ValueError("auth strategy 'none' cannot reference credentials")
@@ -295,7 +295,7 @@ class Score(FrozenModel):
     denominator: float | None = None
 
     @model_validator(mode="after")
-    def validate_fraction(self) -> "Score":
+    def validate_fraction(self) -> Score:
         if (self.numerator is None) != (self.denominator is None):
             raise ValueError("numerator and denominator must be set together")
         if self.denominator is not None and self.denominator <= 0:
@@ -336,7 +336,7 @@ class SampleExecution(VersionedModel):
         return value
 
     @model_validator(mode="after")
-    def validate_status(self) -> "SampleExecution":
+    def validate_status(self) -> SampleExecution:
         if self.completed_at < self.started_at:
             raise ValueError("completed_at cannot precede started_at")
         if self.status == SampleStatus.SUCCEEDED and self.error is not None:
@@ -373,7 +373,7 @@ class Run(VersionedModel):
         return value
 
     @model_validator(mode="after")
-    def validate_lifecycle(self) -> "Run":
+    def validate_lifecycle(self) -> Run:
         terminal = {
             RunStatus.SUCCEEDED,
             RunStatus.FAILED,
