@@ -1,1 +1,0 @@
-Local LLM Server identity consumer documentation: [`local-llm-identity-contract.md`](local-llm-identity-contract.md). Cross-repository alignment: [`cross-repo-identity-alignment.md`](cross-repo-identity-alignment.md).
