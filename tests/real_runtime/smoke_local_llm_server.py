@@ -31,7 +31,11 @@ def main() -> int:
         )
     )
     parser.add_argument("--base-url", default="http://127.0.0.1:1235")
-    parser.add_argument("--model", required=True)
+    parser.add_argument(
+        "--model",
+        required=True,
+        help="Local LLM Server runtime key or model id accepted by the inference endpoint.",
+    )
     parser.add_argument("--output-dir", type=Path, default=Path(".performance-lab/real-smoke"))
     parser.add_argument("--run-id", default=None)
     args = parser.parse_args()
@@ -53,8 +57,6 @@ def main() -> int:
     probe_payload = json.loads(probe.stdout)
     if not probe_payload.get("healthy"):
         raise RuntimeError("endpoint probe did not report healthy")
-    if args.model not in probe_payload.get("models", []):
-        raise RuntimeError(f"requested model is not advertised by /v1/models: {args.model}")
 
     store_path = output_dir / "runs.sqlite3"
     config_path = output_dir / f"{run_id}.config.json"
