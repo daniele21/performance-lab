@@ -7,9 +7,9 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
 from zipfile import ZipFile
 
 import pytest
