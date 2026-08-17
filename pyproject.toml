@@ -34,6 +34,9 @@ where = ["src"]
 [tool.pytest.ini_options]
 addopts = "-q --strict-markers --strict-config"
 testpaths = ["tests"]
+markers = [
+  "e2e: deterministic product-level tests that cross CLI, HTTP, persistence and regression boundaries",
+]
 
 [tool.ruff]
 target-version = "py312"

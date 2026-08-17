@@ -1,4 +1,4 @@
-"""Run the same deterministic validation gate locally and in CI."""
+"""Run the same deterministic library validation gate locally and in CI."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ COMMANDS = (
     (sys.executable, "-m", "ruff", "format", "--check", "."),
     (sys.executable, "-m", "ruff", "check", "."),
     (sys.executable, "-m", "mypy", "src"),
-    (sys.executable, "-m", "pytest"),
+    (sys.executable, "-m", "pytest", "--ignore=tests/e2e"),
 )
 
 
