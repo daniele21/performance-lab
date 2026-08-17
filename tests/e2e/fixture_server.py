@@ -104,7 +104,7 @@ def _completion_text(payload: dict[str, Any]) -> str:
 class FixtureHandler(BaseHTTPRequestHandler):
     identity_mode = "ok"
 
-    def log_message(self, format: str, *args: object) -> None:  # noqa: A002
+    def log_message(self, format: str, *args: object) -> None:
         return None
 
     def _json(self, status: int, payload: object) -> None:
@@ -115,7 +115,7 @@ class FixtureHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         if self.path == "/v1/models":
             self._json(
                 HTTPStatus.OK,
@@ -160,7 +160,7 @@ class FixtureHandler(BaseHTTPRequestHandler):
             return
         self._json(HTTPStatus.NOT_FOUND, {"detail": "not found"})
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         if self.path != "/v1/chat/completions":
             self._json(HTTPStatus.NOT_FOUND, {"detail": "not found"})
             return
@@ -190,9 +190,7 @@ class FixtureHandler(BaseHTTPRequestHandler):
                 ],
                 "usage": {"prompt_tokens": 4, "completion_tokens": 2},
             }
-            body = (f"data: {json.dumps(event, separators=(',', ':'))}\n\ndata: [DONE]\n\n").encode(
-                "utf-8"
-            )
+            body = (f"data: {json.dumps(event, separators=(',', ':'))}\n\ndata: [DONE]\n\n").encode()
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Content-Length", str(len(body)))
