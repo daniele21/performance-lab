@@ -52,9 +52,7 @@ def _fixture_server(*, identity_mode: str = "ok") -> Iterator[str]:
                     f"stdout:\n{stdout}\nstderr:\n{stderr}"
                 )
             try:
-                with urllib.request.urlopen(
-                    f"{base_url}/v1/models", timeout=0.25
-                ) as response:
+                with urllib.request.urlopen(f"{base_url}/v1/models", timeout=0.25) as response:
                     if response.status == 200:
                         break
             except (OSError, urllib.error.URLError):
