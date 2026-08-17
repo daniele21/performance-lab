@@ -5,7 +5,7 @@ Document type: documentation-governance
 Owner: repository
 Canonical scope: documentation.routing
 Read when: locating the canonical source for a project question or deciding where documentation changes belong
-Last reviewed: 2026-08-15
+Last reviewed: 2026-08-17
 
 Documentation uses progressive disclosure. Read only the source that owns the question, then follow focused links as needed. A fact should have one canonical owner; summaries link to that owner rather than duplicating detailed truth.
 
@@ -21,6 +21,8 @@ For operational use rather than architecture/planning, read in this order:
 
 For Local LLM Server specifically, continue with [`local-llm-server-integration.md`](local-llm-server-integration.md) and [`local-llm-identity-contract.md`](local-llm-identity-contract.md).
 
+For automated product-boundary testing, read [`e2e-product-acceptance.md`](e2e-product-acceptance.md) together with `tests/e2e/README.md` and `tests/real_runtime/README.md`.
+
 ## Canonical sources
 
 | Question | Canonical source |
@@ -30,6 +32,7 @@ For Local LLM Server specifically, continue with [`local-llm-server-integration.
 | What commands, JSON outputs and exit codes exist? | [`cli-reference.md`](cli-reference.md) |
 | What exactly is persisted/exported and how do I interpret it? | [`output-and-evidence-reference.md`](output-and-evidence-reference.md) |
 | How do I diagnose a failed or non-comparable run? | [`troubleshooting.md`](troubleshooting.md) |
+| What does the deterministic product E2E gate prove, and what still requires a real runtime/device? | [`e2e-product-acceptance.md`](e2e-product-acceptance.md) |
 | What is integrated, blocked or next? | [`current-state.md`](current-state.md) |
 | What exactly are we building? | [`implementation-plan.md`](implementation-plan.md) |
 | What can run in parallel and what depends on what? | [`implementation-plan.md`](implementation-plan.md) |
@@ -54,6 +57,7 @@ For Local LLM Server specifically, continue with [`local-llm-server-integration.
 - [`output-and-evidence-reference.md`](output-and-evidence-reference.md) — canonical Run, ExecutionFingerprint, scores, measurements, immutable SQLite and portable bundle semantics.
 - [`troubleshooting.md`](troubleshooting.md) — diagnosis while preserving unknown/unavailable/comparability/privacy semantics.
 - [`ci-regression.md`](ci-regression.md) — GitHub Actions gate, artifact and controlled-runner rules.
+- [`e2e-product-acceptance.md`](e2e-product-acceptance.md) — E2E-001 deterministic product workflow, dedicated CI boundary and opt-in real-runtime smoke semantics.
 
 ### Product and delivery
 
