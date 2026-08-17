@@ -48,10 +48,13 @@ def _fixture_server(*, identity_mode: str = "ok") -> Iterator[str]:
             if process.poll() is not None:
                 stdout, stderr = process.communicate(timeout=1)
                 raise AssertionError(
-                    f"fixture server exited early ({process.returncode})\nstdout:\n{stdout}\nstderr:\n{stderr}"
+                    f"fixture server exited early ({process.returncode})\n"
+                    f"stdout:\n{stdout}\nstderr:\n{stderr}"
                 )
             try:
-                with urllib.request.urlopen(f"{base_url}/v1/models", timeout=0.25) as response:
+                with urllib.request.urlopen(
+                    f"{base_url}/v1/models", timeout=0.25
+                ) as response:
                     if response.status == 200:
                         break
             except (OSError, urllib.error.URLError):
@@ -202,7 +205,11 @@ def test_cli_product_workflow_probe_run_bundle_inspect_and_regression(tmp_path: 
         )
 
         baseline = _run_cli(
-            "run", "--config", str(baseline_config), "--json", cwd=tmp_path
+            "run",
+            "--config",
+            str(baseline_config),
+            "--json",
+            cwd=tmp_path,
         )
         baseline_result = json.loads(baseline.stdout)
         assert baseline_result["status"] == "succeeded"
@@ -230,18 +237,32 @@ def test_cli_product_workflow_probe_run_bundle_inspect_and_regression(tmp_path: 
         extracted_run = tmp_path / "baseline-run.json"
         extracted_run.write_text(json.dumps(run_payload), encoding="utf-8")
         inspected = _run_cli(
-            "inspect", str(extracted_run), "--json", cwd=tmp_path
+            "inspect",
+            str(extracted_run),
+            "--json",
+            cwd=tmp_path,
         )
         inspected_payload = json.loads(inspected.stdout)
         assert inspected_payload["run_id"] == "e2e-baseline"
-        assert inspected_payload["fingerprint"]["fingerprint_id"] if False else True
+        assert inspected_payload["fingerprint"]["model"]["model_id"] == GOOD_MODEL
+        assert len(inspected_payload["samples"]) == 23
 
-        repeat = _run_cli("run", "--config", str(repeat_config), "--json", cwd=tmp_path)
+        repeat = _run_cli(
+            "run",
+            "--config",
+            str(repeat_config),
+            "--json",
+            cwd=tmp_path,
+        )
         repeat_result = json.loads(repeat.stdout)
         assert repeat_result["fingerprint_id"] == baseline_result["fingerprint_id"]
 
         candidate = _run_cli(
-            "run", "--config", str(candidate_config), "--json", cwd=tmp_path
+            "run",
+            "--config",
+            str(candidate_config),
+            "--json",
+            cwd=tmp_path,
         )
         candidate_result = json.loads(candidate.stdout)
         assert candidate_result["status"] == "succeeded"
