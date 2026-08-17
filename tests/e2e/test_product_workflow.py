@@ -16,6 +16,9 @@ import pytest
 
 GOOD_MODEL = "fixture-good"
 BAD_MODEL = "fixture-bad"
+CANONICAL_EXACT_MATCH_METRIC = (
+    "normalized_exact_match|normalized-exact-match:text-normalization-v1@1"
+)
 
 
 def _free_port() -> int:
@@ -145,7 +148,7 @@ def _write_policy(path: Path) -> None:
                     {
                         "rule_id": "normalized-exact-match",
                         "dimension": "capability",
-                        "metric": "normalized_exact_match",
+                        "metric": CANONICAL_EXACT_MATCH_METRIC,
                         "direction": "higher_is_better",
                         "max_absolute_regression": 0.0,
                     }
