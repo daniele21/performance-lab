@@ -47,4 +47,15 @@ jobs:
       - name: Validate CI dependency snapshot
         run: python scripts/validate_ci_constraints.py requirements/ci-constraints.txt
       - name: Run deterministic product acceptance workflow
-        run: python -m pytest tests/e2e -v --tb=short
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest tests/e2e -v --tb=short 2>&1 | tee product-e2e.log
+      - name: Upload product E2E failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-e2e-failure-log
+          path: product-e2e.log
+          if-no-files-found: error
+          retention-days: 7
