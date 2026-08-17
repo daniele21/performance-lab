@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "contract_version": "0.4.0",
+  "product_name": "Performance Lab",
+  "assets": {
+    "logo_primary": "docs/assets/brand/logo-lockup.svg",
+    "logo_compact": "docs/assets/brand/mark.svg",
+    "logo_monochrome": "docs/assets/brand/mark.svg",
+    "app_icon": "docs/assets/brand/app-icon.webp",
+    "favicon": "docs/assets/brand/mark.svg"
+  },
+  "themes": {
+    "light": false,
+    "dark": true
+  },
+  "tokens": {
+    "colors": {
+      "surface": "#0B0F14",
+      "surface_elevated": "#111820",
+      "surface_subtle": "#151E27",
+      "text_primary": "#F8FAFC",
+      "text_secondary": "#94A3B8",
+      "primary": "#00E5FF",
+      "secondary": "#7B5CFF",
+      "quality": "#22D3EE",
+      "performance": "#8B5CF6",
+      "resources": "#38BDF8",
+      "success": "#22C55E",
+      "warning": "#F59E0B",
+      "error": "#EF4444",
+      "evidence_unknown": "#64748B",
+      "evidence_unavailable": "#475569",
+      "border": "#24303C",
+      "focus": "#67E8F9"
+    },
+    "typography": "system UI sans-serif; tabular numerals for metrics; monospace only for fingerprints/raw evidence",
+    "spacing": "4px base scale: 4, 8, 12, 16, 24, 32, 48",
+    "radius": "8px controls; 12px panels; 16px major surfaces",
+    "elevation": "restrained; borders + subtle shadow only for overlays and elevated panels"
+  },
+  "style": {
+    "iconography": "simple outline icons with consistent 1.5-2px stroke; never decorative when a text label is clearer",
+    "motion": "short functional transitions only; honor reduced-motion preferences",
+    "imagery": "no decorative stock imagery in core workflows; charts and evidence visuals must encode real data",
+    "voice_microcopy": "concise, concrete, user-goal language; prefer 'Test a model' over internal evaluation terminology; errors state what failed and the next recovery action"
+  }
+}
