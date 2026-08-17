@@ -4,23 +4,10 @@ Status: active
 Document type: adr-index
 Owner: repository
 Canonical scope: architecture.decisions
-Read when: making or reviewing a durable architectural decision with meaningful alternatives or migration impact
-Last reviewed: 2026-08-15
+Read when: making or reviewing a durable architectural decision with meaningful migration impact
+Last reviewed: 2026-08-17
 
-Use ADRs for decisions that should remain understandable after the implementation context is gone.
-
-Good ADR candidates include:
-
-- primary implementation language/runtime;
-- package/module structure when it establishes dependency boundaries;
-- local persistence and artifact storage architecture;
-- schema/versioning strategy;
-- plugin/registry mechanism;
-- local API/UI process topology;
-- instrumented telemetry protocol;
-- privacy/evidence persistence defaults.
-
-Do not create ADRs for routine implementation choices that are easily reversible and do not affect public contracts or architecture.
+ADRs preserve decisions whose rationale must remain understandable after an implementation workstream is gone. Routine reversible implementation details belong near code/tests rather than here.
 
 ## Status vocabulary
 
@@ -29,14 +16,16 @@ Do not create ADRs for routine implementation choices that are easily reversible
 - `superseded`
 - `deprecated`
 
-## Naming
+## Index
 
-```text
-0001-short-decision-title.md
-0002-next-decision.md
-```
+| ADR | Status | Decision |
+| --- | --- | --- |
+| [`0001-python-core-and-toolchain.md`](0001-python-core-and-toolchain.md) | accepted | Python 3.12+ core and lightweight package/toolchain |
+| [`0002-versioned-immutable-domain-contracts.md`](0002-versioned-immutable-domain-contracts.md) | accepted | immutable versioned evidence and dimension-specific comparability |
+| [`0003-sqlite-local-run-store.md`](0003-sqlite-local-run-store.md) | accepted | local SQLite run store with immutable completed evidence |
+| [`0004-performance-lab-owns-evaluation-product.md`](0004-performance-lab-owns-evaluation-product.md) | accepted | Performance Lab owns benchmark/evaluation product UX; Local LLM Server remains the serving/runtime control plane |
 
-## Template
+## Minimal ADR shape
 
 ```markdown
 # ADR 000X — Decision title
@@ -45,35 +34,8 @@ Status: proposed
 Date: YYYY-MM-DD
 
 ## Context
-
-What problem or constraint requires a durable decision?
-
 ## Decision
-
-What is being chosen?
-
 ## Alternatives considered
-
-### Alternative A
-
-Pros / cons.
-
-### Alternative B
-
-Pros / cons.
-
 ## Consequences
-
-Positive and negative consequences, including migration/test/operational impact.
-
 ## Validation / revisit trigger
-
-What evidence validates the choice, and what future evidence would justify revisiting it?
 ```
-
-## Index
-
-| ADR | Status | Decision |
-| --- | --- | --- |
-| [`0001-python-core-and-toolchain.md`](0001-python-core-and-toolchain.md) | accepted | Python 3.12+ core, lightweight PEP 621 toolchain, shared validation gate, MIT |
-| [`0002-versioned-immutable-domain-contracts.md`](0002-versioned-immutable-domain-contracts.md) | accepted | immutable schema-v1 evidence and dimension-specific comparability |

@@ -4,160 +4,54 @@ Status: active
 Document type: documentation-governance
 Owner: repository
 Canonical scope: documentation.routing
-Read when: locating the canonical source for a project question or deciding where documentation changes belong
+Read when: locating the canonical source for a project question
 Last reviewed: 2026-08-17
 
-Documentation uses progressive disclosure. Read only the source that owns the question, then follow focused links as needed. A fact should have one canonical owner; summaries link to that owner rather than duplicating detailed truth.
+Performance Lab documentation uses progressive disclosure: start with the one source that owns the question, then follow focused links. Do not duplicate behavioral truth across planning, architecture and operational docs.
 
-## Start here if you want to use the product
+## Start here
 
-For operational use rather than architecture/planning, read in this order:
+If you want to **use the current CLI product**:
 
-1. [`getting-started.md`](getting-started.md) — install, probe, first run, first comparison and CI gate.
-2. [`run-config-reference.md`](run-config-reference.md) — every supported starter-run config field and validation rule.
-3. [`cli-reference.md`](cli-reference.md) — commands, machine-readable outputs and exit codes.
-4. [`output-and-evidence-reference.md`](output-and-evidence-reference.md) — Run/fingerprint/measurement semantics, SQLite and `.plab.zip` contents.
-5. [`troubleshooting.md`](troubleshooting.md) — common endpoint, identity, telemetry, bundle and regression failures.
+1. [`getting-started.md`](getting-started.md)
+2. [`run-config-reference.md`](run-config-reference.md)
+3. [`cli-reference.md`](cli-reference.md)
+4. [`output-and-evidence-reference.md`](output-and-evidence-reference.md)
+5. [`troubleshooting.md`](troubleshooting.md)
 
-For Local LLM Server specifically, continue with [`local-llm-server-integration.md`](local-llm-server-integration.md) and [`local-llm-identity-contract.md`](local-llm-identity-contract.md).
+If you want to **work on the local visual product**:
 
-For automated product-boundary testing, read [`e2e-product-acceptance.md`](e2e-product-acceptance.md) together with `tests/e2e/README.md` and `tests/real_runtime/README.md`.
+1. [`current-state.md`](current-state.md) — what is active now.
+2. [`workstreams/ui-productization.md`](workstreams/ui-productization.md) — active dependency DAG and acceptance gates.
+3. [`adr/0004-performance-lab-owns-evaluation-product.md`](adr/0004-performance-lab-owns-evaluation-product.md) — Performance Lab vs Local LLM Server ownership decision.
+4. [`assets/design/README.md`](assets/design/README.md) — visual direction and behavioral boundaries of the mockups.
+5. [`architecture.md`](architecture.md) — current durable dependency/ownership model.
 
-## Canonical sources
+## Canonical owners
 
-| Question | Canonical source |
+| Question | Source |
 | --- | --- |
-| How do I get from install to a first run? | [`getting-started.md`](getting-started.md) |
-| What fields can I put in a run config? | [`run-config-reference.md`](run-config-reference.md) |
-| What commands, JSON outputs and exit codes exist? | [`cli-reference.md`](cli-reference.md) |
-| What exactly is persisted/exported and how do I interpret it? | [`output-and-evidence-reference.md`](output-and-evidence-reference.md) |
-| How do I diagnose a failed or non-comparable run? | [`troubleshooting.md`](troubleshooting.md) |
-| What does the deterministic product E2E gate prove, and what still requires a real runtime/device? | [`e2e-product-acceptance.md`](e2e-product-acceptance.md) |
-| What is integrated, blocked or next? | [`current-state.md`](current-state.md) |
-| What exactly are we building? | [`implementation-plan.md`](implementation-plan.md) |
-| What can run in parallel and what depends on what? | [`implementation-plan.md`](implementation-plan.md) |
-| Which capability milestone is next? | [`roadmap.md`](roadmap.md) |
-| Why did a dependency/priority/scope change? | [`plan-changelog.md`](plan-changelog.md) |
-| What architectural boundary owns this behavior? | [`architecture.md`](architecture.md) |
-| How should datasets, evaluators and benchmark protocols work? | [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) |
-| How should resource/device telemetry work? | [`telemetry.md`](telemetry.md) |
-| What does Performance Lab require from `local-llm-server` and how is it configured? | [`local-llm-server-integration.md`](local-llm-server-integration.md) |
-| How is Local LLM Server model/runtime/hardware identity mapped into the execution fingerprint? | [`local-llm-identity-contract.md`](local-llm-identity-contract.md) |
-| How does the CI regression gate behave? | [`ci-regression.md`](ci-regression.md) |
-| What is required before something is considered complete? | [`definition-of-done.md`](definition-of-done.md) |
-| Where should a durable architectural decision be recorded? | [`adr/README.md`](adr/README.md) |
+| What is integrated and what happens next? | [`current-state.md`](current-state.md) |
+| What is the active UI implementation DAG? | [`workstreams/ui-productization.md`](workstreams/ui-productization.md) |
+| Who owns benchmark/evaluation long term? | [`adr/0004-performance-lab-owns-evaluation-product.md`](adr/0004-performance-lab-owns-evaluation-product.md) |
+| What visual direction is approved? | [`assets/design/README.md`](assets/design/README.md) + [`assets/design/ui-reference-board.webp`](assets/design/ui-reference-board.webp) |
+| What are the durable architecture boundaries? | [`architecture.md`](architecture.md) |
+| How should benchmark/dataset/evaluator semantics work? | [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) |
+| How should telemetry/provenance work? | [`telemetry.md`](telemetry.md) |
+| How does Local LLM Server integrate? | [`local-llm-server-integration.md`](local-llm-server-integration.md) |
+| How is Local LLM identity mapped? | [`local-llm-identity-contract.md`](local-llm-identity-contract.md) |
+| What is persisted/exported? | [`output-and-evidence-reference.md`](output-and-evidence-reference.md) |
+| How does regression CI behave? | [`ci-regression.md`](ci-regression.md) |
+| What does deterministic product E2E prove? | [`e2e-product-acceptance.md`](e2e-product-acceptance.md) |
+| What is required before DONE? | [`definition-of-done.md`](definition-of-done.md) |
+| Where are durable architecture decisions? | [`adr/README.md`](adr/README.md) |
 
-## Active source index
+## Documentation lifecycle
 
-### Operational use
+- `current-state.md` stays short and volatile.
+- `docs/workstreams/` contains only active bounded plans; completed plans are deleted after durable knowledge is transferred.
+- `architecture.md`, focused feature docs and ADRs own durable truth.
+- operational references describe what the executable product does now, not aspirational UI.
+- visual mockups are references, never evidence that a feature is shipped.
 
-- [`getting-started.md`](getting-started.md) — clean-checkout-to-evidence workflow, including richer Local LLM Server integration.
-- [`run-config-reference.md`](run-config-reference.md) — strict version-1 run config, endpoint auth indirection, hardware and identity/telemetry options.
-- [`cli-reference.md`](cli-reference.md) — `probe`, `inspect`, `run`, `regress`, `regress-ci`, JSON output and deterministic exit codes.
-- [`output-and-evidence-reference.md`](output-and-evidence-reference.md) — canonical Run, ExecutionFingerprint, scores, measurements, immutable SQLite and portable bundle semantics.
-- [`troubleshooting.md`](troubleshooting.md) — diagnosis while preserving unknown/unavailable/comparability/privacy semantics.
-- [`ci-regression.md`](ci-regression.md) — GitHub Actions gate, artifact and controlled-runner rules.
-- [`e2e-product-acceptance.md`](e2e-product-acceptance.md) — E2E-001 deterministic product workflow, dedicated CI boundary and opt-in real-runtime smoke semantics.
-
-### Product and delivery
-
-- [`implementation-plan.md`](implementation-plan.md) — repository target, task IDs, dependencies, workstreams, parallel waves and acceptance criteria.
-- [`current-state.md`](current-state.md) — live operational ledger and immediate next work.
-- [`roadmap.md`](roadmap.md) — capability milestones and exit gates.
-- [`plan-changelog.md`](plan-changelog.md) — material plan-decision history.
-- [`definition-of-done.md`](definition-of-done.md) — task, milestone, merge and evidence completion rules.
-
-### Architecture and domain behavior
-
-- [`architecture.md`](architecture.md) — dependency direction, domain objects, inference adapter, run lifecycle, fingerprint, persistence and extension rules.
-- [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) — dataset snapshots, sampling, evaluator semantics, performance protocols, workload suites and regression comparability.
-- [`telemetry.md`](telemetry.md) — black-box/host/instrumented telemetry levels, metric provenance, sampling and resource comparison.
-- [`local-llm-server-integration.md`](local-llm-server-integration.md) — OpenAI-compatible inference requirements, optional `/status` runtime evidence, optional execution-identity discovery, run configuration and measurement limitations for `daniele21/local-llm-server`.
-- [`local-llm-identity-contract.md`](local-llm-identity-contract.md) — strict `local-llm-identity-v1` producer/consumer mapping for model artifact, runtime configuration and hardware identity.
-- [`adr/README.md`](adr/README.md) — durable architectural decision log and template.
-
-## Document ownership rules
-
-### Operational references
-
-Own how a user or automation actually invokes the current integrated product. They must match executable contracts and avoid speculative future options. When a CLI/config/output shape changes, update the relevant operational reference in the same integration cycle.
-
-### `current-state`
-
-Owns only current integrated status, blockers, parallel-ready work and the immediate next block. Update frequently.
-
-### `implementation-plan`
-
-Owns intended target, task decomposition, dependencies and acceptance criteria. Update only when the plan itself materially changes.
-
-### `roadmap`
-
-Owns capability-level milestones and exit gates. It should not become a branch/commit history.
-
-### `plan-changelog`
-
-Owns rationale for material planning changes. Append decisions; do not use it for routine task status movement.
-
-### Feature specifications
-
-Own durable behavior for one bounded domain such as evaluation, telemetry or one runtime integration. New focused specs should be created only when a real concern becomes too detailed for the existing owner.
-
-### ADRs
-
-Own durable decisions with meaningful alternatives/trade-offs, such as the implementation stack, persistence architecture or plugin mechanism.
-
-## Required metadata
-
-Every active Markdown document under `docs/` except ADR entries should start with:
-
-```text
-Status: active
-Document type: <type>
-Owner: <repository or domain>
-Canonical scope: <unique dotted scope>
-Read when: <specific trigger>
-Last reviewed: YYYY-MM-DD
-```
-
-## Before creating a new document
-
-1. Check this map for an existing canonical owner.
-2. Update the existing source if the information fits its scope.
-3. Create a new file only for a durable independently readable concern.
-4. Give it a unique canonical scope.
-5. Link it from this map or the closest future domain index.
-6. If the new document replaces an old source, explicitly redirect/archive the old one.
-
-Do not create a document merely to report that one branch or task completed.
-
-## Update workflow
-
-For a normal implementation change:
-
-```text
-code/tests
-  + operational docs if invocation/config/output changed
-  + current-state status update
-  + focused spec if behavior changed
-  + roadmap only if milestone changed
-  + implementation-plan only if plan/dependencies changed
-  + plan-changelog only if the plan changed materially
-```
-
-This separation is important: it keeps frequent progress tracking from rewriting durable specifications and preserves a readable history of why the roadmap changed.
-
-## Precedence
-
-When documentation conflicts, prefer in this order:
-
-1. executable tests/contracts;
-2. accepted ADRs;
-3. architecture/focused feature specifications;
-4. operational references for current invocation/serialization behavior;
-5. implementation plan;
-6. current state;
-7. roadmap;
-8. root README;
-9. historical/archive material.
-
-A contradiction that changes behavior should be corrected in the canonical owner, not silently reconciled in a summary.
+When sources conflict, prefer: executable contracts/tests -> accepted ADRs -> architecture/focused specs -> operational references -> active workstream/current state -> roadmap/root README.
