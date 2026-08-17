@@ -30,3 +30,21 @@ jobs:
         run: python scripts/validate_ci_constraints.py requirements/ci-constraints.txt
       - name: Validate repository
         run: python scripts/validate.py
+
+  product-e2e:
+    name: Product E2E (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install constrained package and development dependencies
+        run: |
+          python -m pip install "pip==26.2.1"
+          python -m pip install -c requirements/ci-constraints.txt -e ".[dev]"
+      - name: Validate CI dependency snapshot
+        run: python scripts/validate_ci_constraints.py requirements/ci-constraints.txt
+      - name: Run deterministic product acceptance workflow
+        run: python -m pytest tests/e2e -v --tb=short
