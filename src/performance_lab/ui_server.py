@@ -57,7 +57,9 @@ def serve_local_ui(config: StarterRunConfig, *, port: int = UI_SERVER_PORT) -> N
     try:
         import uvicorn
     except ModuleNotFoundError as exc:  # pragma: no cover - exercised outside dev extra
-        raise RuntimeError("UI server dependency missing; install the project with the 'ui' extra") from exc
+        raise RuntimeError(
+            "UI server dependency missing; install the project with the 'ui' extra"
+        ) from exc
 
     uvicorn.run(
         build_local_ui_app(config),
