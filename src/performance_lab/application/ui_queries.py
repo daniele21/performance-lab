@@ -71,6 +71,7 @@ class UIQueryService:
         dataset_snapshots: tuple[DatasetSnapshot, ...] = (),
         baselines: tuple[BaselineBinding, ...] = (),
         policies: tuple[RegressionPolicy, ...] = (),
+        starter_run_template: StarterRunConfig | None = None,
     ) -> None:
         self.store = store
         self.targets = targets
@@ -79,6 +80,7 @@ class UIQueryService:
         self.dataset_snapshots = dataset_snapshots
         self.baselines = baselines
         self.policies = policies
+        self.starter_run_template = starter_run_template
         self.comparisons = RunComparisonService(store)
 
     def list_runs(self, *, offset: int = 0, limit: int = 50) -> tuple[RunSummaryReadModel, ...]:
