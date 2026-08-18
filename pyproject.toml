@@ -18,10 +18,12 @@ dependencies = [
 
 [project.scripts]
 performance-lab = "performance_lab.cli:main"
+performance-lab-ui = "performance_lab.ui_server:main"
 
 [project.optional-dependencies]
 ui = [
   "fastapi>=0.140,<0.141",
+  "uvicorn>=0.51,<0.52",
 ]
 dev = [
   "fastapi>=0.140,<0.141",
@@ -30,6 +32,7 @@ dev = [
   "pytest-cov>=6,<7",
   "ruff>=0.9,<1",
   "types-jsonschema>=4.23,<5",
+  "uvicorn>=0.51,<0.52",
 ]
 
 [tool.setuptools.packages.find]
