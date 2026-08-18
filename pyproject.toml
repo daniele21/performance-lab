@@ -20,7 +20,11 @@ dependencies = [
 performance-lab = "performance_lab.cli:main"
 
 [project.optional-dependencies]
+ui = [
+  "fastapi>=0.140,<0.141",
+]
 dev = [
+  "fastapi>=0.140,<0.141",
   "mypy>=1.14,<2",
   "pytest>=8.3,<9",
   "pytest-cov>=6,<7",
