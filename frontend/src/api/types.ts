@@ -10,6 +10,14 @@ export type EvidenceAvailability = "available" | "unknown" | "unavailable" | "no
 export type MetricDimension = "quality" | "performance" | "resources";
 export type RunStatus = "planned" | "running" | "succeeded" | "failed" | "cancelled";
 export type ScenarioKind = "general_capability" | "my_workload" | "performance" | "regression";
+export type RunJobState =
+  | "starting"
+  | "running"
+  | "cancelling"
+  | "succeeded"
+  | "failed"
+  | "cancelled"
+  | "interrupted";
 
 export interface MetricReadModel extends UIModelIdentity {
   metric_id: string;
@@ -155,6 +163,31 @@ export interface RunPreflightReadModel extends UIModelIdentity {
   can_run: boolean;
   issues: PreflightIssueReadModel[];
   preview: FrozenExecutionPreviewReadModel | null;
+}
+
+export interface RunLaunchRequest {
+  preflight: RunPreflightRequest;
+  config_digest: string;
+}
+
+export interface RunJobSnapshot {
+  api_version: ApiVersion;
+  job_id: string;
+  state: RunJobState;
+  revision: number;
+  created_at: string;
+  updated_at: string;
+  config_digest: string | null;
+  target_id: string | null;
+  model_id: string | null;
+  scenario: string | null;
+  phase: string | null;
+  completed_samples: number;
+  total_samples: number;
+  run_id: string | null;
+  run_status: RunStatus | null;
+  error_code: string | null;
+  error_message: string | null;
 }
 
 export interface CompatibilityReasonReadModel extends UIModelIdentity {
