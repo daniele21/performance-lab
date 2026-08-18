@@ -1,7 +1,11 @@
 import type {
   ComparisonReadModel,
   RunDetailReadModel,
+  RunPreflightReadModel,
+  RunPreflightRequest,
   RunSummaryReadModel,
+  ScenarioSummaryReadModel,
+  TargetSummaryReadModel,
   TestedModelReadModel,
 } from "./types";
 
@@ -29,14 +33,38 @@ async function readError(response: Response): Promise<string> {
   return `Performance Lab API request failed (${response.status})`;
 }
 
-async function getJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function requestJson<T>(
+  path: string,
+  init: RequestInit,
+  options: RequestOptions = {},
+): Promise<T> {
   const response = await fetch(path, {
-    method: "GET",
-    headers: { Accept: "application/json" },
+    ...init,
+    headers: { Accept: "application/json", ...init.headers },
     signal: options.signal,
   });
   if (!response.ok) throw new ApiError(response.status, await readError(response));
   return (await response.json()) as T;
+}
+
+async function getJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  return requestJson<T>(path, { method: "GET" }, options);
+}
+
+async function postJson<Request, Response>(
+  path: string,
+  body: Request,
+  options: RequestOptions = {},
+): Promise<Response> {
+  return requestJson<Response>(
+    path,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+    options,
+  );
 }
 
 export function listTestedModels(options?: RequestOptions) {
@@ -53,6 +81,22 @@ export function listRuns(
 
 export function getRun(runId: string, options?: RequestOptions) {
   return getJson<RunDetailReadModel>(`/api/v1/runs/${encodeURIComponent(runId)}`, options);
+}
+
+export function listTargets(options?: RequestOptions) {
+  return getJson<TargetSummaryReadModel[]>("/api/v1/targets", options);
+}
+
+export function listScenarios(options?: RequestOptions) {
+  return getJson<ScenarioSummaryReadModel[]>("/api/v1/scenarios", options);
+}
+
+export function preflightRun(request: RunPreflightRequest, options?: RequestOptions) {
+  return postJson<RunPreflightRequest, RunPreflightReadModel>(
+    "/api/v1/run-preflight",
+    request,
+    options,
+  );
 }
 
 export function compareRuns(
