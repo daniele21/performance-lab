@@ -130,7 +130,9 @@ export function LiveRunPage({ jobId, onCompleted, onTestAgain, onRuns }: LiveRun
       <AppShell activePrimary="Runs">
         <ErrorState
           title="The evaluation failed"
-          description={snapshot.error_message ?? "The run stopped before completed evidence was published."}
+          description={
+            snapshot.error_message ?? "The run stopped before completed evidence was published."
+          }
           action={<Button onClick={onTestAgain}>Test a model</Button>}
         />
       </AppShell>
@@ -153,8 +155,12 @@ export function LiveRunPage({ jobId, onCompleted, onTestAgain, onRuns }: LiveRun
           />
           <Status tone="warning">{interrupted ? "Interrupted" : "Cancelled"}</Status>
           <div className="live-run-actions">
-            <Button variant="primary" onClick={onTestAgain}>Test again</Button>
-            <Button variant="quiet" onClick={onRuns}>View Runs</Button>
+            <Button variant="primary" onClick={onTestAgain}>
+              Test again
+            </Button>
+            <Button variant="quiet" onClick={onRuns}>
+              View Runs
+            </Button>
           </div>
         </div>
       </AppShell>
@@ -194,7 +200,9 @@ export function LiveRunPage({ jobId, onCompleted, onTestAgain, onRuns }: LiveRun
           </div>
           <div>
             <dt>Job</dt>
-            <dd><code>{snapshot.job_id}</code></dd>
+            <dd>
+              <code>{snapshot.job_id}</code>
+            </dd>
           </div>
         </dl>
 
@@ -220,14 +228,32 @@ export function LiveRunPage({ jobId, onCompleted, onTestAgain, onRuns }: LiveRun
           </Button>
           <span>Closing this page does not cancel the server-owned job.</span>
         </div>
-        {cancelError ? <p className="live-run-error" role="alert">{cancelError}</p> : null}
+        {cancelError ? (
+          <p className="live-run-error" role="alert">
+            {cancelError}
+          </p>
+        ) : null}
 
         <Disclosure summary="Activity and lifecycle details">
           <dl className="live-run-diagnostics">
-            <div><dt>Revision</dt><dd>{snapshot.revision}</dd></div>
-            <div><dt>Phase</dt><dd>{snapshot.phase ?? "not started"}</dd></div>
-            <div><dt>Run ID</dt><dd>{snapshot.run_id ?? "assigned at execution"}</dd></div>
-            <div><dt>Frozen config</dt><dd><code>{snapshot.config_digest ?? "unavailable"}</code></dd></div>
+            <div>
+              <dt>Revision</dt>
+              <dd>{snapshot.revision}</dd>
+            </div>
+            <div>
+              <dt>Phase</dt>
+              <dd>{snapshot.phase ?? "not started"}</dd>
+            </div>
+            <div>
+              <dt>Run ID</dt>
+              <dd>{snapshot.run_id ?? "assigned at execution"}</dd>
+            </div>
+            <div>
+              <dt>Frozen config</dt>
+              <dd>
+                <code>{snapshot.config_digest ?? "unavailable"}</code>
+              </dd>
+            </div>
           </dl>
         </Disclosure>
       </div>

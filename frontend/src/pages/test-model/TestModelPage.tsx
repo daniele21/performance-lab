@@ -336,7 +336,11 @@ function ReviewPanel({
           The run continues in the local Performance Lab process if this browser view disconnects.
         </p>
       </div>
-      {launchError ? <p className="test-model-launch-error" role="alert">{launchError}</p> : null}
+      {launchError ? (
+        <p className="test-model-launch-error" role="alert">
+          {launchError}
+        </p>
+      ) : null}
     </div>
   );
 }

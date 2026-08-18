@@ -28,9 +28,7 @@ export function App() {
 
   if (route.kind === "test-model") {
     return (
-      <TestModelPage
-        onLaunched={(jobId) => navigate(`live-run/${encodeURIComponent(jobId)}`)}
-      />
+      <TestModelPage onLaunched={(jobId) => navigate(`live-run/${encodeURIComponent(jobId)}`)} />
     );
   }
 
