@@ -54,7 +54,7 @@ export function LiveRunPage({ jobId, onCompleted, onTestAgain, onRuns }: LiveRun
   useEffect(() => {
     const controller = new AbortController();
     let disposed = false;
-    let closeStream = () => undefined;
+    let closeStream: () => void = () => undefined;
 
     const applySnapshot = (next: RunJobSnapshot) => {
       if (disposed) return;
