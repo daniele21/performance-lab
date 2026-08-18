@@ -12,7 +12,15 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from performance_lab.domain import ComparisonDimension, ExecutionFingerprint, RunStatus
+from performance_lab.domain import (
+    ComparisonDimension,
+    DatasetSnapshot,
+    ExecutionFingerprint,
+    GenerationConfig,
+    LoadProfile,
+    RunStatus,
+)
+from performance_lab.run_config import StarterRunConfig
 from performance_lab.storage import IdentityDifference, MetricDelta
 
 UI_READ_MODEL_VERSION: Literal[1] = 1
@@ -36,6 +44,13 @@ class MetricDimension(StrEnum):
     QUALITY = "quality"
     PERFORMANCE = "performance"
     RESOURCES = "resources"
+
+
+class ScenarioKind(StrEnum):
+    GENERAL_CAPABILITY = "general_capability"
+    MY_WORKLOAD = "my_workload"
+    PERFORMANCE = "performance"
+    REGRESSION = "regression"
 
 
 class MetricReadModel(UIModel):
@@ -110,6 +125,73 @@ class SuiteSummaryReadModel(UIModel):
     suite_version: str = Field(min_length=1)
     task_count: int = Field(gt=0)
     task_ids: tuple[str, ...]
+
+
+class DatasetSummaryReadModel(UIModel):
+    dataset_id: str = Field(min_length=1)
+    dataset_version: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+    split: str = Field(min_length=1)
+    sample_count: int = Field(gt=0)
+    selection_policy: str = Field(min_length=1)
+    content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @classmethod
+    def from_snapshot(cls, snapshot: DatasetSnapshot) -> DatasetSummaryReadModel:
+        return cls(
+            dataset_id=snapshot.dataset_id,
+            dataset_version=snapshot.dataset_version,
+            source=snapshot.source,
+            split=snapshot.split,
+            sample_count=snapshot.sample_count,
+            selection_policy=snapshot.selection_policy,
+            content_sha256=snapshot.content_sha256,
+        )
+
+
+class ScenarioSummaryReadModel(UIModel):
+    scenario: ScenarioKind
+    title: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    supported: bool
+    blocked_reason: str | None = None
+    suite_id: str | None = None
+
+
+class RunPreflightRequest(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    target_id: str = Field(min_length=1)
+    model_id: str = Field(min_length=1)
+    scenario: ScenarioKind = ScenarioKind.GENERAL_CAPABILITY
+    use_host_telemetry: bool = False
+
+
+class PreflightIssueReadModel(UIModel):
+    code: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+    field: str | None = None
+
+
+class FrozenExecutionPreviewReadModel(UIModel):
+    scenario: ScenarioKind
+    config: StarterRunConfig
+    config_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    target: TargetSummaryReadModel
+    suite: SuiteSummaryReadModel
+    datasets: tuple[DatasetSummaryReadModel, ...]
+    evaluator_ids: tuple[str, ...]
+    generation: GenerationConfig
+    load_profile: LoadProfile
+    prompt_template_version: str = Field(min_length=1)
+    benchmark_protocol_version: str = Field(min_length=1)
+    identity_resolution: Literal["resolved_at_launch"] = "resolved_at_launch"
+
+
+class RunPreflightReadModel(UIModel):
+    can_run: bool
+    issues: tuple[PreflightIssueReadModel, ...] = ()
+    preview: FrozenExecutionPreviewReadModel | None = None
 
 
 class BaselineSummaryReadModel(UIModel):
