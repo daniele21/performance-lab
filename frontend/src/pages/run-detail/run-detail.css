@@ -1,0 +1,101 @@
+.run-detail {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.run-detail__back {
+  width: fit-content;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.run-detail__status-row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) 0;
+}
+
+.run-detail__status-row code,
+.run-detail__evidence code {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.run-detail__metric-section,
+.run-detail__evidence {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.run-detail__evidence-summary {
+  display: grid;
+  grid-template-columns: minmax(14rem, 2fr) repeat(3, minmax(7rem, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-border);
+}
+
+.run-detail__evidence-summary > div {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--color-surface-elevated);
+}
+
+.run-detail__evidence-summary span,
+.run-detail__identity-grid dt {
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+}
+
+.run-detail__evidence-summary code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.run-detail__identity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.run-detail__identity-grid div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.run-detail__identity-grid dd {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.run-detail__fingerprint {
+  max-height: 24rem;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: var(--space-4);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 72rem) {
+  .run-detail__evidence-summary,
+  .run-detail__identity-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
