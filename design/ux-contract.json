@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "contract_version": "0.4.0",
+  "applicable": true,
+  "design_source_of_truth": {
+    "type": "in-repo",
+    "location": "design/"
+  },
+  "principles": {
+    "user_task_model_over_internal_architecture": true,
+    "progressive_disclosure": true,
+    "sensible_defaults": true,
+    "clear_primary_action_hierarchy": true,
+    "platform_appropriate": true,
+    "bounded_information_density": true,
+    "actionable_error_recovery": true
+  },
+  "information_architecture": {
+    "primary_navigation": [
+      "Overview",
+      "Test a model",
+      "Runs",
+      "Compare"
+    ],
+    "secondary_navigation": {
+      "Library": [
+        "Test suites",
+        "Datasets",
+        "Baselines",
+        "Regression policies"
+      ],
+      "Settings": [
+        "Endpoints",
+        "Devices / targets",
+        "Advanced"
+      ]
+    },
+    "primary_user_question": "Which model works best for my workload on this device?"
+  },
+  "progressive_disclosure": [
+    "essential",
+    "contextual",
+    "advanced",
+    "expert / diagnostics"
+  ],
+  "critical_states": [
+    "loading",
+    "empty",
+    "error",
+    "disabled",
+    "offline",
+    "partial-result",
+    "not-comparable",
+    "not-evaluated",
+    "cancelled"
+  ],
+  "accessibility": {
+    "target": "WCAG 2.2 AA",
+    "keyboard_when_applicable": true,
+    "focus_visibility_order": true,
+    "assistive_semantics": true,
+    "text_scaling_when_applicable": true,
+    "no_color_only_critical_meaning": true,
+    "reduced_motion_when_applicable": true
+  },
+  "adaptive_layout": {
+    "applicable": true,
+    "supported_contexts": [
+      "desktop-compact: 1024-1279px",
+      "desktop-standard: 1280-1599px",
+      "desktop-wide: >=1600px"
+    ]
+  },
+  "design_system": {
+    "component_source": "frontend design-system primitives once UIF-001/UIK-001 land; design/ is the contract until then",
+    "brand_tokens": "design/brand-kit.json",
+    "reuse_existing_semantic_component_first": true,
+    "canonical_primitives": [
+      "AppShell",
+      "Navigation",
+      "PageHeader",
+      "Button",
+      "Field",
+      "Select",
+      "Toggle",
+      "Tabs",
+      "Disclosure",
+      "Status",
+      "Metric",
+      "MetricGroup",
+      "DataTable",
+      "Progress",
+      "CompatibilitySummary",
+      "IdentityDiff",
+      "EmptyState",
+      "ErrorState",
+      "Toast",
+      "Dialog"
+    ]
+  },
+  "critical_journeys": [
+    {
+      "id": "J1",
+      "name": "Connect a model -> test it -> understand the result",
+      "e2e": "required"
+    },
+    {
+      "id": "J2",
+      "name": "Find which tested model is best for my workload",
+      "e2e": "recommended"
+    },
+    {
+      "id": "J3",
+      "name": "Compare two compatible runs -> understand trade-offs",
+      "e2e": "required"
+    },
+    {
+      "id": "J4",
+      "name": "Attempt incompatible comparison -> understand why deltas are invalid",
+      "e2e": "required"
+    },
+    {
+      "id": "J5",
+      "name": "Run fails -> understand cause -> retry successfully",
+      "e2e": "required"
+    },
+    {
+      "id": "J6",
+      "name": "Cancel a run -> resources release -> next run succeeds",
+      "e2e": "required"
+    }
+  ],
+  "reference_views": [
+    "design/reference/ux-reference-board.svg#overview",
+    "design/reference/ux-reference-board.svg#test-a-model",
+    "design/reference/ux-reference-board.svg#live-run",
+    "design/reference/ux-reference-board.svg#run-detail",
+    "design/reference/ux-reference-board.svg#compare",
+    "design/reference/ux-reference-board.svg#recovery"
+  ],
+  "validation": {
+    "accessibility_automation": "planned with browser UI: Playwright + accessibility assertions",
+    "visual_regression": "planned for stable high-value reference surfaces after implementation",
+    "manual_accessibility": "keyboard/focus/contrast review at compact, standard and wide desktop sizes",
+    "usability_evidence": "representative-user review before reference-grade UI claim"
+  },
+  "evidence": {
+    "bounded_ci_retention": true,
+    "identity_with_source_build_environment": true,
+    "zero_residue_after_ui_e2e": true
+  }
+}
