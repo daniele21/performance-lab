@@ -4,30 +4,36 @@ Status: active
 Document type: current-state
 Owner: repository
 Canonical scope: state.repository
-Last reviewed: 2026-08-17
+Last reviewed: 2026-08-18
 
 This is the short operational ledger for Performance Lab. Durable behavior belongs in architecture/feature/ADR/design contracts; active implementation detail belongs in bounded workstreams.
 
 ## Current phase
 
-The benchmark/evidence core is integrated on `dev`; the next product phase is **task-model-first UI productization plus representative real-device evidence**.
+The benchmark/evidence engine and the first end-to-end local product path are integrated on `dev`.
 
-Performance Lab can already execute reproducible endpoint evaluations, capture quality/runtime/optional resource evidence, freeze execution identity, persist immutable runs, export `.plab.zip`, compare compatible evidence and enforce regression policies through CLI/CI. Deterministic product E2E is integrated.
+Performance Lab can now execute reproducible endpoint evaluations, capture quality/runtime/optional resource evidence, freeze execution identity, persist immutable runs, export `.plab.zip`, compare compatible evidence, enforce regression policies through CLI/CI, and expose the same ownership model through a loopback browser product.
 
-The major product gap is no longer the engine: it is the local visual product that makes tested models, run evidence and comparison usable without CLI-only workflows.
-
-The product experience direction is explicitly organized around the user's decision flow rather than internal benchmark modules:
+The integrated primary path is:
 
 ```text
 Overview
-Test a model
-Runs
-Compare
+  -> Test a model
+      -> Model
+      -> Scenario
+      -> Test
+      -> frozen Review
+      -> Run test
+      -> Live Run
+      -> immutable Run Detail
 
-Library / Settings -> advanced and expert capability
+Runs -> Run Detail
+Compare -> next product slice
 ```
 
-The canonical UX/brand source of truth is `design/`, with project-specific `ux-contract.json`, `brand-kit.json` and reference views.
+The canonical UX/brand source of truth remains `design/`, with project-specific `ux-contract.json`, `brand-kit.json` and reference views.
+
+Passing deterministic CI is implementation evidence, not representative model/device benchmark evidence.
 
 ## Ownership direction
 
@@ -37,7 +43,7 @@ ADR 0004 is accepted:
 - **Local LLM Server** remains the serving/runtime control plane: inference, residency, scheduling/resources, identity and dynamic status.
 - Local LLM Server's current evaluation surface is transitional and is removed only after Performance Lab replacement parity, migration policy and cross-product evidence are complete.
 
-## Integrated baseline
+## Integrated benchmark/evidence baseline
 
 The current `dev` line includes:
 
@@ -54,49 +60,68 @@ The current `dev` line includes:
 - constrained Python 3.12/3.13 CI dependencies;
 - deterministic Product E2E across CLI + HTTP + persistence + regression.
 
-Passing deterministic CI is implementation evidence, not representative model/device benchmark evidence.
+## Integrated local product surface
 
-## Product UI contract and foundation in the active UX alignment change
+The browser product now includes:
 
-The active UI change now contains both the product contract and the executable browser foundation:
+- React + TypeScript + Vite foundation under `frontend/`;
+- executable semantic design tokens and reusable product primitives;
+- task-model-first primary navigation: Overview / Test a model / Runs / Compare;
+- tested-model-first Overview backed only by immutable stored run evidence;
+- Runs list and immutable Run Detail with separate quality/performance/resource evidence;
+- Model -> Scenario -> Test -> Review wizard;
+- server-side preflight with frozen `StarterRunConfig` digest;
+- server-owned bounded run lifecycle with one active job per local process and no implicit queue;
+- launch-time revalidation of the exact frozen digest;
+- reconnectable Live Run using job identity separate from immutable run identity;
+- explicit cancellation, shutdown and restart/interrupted semantics;
+- bounded revision-based progress and SSE transport;
+- successful terminal navigation into immutable Run Detail;
+- explicit loading/empty/error/cancelled/interrupted/reconnecting states;
+- loopback-only local API composition root exposed as `performance-lab-ui`;
+- Vite development proxy from `/api` to the fixed local API listener;
+- frontend check/Vitest/build plus Python 3.12/3.13 and Product E2E gates.
 
-- canonical design source of truth under `design/`;
-- task-model-first information architecture;
-- primary navigation: Overview / Test a model / Runs / Compare;
-- secondary Library and Settings surfaces for benchmark internals/expert configuration;
-- Test a model journey: Model -> Scenario -> Test -> Review;
-- compatibility-first Compare behavior;
-- explicit loading/empty/error/offline/partial/not-evaluated/not-comparable/cancelled states;
-- WCAG 2.2 AA target and compact/standard/wide desktop adaptive contexts;
-- J1-J6 critical journeys mapped to future browser evidence;
-- React + TypeScript + Vite browser foundation under `frontend/`;
-- exact Node/npm/dependency pins with committed `package-lock.json`;
-- loopback-only Vite development/preview listeners with fixed-port failure behavior;
-- repository operating commands under `.engineering/commands.json`;
-- deterministic frontend `check`, `test` and production `build` gates in CI;
-- scoped frontend contributor rules preserving Python ownership of benchmark semantics.
+The local process graph is now explicit:
 
-The foundation shell is engineering evidence only. Overview, Runs, Test a model, Compare and their production states are still implemented by the downstream UI tasks.
+```text
+Browser UI
+   |
+   | /api/v1 + SSE
+   v
+FastAPI loopback adapter
+   |
+   +--> UIQueryService
+   +--> RunJobManager
+   +--> SQLiteRunStore
+   +--> canonical starter registries
+   |
+   v
+endpoint adapter / Local LLM Server
+```
+
+The composition root is development/product execution evidence. Final static-asset packaging, browser/process ownership, release smoke and cleanup remain separate release work.
 
 ## Active work
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
-| [UI productization](workstreams/ui-productization.md) | ACTIVE | `UIA-001 + UIK-001` in parallel |
+| [UI productization](workstreams/ui-productization.md) | ACTIVE | compatibility-first Compare, then secondary Library/Settings |
+| Browser acceptance | PLANNED | Playwright J1-J6, cancellation/recovery and zero-residue evidence |
 | Representative model/device evidence | READY | first real Local LLM Server smoke + retained run bundle |
+| Built-product lifecycle | PLANNED | packaged UI process, smoke/start/stop/clean evidence |
 
-Completed E2E hardening is documented in [`e2e-product-acceptance.md`](e2e-product-acceptance.md); it does not replace real-runtime or human acceptance.
+Completed deterministic product E2E is documented in [`e2e-product-acceptance.md`](e2e-product-acceptance.md); it does not replace real-runtime, browser or human acceptance.
 
 ## Immediate next block
 
-1. **UIA-001 + UIK-001 in parallel** — implement the versioned UI application/read API and executable semantic design system from the `design/` contracts.
-2. Build **Overview/Tested Models** and **Runs/Run Detail** first once the first API/read-model and primitive slices are stable; both expose existing immutable evidence without requiring new run-lifecycle writes.
-3. Build **Test a model** as Model -> Scenario -> Test -> Review against explicit preflight/frozen-execution contracts; do not expose the raw benchmark config as the default UX.
-4. Add **Live Run/cancellation/recovery** only after `UIA-002` proves server-owned lifecycle and cleanup semantics.
-5. Build **Compare/regression** compatibility-first: verdict and identity differences precede valid metric deltas.
-6. Keep Library/Settings secondary throughout implementation so suites/datasets/policies/targets do not drift back into the primary task model.
-7. In parallel, execute the first real Local LLM Server smoke/evidence run so UI assumptions are checked against real identity/telemetry rather than fixtures only.
-8. Start Local LLM Server evaluation deprecation only after Performance Lab UI parity is product-tested.
+1. Build **Compare** compatibility-first: identity differences and compatibility reasons precede any metric deltas; invalid deltas stay absent.
+2. Complete **Library / Settings** as secondary expert surfaces backed by canonical suite/dataset/baseline/policy/endpoint/target owners.
+3. Add **Playwright browser acceptance** for the critical product journeys, including refresh/reconnect, explicit cancellation and recovery.
+4. Execute the first **real Local LLM Server model/device run** through the integrated local product and retain the resulting fingerprint/bundle.
+5. Add representative repeated/load and baseline/candidate regression evidence on controlled hardware.
+6. Finish **built-product lifecycle** only after browser behavior is stable: static assets, local process/browser ownership, bounded artifacts and clean shutdown.
+7. Start Local LLM Server evaluation deprecation only after replacement parity and migration evidence are complete.
 
 ## Integration lines
 
@@ -112,8 +137,8 @@ Before broad product/release claims:
 - repeated/load evidence on controlled hardware;
 - real Local LLM Server identity + telemetry usefulness check;
 - real baseline/candidate regression evidence;
-- built UI component/integration tests for the semantic design system and states;
-- built UI Playwright J1-J6 journeys plus cancellation/recovery/zero-residue evidence;
+- browser-level J1-J6 acceptance plus cancellation/recovery/zero-residue evidence;
 - automated/manual accessibility evidence appropriate to WCAG 2.2 AA;
 - adaptive-layout evidence for compact/standard/wide desktop contexts;
+- built-product start/stop/clean and no-orphan listener/browser/temp-state evidence;
 - human/manual acceptance of the shipped local product surface and progressive-disclosure hierarchy.
