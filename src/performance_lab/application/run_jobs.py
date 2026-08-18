@@ -64,6 +64,9 @@ class RunJobSnapshot(BaseModel):
     created_at: datetime
     updated_at: datetime
     config_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    target_id: str | None = None
+    model_id: str | None = None
+    scenario: str | None = None
     phase: str | None = None
     completed_samples: int = Field(default=0, ge=0)
     total_samples: int = Field(default=0, ge=0)
@@ -123,7 +126,13 @@ class RunJobManager:
         except KeyError as exc:
             raise RunJobNotFoundError(job_id) from exc
 
-    async def launch(self, config: StarterRunConfig, *, config_digest: str) -> RunJobSnapshot:
+    async def launch(
+        self,
+        config: StarterRunConfig,
+        *,
+        config_digest: str,
+        scenario: str | None = None,
+    ) -> RunJobSnapshot:
         actual_digest = starter_run_config_digest(config)
         if actual_digest != config_digest:
             raise FrozenConfigMismatchError("launch config differs from frozen review")
@@ -144,6 +153,9 @@ class RunJobManager:
                 created_at=now,
                 updated_at=now,
                 config_digest=config_digest,
+                target_id=config.target_id,
+                model_id=config.model_id,
+                scenario=scenario,
             )
             self._jobs[job_id] = snapshot
             self._active_job_id = job_id
@@ -304,6 +316,8 @@ class RunJobManager:
             revision=0,
             created_at=run.created_at,
             updated_at=now,
+            target_id=run.fingerprint.target_id,
+            model_id=run.fingerprint.model.model_id,
             phase="interrupted",
             completed_samples=len(run.samples),
             total_samples=total_samples,

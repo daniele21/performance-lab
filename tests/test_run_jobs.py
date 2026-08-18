@@ -203,6 +203,8 @@ def test_retained_working_run_is_recovered_as_interrupted_not_completed(tmp_path
     assert len(jobs) == 1
     assert jobs[0].state == RunJobState.INTERRUPTED
     assert jobs[0].run_id == "run-working"
+    assert jobs[0].target_id == "local-target"
+    assert jobs[0].model_id == "model-a"
     assert store.get_completed("run-working", required=False) is None
     assert store.get("run-working") == working
 
@@ -240,7 +242,11 @@ def test_http_launch_rechecks_server_preflight_and_enforces_capacity(tmp_path) -
         }
         first = client.post("/api/v1/run-jobs", json=payload)
         assert first.status_code == 202
-        job_id = first.json()["job_id"]
+        first_payload = first.json()
+        job_id = first_payload["job_id"]
+        assert first_payload["target_id"] == "local-target"
+        assert first_payload["model_id"] == "model-a"
+        assert first_payload["scenario"] == "general_capability"
 
         second = client.post("/api/v1/run-jobs", json=payload)
         assert second.status_code == 409

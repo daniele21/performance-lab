@@ -1,6 +1,8 @@
 import type {
   ComparisonReadModel,
   RunDetailReadModel,
+  RunJobSnapshot,
+  RunLaunchRequest,
   RunPreflightReadModel,
   RunPreflightRequest,
   RunSummaryReadModel,
@@ -27,6 +29,12 @@ async function readError(response: Response): Promise<string> {
   try {
     const payload = (await response.json()) as { detail?: unknown };
     if (typeof payload.detail === "string" && payload.detail.trim()) return payload.detail;
+    if (Array.isArray(payload.detail)) {
+      const messages = payload.detail.filter(
+        (item): item is string => typeof item === "string" && Boolean(item.trim()),
+      );
+      if (messages.length) return messages.join(" · ");
+    }
   } catch {
     // Fall through to the stable status-based message.
   }
@@ -97,6 +105,59 @@ export function preflightRun(request: RunPreflightRequest, options?: RequestOpti
     request,
     options,
   );
+}
+
+export function launchRunJob(request: RunLaunchRequest, options?: RequestOptions) {
+  return postJson<RunLaunchRequest, RunJobSnapshot>("/api/v1/run-jobs", request, options);
+}
+
+export function getRunJob(jobId: string, options?: RequestOptions) {
+  return getJson<RunJobSnapshot>(`/api/v1/run-jobs/${encodeURIComponent(jobId)}`, options);
+}
+
+export function cancelRunJob(jobId: string, options?: RequestOptions) {
+  return postJson<Record<string, never>, RunJobSnapshot>(
+    `/api/v1/run-jobs/${encodeURIComponent(jobId)}/cancel`,
+    {},
+    options,
+  );
+}
+
+const TERMINAL_JOB_STATES = new Set<RunJobSnapshot["state"]>([
+  "succeeded",
+  "failed",
+  "cancelled",
+  "interrupted",
+]);
+
+interface RunJobSubscription {
+  afterRevision?: number;
+  onSnapshot: (snapshot: RunJobSnapshot) => void;
+  onDisconnect?: () => void;
+  onMalformedEvent?: () => void;
+}
+
+export function subscribeRunJob(jobId: string, subscription: RunJobSubscription) {
+  const query = new URLSearchParams({
+    after_revision: String(subscription.afterRevision ?? -1),
+  });
+  const source = new EventSource(
+    `/api/v1/run-jobs/${encodeURIComponent(jobId)}/events?${query.toString()}`,
+  );
+  const handleSnapshot = (event: Event) => {
+    const message = event as MessageEvent<string>;
+    try {
+      const snapshot = JSON.parse(message.data) as RunJobSnapshot;
+      subscription.onSnapshot(snapshot);
+      if (TERMINAL_JOB_STATES.has(snapshot.state)) source.close();
+    } catch {
+      subscription.onMalformedEvent?.();
+    }
+  };
+
+  source.addEventListener("run_job", handleSnapshot);
+  source.onerror = () => subscription.onDisconnect?.();
+  return () => source.close();
 }
 
 export function compareRuns(

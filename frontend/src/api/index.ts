@@ -1,12 +1,16 @@
 export {
   ApiError,
+  cancelRunJob,
   compareRuns,
   getRun,
+  getRunJob,
+  launchRunJob,
   listRuns,
   listScenarios,
   listTargets,
   listTestedModels,
   preflightRun,
+  subscribeRunJob,
 } from "./client";
 export type {
   ComparisonReadModel,
@@ -21,6 +25,9 @@ export type {
   MetricReadModel,
   PreflightIssueReadModel,
   RunDetailReadModel,
+  RunJobSnapshot,
+  RunJobState,
+  RunLaunchRequest,
   RunPreflightReadModel,
   RunPreflightRequest,
   RunStatus,

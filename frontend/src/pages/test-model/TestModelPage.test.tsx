@@ -107,7 +107,7 @@ describe("TestModelView", () => {
     expect(markup).toContain("disabled");
   });
 
-  it("shows the frozen config digest and keeps launch disabled until lifecycle exists", () => {
+  it("shows the frozen config digest and enables launch only after executable preflight", () => {
     const markup = renderToStaticMarkup(
       <TestModelView
         targets={[target]}
@@ -121,6 +121,7 @@ describe("TestModelView", () => {
     expect(markup).toContain("Frozen config digest");
     expect(markup).toContain("a".repeat(64));
     expect(markup).toContain("Run test");
-    expect(markup).toContain("Launch remains disabled");
+    expect(markup).toContain("continues in the local Performance Lab process");
+    expect(markup).not.toContain("Launch remains disabled");
   });
 });
