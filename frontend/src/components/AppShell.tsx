@@ -1,0 +1,64 @@
+import type { ReactNode } from "react";
+
+import { PRIMARY_NAVIGATION, SECONDARY_NAVIGATION } from "../navigation";
+
+interface AppShellProps {
+  activePrimary?: (typeof PRIMARY_NAVIGATION)[number];
+  children: ReactNode;
+}
+
+function slug(label: string) {
+  return label.toLowerCase().replaceAll(" / ", "-").replaceAll(" ", "-");
+}
+
+export function AppShell({ activePrimary = "Overview", children }: AppShellProps) {
+  return (
+    <div className="app-shell">
+      <aside className="app-shell__sidebar">
+        <a className="app-shell__brand" href="#main-content" aria-label="Performance Lab home">
+          <span className="app-shell__mark" aria-hidden="true">
+            ◈
+          </span>
+          <span>Performance Lab</span>
+        </a>
+
+        <nav aria-label="Primary navigation">
+          <ul className="app-navigation">
+            {PRIMARY_NAVIGATION.map((item) => (
+              <li key={item}>
+                <a
+                  className="app-navigation__link"
+                  data-current={item === activePrimary ? "true" : undefined}
+                  href={`#${slug(item)}`}
+                  aria-current={item === activePrimary ? "page" : undefined}
+                >
+                  {item}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="app-shell__secondary">
+          {Object.entries(SECONDARY_NAVIGATION).map(([group, items]) => (
+            <nav key={group} aria-label={group}>
+              <p className="app-navigation__group">{group}</p>
+              <ul className="app-navigation app-navigation--secondary">
+                {items.map((item) => (
+                  <li key={item}>
+                    <a className="app-navigation__link" href={`#${slug(item)}`}>
+                      {item}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+        </div>
+      </aside>
+      <main id="main-content" className="app-shell__main">
+        {children}
+      </main>
+    </div>
+  );
+}
