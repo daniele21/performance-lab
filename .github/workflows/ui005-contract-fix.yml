@@ -1,0 +1,38 @@
+name: UI005 comparison contract fix
+
+on:
+  push:
+    branches: [agent/ui-005-compare]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Align TypeScript comparison transport with Python read model
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('frontend/src/api/types.ts')
+          text = path.read_text()
+          old = '''export interface MetricDelta {\n  metric_id: string;\n  baseline: number;\n  candidate: number;\n  absolute_delta: number;\n  relative_delta: number | null;\n  higher_is_better: boolean | null;\n  unit: string | null;\n  [key: string]: unknown;\n}\n\nexport interface DimensionComparisonReadModel extends UIModelIdentity {\n  dimension: "quality" | "runtime" | "resources";\n'''
+          new = '''export interface MetricDelta {\n  metric: string;\n  baseline_value: number;\n  candidate_value: number;\n  absolute_delta: number;\n  relative_delta_pct: number | null;\n  higher_is_better: boolean | null;\n  unit: string | null;\n}\n\nexport interface DimensionComparisonReadModel extends UIModelIdentity {\n  dimension: "capability" | "runtime" | "resource";\n'''
+          if old not in text:
+              raise SystemExit('comparison transport type anchor not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git rm .github/workflows/ui005-contract-fix.yml
+      - name: Commit transport alignment
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/api/types.ts
+          git commit -m "UI-005 align comparison transport contract"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
