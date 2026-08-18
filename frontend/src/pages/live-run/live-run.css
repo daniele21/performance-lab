@@ -1,0 +1,85 @@
+.live-run-page {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 68rem;
+}
+
+.live-run-status-row,
+.live-run-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.live-run-identity,
+.live-run-diagnostics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-border);
+}
+
+.live-run-identity > div,
+.live-run-diagnostics > div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--color-surface-elevated);
+}
+
+.live-run-identity dt,
+.live-run-diagnostics dt {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.live-run-identity dd,
+.live-run-diagnostics dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.live-run-progress-section {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.live-run-actions {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+}
+
+.live-run-actions > span {
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+}
+
+.live-run-error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 0.86rem;
+}
+
+.live-run-diagnostics code {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+@media (max-width: 54rem) {
+  .live-run-identity,
+  .live-run-diagnostics {
+    grid-template-columns: 1fr;
+  }
+
+  .live-run-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

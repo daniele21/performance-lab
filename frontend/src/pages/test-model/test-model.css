@@ -160,17 +160,23 @@
   line-height: 1.55;
 }
 
-.test-model-launch-blocked {
+.test-model-launch {
   display: flex;
   gap: var(--space-4);
   align-items: center;
 }
 
-.test-model-launch-blocked p {
+.test-model-launch p {
   margin: 0;
   color: var(--color-text-secondary);
   font-size: 0.86rem;
   line-height: 1.5;
+}
+
+.test-model-launch-error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 0.86rem;
 }
 
 @media (max-width: 54rem) {
@@ -189,7 +195,7 @@
     display: flex;
   }
 
-  .test-model-launch-blocked {
+  .test-model-launch {
     align-items: flex-start;
     flex-direction: column;
   }

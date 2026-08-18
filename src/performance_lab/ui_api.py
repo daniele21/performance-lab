@@ -133,6 +133,7 @@ def create_ui_app(
             return await manager.launch(
                 prepared.preview.config,
                 config_digest=request.config_digest,
+                scenario=request.preflight.scenario.value,
             )
         except FrozenConfigMismatchError as exc:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc

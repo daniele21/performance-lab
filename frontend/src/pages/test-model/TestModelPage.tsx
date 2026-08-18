@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { listScenarios, listTargets, preflightRun } from "../../api";
+import { launchRunJob, listScenarios, listTargets, preflightRun } from "../../api";
 import type {
   RunPreflightReadModel,
   ScenarioKind,
@@ -47,9 +47,12 @@ interface TestModelViewProps {
   preflight: RunPreflightReadModel | null;
   preflightLoading?: boolean;
   preflightError?: string | null;
+  launchLoading?: boolean;
+  launchError?: string | null;
   onSelectionChange?: (selection: WizardSelection) => void;
   onStepChange?: (step: WizardStep) => void;
   onReview?: () => void;
+  onLaunch?: () => void;
 }
 
 function stepIndex(step: WizardStep) {
@@ -64,9 +67,12 @@ export function TestModelView({
   preflight,
   preflightLoading = false,
   preflightError = null,
+  launchLoading = false,
+  launchError = null,
   onSelectionChange,
   onStepChange,
   onReview,
+  onLaunch,
 }: TestModelViewProps) {
   const currentIndex = stepIndex(step);
   const selectedScenario = scenarios.find((item) => item.scenario === selection.scenario);
@@ -195,13 +201,16 @@ export function TestModelView({
               preflight={preflight}
               loading={preflightLoading}
               error={preflightError}
+              launchLoading={launchLoading}
+              launchError={launchError}
               onRetry={onReview}
+              onLaunch={onLaunch}
             />
           ) : null}
         </section>
 
         <div className="test-model-actions">
-          <Button variant="quiet" disabled={currentIndex === 0} onClick={goBack}>
+          <Button variant="quiet" disabled={currentIndex === 0 || launchLoading} onClick={goBack}>
             Back
           </Button>
           {step !== "review" ? (
@@ -225,12 +234,18 @@ function ReviewPanel({
   preflight,
   loading,
   error,
+  launchLoading,
+  launchError,
   onRetry,
+  onLaunch,
 }: {
   preflight: RunPreflightReadModel | null;
   loading: boolean;
   error: string | null;
+  launchLoading: boolean;
+  launchError: string | null;
   onRetry?: () => void;
+  onLaunch?: () => void;
 }) {
   if (loading) {
     return (
@@ -313,15 +328,19 @@ function ReviewPanel({
       <Disclosure summary="Show exact frozen configuration">
         <pre className="test-model-config">{JSON.stringify(preview, null, 2)}</pre>
       </Disclosure>
-      <div className="test-model-launch-blocked">
-        <Button variant="primary" disabled>
-          Run test
+      <div className="test-model-launch">
+        <Button variant="primary" disabled={launchLoading} onClick={onLaunch}>
+          {launchLoading ? "Starting run…" : "Run test"}
         </Button>
         <p>
-          Launch remains disabled until the server-owned run lifecycle, progress and cancellation
-          contract is integrated.
+          The run continues in the local Performance Lab process if this browser view disconnects.
         </p>
       </div>
+      {launchError ? (
+        <p className="test-model-launch-error" role="alert">
+          {launchError}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -331,7 +350,11 @@ type LoadState =
   | { status: "ready"; targets: TargetSummaryReadModel[]; scenarios: ScenarioSummaryReadModel[] }
   | { status: "error"; message: string };
 
-export function TestModelPage() {
+interface TestModelPageProps {
+  onLaunched?: (jobId: string) => void;
+}
+
+export function TestModelPage({ onLaunched }: TestModelPageProps) {
   const [catalog, setCatalog] = useState<LoadState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [step, setStep] = useState<WizardStep>("model");
@@ -344,6 +367,8 @@ export function TestModelPage() {
   const [preflight, setPreflight] = useState<RunPreflightReadModel | null>(null);
   const [preflightLoading, setPreflightLoading] = useState(false);
   const [preflightError, setPreflightError] = useState<string | null>(null);
+  const [launchLoading, setLaunchLoading] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -382,6 +407,7 @@ export function TestModelPage() {
   const prepareReview = () => {
     setPreflightLoading(true);
     setPreflightError(null);
+    setLaunchError(null);
     setPreflight(null);
     preflightRun(request)
       .then(setPreflight)
@@ -391,6 +417,18 @@ export function TestModelPage() {
         ),
       )
       .finally(() => setPreflightLoading(false));
+  };
+
+  const launch = () => {
+    if (!preflight?.can_run || !preflight.preview) return;
+    setLaunchLoading(true);
+    setLaunchError(null);
+    launchRunJob({ preflight: request, config_digest: preflight.preview.config_digest })
+      .then((job) => onLaunched?.(job.job_id))
+      .catch((error: unknown) =>
+        setLaunchError(error instanceof Error ? error.message : "The run could not be started."),
+      )
+      .finally(() => setLaunchLoading(false));
   };
 
   if (catalog.status === "loading") {
@@ -434,12 +472,16 @@ export function TestModelPage() {
       preflight={preflight}
       preflightLoading={preflightLoading}
       preflightError={preflightError}
+      launchLoading={launchLoading}
+      launchError={launchError}
       onSelectionChange={(next) => {
         setSelection(next);
         setPreflight(null);
+        setLaunchError(null);
       }}
       onStepChange={setStep}
       onReview={prepareReview}
+      onLaunch={launch}
     />
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { AppShell, Button, StateSurface } from "./components";
 import "./foundation.css";
+import { LiveRunPage } from "./pages/live-run";
 import { OverviewPage } from "./pages/overview";
 import { RunDetailPage } from "./pages/run-detail";
 import { RunsPage } from "./pages/runs";
@@ -25,7 +26,23 @@ export function App() {
     return <OverviewPage onTestModel={() => navigate("test-a-model")} />;
   }
 
-  if (route.kind === "test-model") return <TestModelPage />;
+  if (route.kind === "test-model") {
+    return (
+      <TestModelPage onLaunched={(jobId) => navigate(`live-run/${encodeURIComponent(jobId)}`)} />
+    );
+  }
+
+  if (route.kind === "live-run") {
+    return (
+      <LiveRunPage
+        jobId={route.jobId}
+        onCompleted={(runId) => navigate(`runs/${encodeURIComponent(runId)}`)}
+        onTestAgain={() => navigate("test-a-model")}
+        onRuns={() => navigate("runs")}
+      />
+    );
+  }
+
   if (route.kind === "runs") return <RunsPage />;
 
   if (route.kind === "run-detail") {
