@@ -1,0 +1,38 @@
+name: UIA003 preflight template fix
+
+on:
+  push:
+    branches: [agent/uia-003-ui-composition-root]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preserve configured execution defaults in frozen preflight
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/performance_lab/application/ui_queries.py')
+          text = path.read_text()
+          old = '''        config = StarterRunConfig(\n            target_id=target.target_id,\n            endpoint_identity=target.endpoint_identity,\n            endpoint=endpoint,\n            model_id=request.model_id,\n            use_host_telemetry=request.use_host_telemetry,\n            suite_id="general-diagnostic-starter",\n        )\n'''
+          new = '''        template = (\n            self.starter_run_template.model_dump(mode="python")\n            if self.starter_run_template is not None\n            else {}\n        )\n        config = StarterRunConfig.model_validate(\n            {\n                **template,\n                "target_id": target.target_id,\n                "endpoint_identity": target.endpoint_identity,\n                "endpoint": endpoint,\n                "model_id": request.model_id,\n                "run_id": None,\n                "use_host_telemetry": request.use_host_telemetry,\n                "suite_id": "general-diagnostic-starter",\n            }\n        )\n'''
+          if old not in text:
+              raise SystemExit('preflight StarterRunConfig block not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git rm .github/workflows/uia003-preflight-template-fix.yml
+      - name: Commit focused patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/performance_lab/application/ui_queries.py
+          git commit -m "UIA-003 preserve configured execution defaults in preflight"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
