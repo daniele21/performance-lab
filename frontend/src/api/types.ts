@@ -193,18 +193,17 @@ export interface CompatibilityReasonReadModel extends UIModelIdentity {
 }
 
 export interface MetricDelta {
-  metric_id: string;
-  baseline: number;
-  candidate: number;
+  metric: string;
+  baseline_value: number;
+  candidate_value: number;
   absolute_delta: number;
-  relative_delta: number | null;
+  relative_delta_pct: number | null;
   higher_is_better: boolean | null;
   unit: string | null;
-  [key: string]: unknown;
 }
 
 export interface DimensionComparisonReadModel extends UIModelIdentity {
-  dimension: "quality" | "runtime" | "resources";
+  dimension: "capability" | "runtime" | "resource";
   comparable: boolean;
   reasons: CompatibilityReasonReadModel[];
   deltas: MetricDelta[];
