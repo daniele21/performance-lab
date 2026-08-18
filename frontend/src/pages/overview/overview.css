@@ -1,0 +1,41 @@
+.overview-page {
+  display: grid;
+  gap: var(--space-12);
+}
+
+.overview-page__section {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.overview-model-identity {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 10rem;
+}
+
+.overview-model-identity strong {
+  color: var(--color-text-primary);
+}
+
+.overview-model-identity span {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+
+.overview-page .data-table .metric {
+  min-width: 8rem;
+  padding: var(--space-3);
+}
+
+.overview-page .data-table .metric__value {
+  font-size: 1rem;
+}
+
+@media (max-width: 72rem) {
+  .overview-page .data-table th:nth-child(4),
+  .overview-page .data-table td:nth-child(4) {
+    display: none;
+  }
+}
