@@ -71,6 +71,7 @@ class UIQueryService:
         dataset_snapshots: tuple[DatasetSnapshot, ...] = (),
         baselines: tuple[BaselineBinding, ...] = (),
         policies: tuple[RegressionPolicy, ...] = (),
+        starter_run_template: StarterRunConfig | None = None,
     ) -> None:
         self.store = store
         self.targets = targets
@@ -79,6 +80,7 @@ class UIQueryService:
         self.dataset_snapshots = dataset_snapshots
         self.baselines = baselines
         self.policies = policies
+        self.starter_run_template = starter_run_template
         self.comparisons = RunComparisonService(store)
 
     def list_runs(self, *, offset: int = 0, limit: int = 50) -> tuple[RunSummaryReadModel, ...]:
@@ -269,13 +271,22 @@ class UIQueryService:
         if issues or endpoint is None or suite is None:
             return RunPreflightReadModel(can_run=False, issues=tuple(issues))
 
-        config = StarterRunConfig(
-            target_id=target.target_id,
-            endpoint_identity=target.endpoint_identity,
-            endpoint=endpoint,
-            model_id=request.model_id,
-            use_host_telemetry=request.use_host_telemetry,
-            suite_id="general-diagnostic-starter",
+        template = (
+            self.starter_run_template.model_dump(mode="python")
+            if self.starter_run_template is not None
+            else {}
+        )
+        config = StarterRunConfig.model_validate(
+            {
+                **template,
+                "target_id": target.target_id,
+                "endpoint_identity": target.endpoint_identity,
+                "endpoint": endpoint,
+                "model_id": request.model_id,
+                "run_id": None,
+                "use_host_telemetry": request.use_host_telemetry,
+                "suite_id": "general-diagnostic-starter",
+            }
         )
         config_digest = _config_digest(config)
         evaluator_ids = tuple(
