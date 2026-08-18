@@ -161,6 +161,14 @@ class SQLiteRunStore:
             ).fetchall()
         return tuple(load_json(Run, str(row[0])) for row in rows)
 
+    def list_working(self) -> tuple[Run, ...]:
+        """Return retained non-terminal state for restart/recovery surfaces."""
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT payload_json FROM working_runs ORDER BY updated_at, run_id"
+            ).fetchall()
+        return tuple(load_json(Run, str(row[0])) for row in rows)
+
     def delete_working(self, run_id: str) -> bool:
         with self._connect() as connection:
             cursor = connection.execute("DELETE FROM working_runs WHERE run_id = ?", (run_id,))
