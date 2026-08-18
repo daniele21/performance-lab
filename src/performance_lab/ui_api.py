@@ -7,9 +7,13 @@ from fastapi import FastAPI, HTTPException, Query
 from performance_lab.application import (
     BaselineSummaryReadModel,
     ComparisonReadModel,
+    DatasetSummaryReadModel,
     PolicySummaryReadModel,
     RunDetailReadModel,
+    RunPreflightReadModel,
+    RunPreflightRequest,
     RunSummaryReadModel,
+    ScenarioSummaryReadModel,
     SuiteSummaryReadModel,
     TargetSummaryReadModel,
     TestedModelReadModel,
@@ -19,7 +23,7 @@ from performance_lab.storage import RunNotFoundError
 
 
 def create_ui_app(queries: UIQueryService) -> FastAPI:
-    """Create the local read API without moving domain ownership into transport code."""
+    """Create the local read/preflight API without moving domain ownership into transport code."""
 
     app = FastAPI(
         title="Performance Lab Local UI API",
@@ -58,6 +62,18 @@ def create_ui_app(queries: UIQueryService) -> FastAPI:
     @app.get("/api/v1/suites", response_model=list[SuiteSummaryReadModel])
     def list_suites() -> tuple[SuiteSummaryReadModel, ...]:
         return queries.list_suites()
+
+    @app.get("/api/v1/datasets", response_model=list[DatasetSummaryReadModel])
+    def list_datasets() -> tuple[DatasetSummaryReadModel, ...]:
+        return queries.list_datasets()
+
+    @app.get("/api/v1/scenarios", response_model=list[ScenarioSummaryReadModel])
+    def list_scenarios() -> tuple[ScenarioSummaryReadModel, ...]:
+        return queries.list_scenarios()
+
+    @app.post("/api/v1/run-preflight", response_model=RunPreflightReadModel)
+    def preflight(request: RunPreflightRequest) -> RunPreflightReadModel:
+        return queries.preflight(request)
 
     @app.get("/api/v1/baselines", response_model=list[BaselineSummaryReadModel])
     def list_baselines() -> tuple[BaselineSummaryReadModel, ...]:

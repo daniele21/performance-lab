@@ -8,7 +8,10 @@ from hashlib import sha256
 from typing import Protocol
 
 from performance_lab.domain import (
+    DatasetSnapshot,
+    EndpointProfile,
     EvaluationSuite,
+    LoadProfile,
     Measurement,
     MeasurementProvenance,
     Run,
@@ -16,25 +19,37 @@ from performance_lab.domain import (
     Target,
 )
 from performance_lab.regression import BaselineBinding, RegressionPolicy
+from performance_lab.run_config import StarterRunConfig
 from performance_lab.storage import RunComparisonService
 
 from .ui_models import (
     BaselineSummaryReadModel,
     ComparisonReadModel,
     CompatibilityReasonReadModel,
+    DatasetSummaryReadModel,
     DimensionComparisonReadModel,
     EvidenceAvailability,
+    FrozenExecutionPreviewReadModel,
     IdentitySummary,
     MetricDimension,
     MetricReadModel,
     PolicySummaryReadModel,
+    PreflightIssueReadModel,
     RunDetailReadModel,
     RunEvidenceReadModel,
+    RunPreflightReadModel,
+    RunPreflightRequest,
     RunSummaryReadModel,
+    ScenarioKind,
+    ScenarioSummaryReadModel,
     SuiteSummaryReadModel,
     TargetSummaryReadModel,
     TestedModelReadModel,
 )
+
+STARTER_SUITE_ID = "general-diagnostic-starter"
+STARTER_PROMPT_TEMPLATE_VERSION = "direct-user-v1"
+STARTER_BENCHMARK_PROTOCOL_VERSION = "starter-quality-v1"
 
 
 class CompletedRunReader(Protocol):
@@ -51,13 +66,17 @@ class UIQueryService:
         store: CompletedRunReader,
         *,
         targets: tuple[Target, ...] = (),
+        endpoint_profiles: tuple[EndpointProfile, ...] = (),
         suites: tuple[EvaluationSuite, ...] = (),
+        dataset_snapshots: tuple[DatasetSnapshot, ...] = (),
         baselines: tuple[BaselineBinding, ...] = (),
         policies: tuple[RegressionPolicy, ...] = (),
     ) -> None:
         self.store = store
         self.targets = targets
+        self.endpoint_profiles = endpoint_profiles
         self.suites = suites
+        self.dataset_snapshots = dataset_snapshots
         self.baselines = baselines
         self.policies = policies
         self.comparisons = RunComparisonService(store)
@@ -120,27 +139,176 @@ class UIQueryService:
 
     def list_targets(self) -> tuple[TargetSummaryReadModel, ...]:
         return tuple(
-            TargetSummaryReadModel(
-                target_id=target.target_id,
-                display_name=target.display_name,
-                adapter_type=target.adapter_type,
-                endpoint_profile_id=target.endpoint_profile_id,
-                endpoint_identity=target.endpoint_identity,
-                capabilities=tuple(capability.value for capability in target.declared_capabilities),
-            )
-            for target in sorted(self.targets, key=lambda item: item.target_id)
+            _target_summary(target) for target in sorted(self.targets, key=lambda x: x.target_id)
         )
 
     def list_suites(self) -> tuple[SuiteSummaryReadModel, ...]:
         return tuple(
-            SuiteSummaryReadModel(
-                suite_id=suite.suite_id,
-                suite_version=suite.suite_version,
-                task_count=len(suite.tasks),
-                task_ids=tuple(task.task_id for task in suite.tasks),
-            )
+            _suite_summary(suite)
             for suite in sorted(self.suites, key=lambda item: (item.suite_id, item.suite_version))
         )
+
+    def list_datasets(self) -> tuple[DatasetSummaryReadModel, ...]:
+        return tuple(
+            DatasetSummaryReadModel.from_snapshot(snapshot)
+            for snapshot in sorted(
+                self.dataset_snapshots,
+                key=lambda item: (item.dataset_id, item.dataset_version, item.content_sha256),
+            )
+        )
+
+    def list_scenarios(self) -> tuple[ScenarioSummaryReadModel, ...]:
+        return (
+            ScenarioSummaryReadModel(
+                scenario=ScenarioKind.GENERAL_CAPABILITY,
+                title="General capability",
+                description="Balanced authored diagnostic coverage across quality tasks.",
+                supported=True,
+                suite_id=STARTER_SUITE_ID,
+            ),
+            ScenarioSummaryReadModel(
+                scenario=ScenarioKind.MY_WORKLOAD,
+                title="My workload",
+                description="Evaluate user-owned examples against an explicit workload contract.",
+                supported=False,
+                blocked_reason="Custom workload execution is not wired to the local product yet.",
+            ),
+            ScenarioSummaryReadModel(
+                scenario=ScenarioKind.PERFORMANCE,
+                title="Performance",
+                description="Focus the run on latency, throughput and resource evidence.",
+                supported=False,
+                blocked_reason="Dedicated performance scenario presets are not wired yet.",
+            ),
+            ScenarioSummaryReadModel(
+                scenario=ScenarioKind.REGRESSION,
+                title="Regression",
+                description="Evaluate against an explicit immutable baseline and policy.",
+                supported=False,
+                blocked_reason="Regression launch configuration is not wired yet.",
+            ),
+        )
+
+    def preflight(self, request: RunPreflightRequest) -> RunPreflightReadModel:
+        issues: list[PreflightIssueReadModel] = []
+        if request.scenario != ScenarioKind.GENERAL_CAPABILITY:
+            issues.append(
+                PreflightIssueReadModel(
+                    code="scenario_not_supported",
+                    field="scenario",
+                    message=f"scenario is not executable yet: {request.scenario.value}",
+                )
+            )
+            return RunPreflightReadModel(can_run=False, issues=tuple(issues))
+
+        target = next((item for item in self.targets if item.target_id == request.target_id), None)
+        if target is None:
+            issues.append(
+                PreflightIssueReadModel(
+                    code="target_not_found",
+                    field="target_id",
+                    message=f"target is not registered: {request.target_id}",
+                )
+            )
+            return RunPreflightReadModel(can_run=False, issues=tuple(issues))
+        if target.adapter_type != "openai-compatible":
+            issues.append(
+                PreflightIssueReadModel(
+                    code="adapter_not_supported",
+                    field="target_id",
+                    message=(
+                        "starter execution currently requires the openai-compatible adapter; "
+                        f"target uses {target.adapter_type}"
+                    ),
+                )
+            )
+
+        endpoint = next(
+            (
+                item
+                for item in self.endpoint_profiles
+                if item.profile_id == target.endpoint_profile_id
+            ),
+            None,
+        )
+        if endpoint is None:
+            issues.append(
+                PreflightIssueReadModel(
+                    code="endpoint_profile_not_found",
+                    field="target_id",
+                    message=f"endpoint profile is not registered: {target.endpoint_profile_id}",
+                )
+            )
+
+        suite = next((item for item in self.suites if item.suite_id == STARTER_SUITE_ID), None)
+        if suite is None:
+            issues.append(
+                PreflightIssueReadModel(
+                    code="suite_not_found",
+                    field="scenario",
+                    message=f"required suite is not registered: {STARTER_SUITE_ID}",
+                )
+            )
+
+        snapshots = {item.dataset_id: item for item in self.dataset_snapshots}
+        selected_snapshots: list[DatasetSnapshot] = []
+        if suite is not None:
+            for dataset_id in dict.fromkeys(task.dataset_snapshot_id for task in suite.tasks):
+                snapshot = snapshots.get(dataset_id)
+                if snapshot is None:
+                    issues.append(
+                        PreflightIssueReadModel(
+                            code="dataset_not_found",
+                            field="scenario",
+                            message=f"required dataset snapshot is not registered: {dataset_id}",
+                        )
+                    )
+                else:
+                    selected_snapshots.append(snapshot)
+
+        if issues or endpoint is None or suite is None:
+            return RunPreflightReadModel(can_run=False, issues=tuple(issues))
+
+        config = StarterRunConfig(
+            target_id=target.target_id,
+            endpoint_identity=target.endpoint_identity,
+            endpoint=endpoint,
+            model_id=request.model_id,
+            use_host_telemetry=request.use_host_telemetry,
+            suite_id="general-diagnostic-starter",
+        )
+        config_digest = _config_digest(config)
+        evaluator_ids = tuple(
+            dict.fromkeys(
+                f"{task.evaluator.evaluator_id}@{task.evaluator.version}" for task in suite.tasks
+            )
+        )
+        request_count = sum(
+            min(snapshots[task.dataset_snapshot_id].sample_count, task.sample_limit)
+            if task.sample_limit is not None
+            else snapshots[task.dataset_snapshot_id].sample_count
+            for task in suite.tasks
+        )
+        preview = FrozenExecutionPreviewReadModel(
+            scenario=request.scenario,
+            config=config,
+            config_digest=config_digest,
+            target=_target_summary(target),
+            suite=_suite_summary(suite),
+            datasets=tuple(
+                DatasetSummaryReadModel.from_snapshot(item) for item in selected_snapshots
+            ),
+            evaluator_ids=evaluator_ids,
+            generation=suite.generation,
+            load_profile=LoadProfile(
+                concurrency=1,
+                request_count=request_count,
+                streaming=False,
+            ),
+            prompt_template_version=STARTER_PROMPT_TEMPLATE_VERSION,
+            benchmark_protocol_version=STARTER_BENCHMARK_PROTOCOL_VERSION,
+        )
+        return RunPreflightReadModel(can_run=True, preview=preview)
 
     def list_baselines(self) -> tuple[BaselineSummaryReadModel, ...]:
         return tuple(
@@ -193,6 +361,36 @@ class UIQueryService:
                 for dimension in comparison.dimensions
             ),
         )
+
+
+def _target_summary(target: Target) -> TargetSummaryReadModel:
+    return TargetSummaryReadModel(
+        target_id=target.target_id,
+        display_name=target.display_name,
+        adapter_type=target.adapter_type,
+        endpoint_profile_id=target.endpoint_profile_id,
+        endpoint_identity=target.endpoint_identity,
+        capabilities=tuple(capability.value for capability in target.declared_capabilities),
+    )
+
+
+def _suite_summary(suite: EvaluationSuite) -> SuiteSummaryReadModel:
+    return SuiteSummaryReadModel(
+        suite_id=suite.suite_id,
+        suite_version=suite.suite_version,
+        task_count=len(suite.tasks),
+        task_ids=tuple(task.task_id for task in suite.tasks),
+    )
+
+
+def _config_digest(config: StarterRunConfig) -> str:
+    canonical = json.dumps(
+        config.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    return sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _identity(run: Run) -> IdentitySummary:
