@@ -1,0 +1,42 @@
+.runs-page {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.runs-page__run-link {
+  display: grid;
+  gap: var(--space-1);
+  width: fit-content;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.runs-page__run-link:hover strong {
+  color: var(--color-primary);
+}
+
+.runs-page__run-link code {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.runs-page__pagination {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.runs-page__pagination span {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 72rem) {
+  .runs-page .data-table th:nth-child(3),
+  .runs-page .data-table td:nth-child(3) {
+    display: none;
+  }
+}
