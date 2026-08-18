@@ -9,6 +9,7 @@ export interface UIModelIdentity {
 export type EvidenceAvailability = "available" | "unknown" | "unavailable" | "not_evaluated";
 export type MetricDimension = "quality" | "performance" | "resources";
 export type RunStatus = "planned" | "running" | "succeeded" | "failed" | "cancelled";
+export type ScenarioKind = "general_capability" | "my_workload" | "performance" | "regression";
 
 export interface MetricReadModel extends UIModelIdentity {
   metric_id: string;
@@ -71,6 +72,89 @@ export interface TestedModelReadModel extends UIModelIdentity {
   latest_run_id: string;
   latest_completed_at: string | null;
   latest_metrics: MetricReadModel[];
+}
+
+export interface TargetSummaryReadModel extends UIModelIdentity {
+  target_id: string;
+  display_name: string;
+  adapter_type: string;
+  endpoint_profile_id: string;
+  endpoint_identity: string;
+  capabilities: string[];
+}
+
+export interface DatasetSummaryReadModel extends UIModelIdentity {
+  dataset_id: string;
+  dataset_version: string;
+  source: string;
+  split: string;
+  sample_count: number;
+  selection_policy: string;
+  content_sha256: string;
+}
+
+export interface SuiteSummaryReadModel extends UIModelIdentity {
+  suite_id: string;
+  suite_version: string;
+  task_count: number;
+  task_ids: string[];
+}
+
+export interface ScenarioSummaryReadModel extends UIModelIdentity {
+  scenario: ScenarioKind;
+  title: string;
+  description: string;
+  supported: boolean;
+  blocked_reason: string | null;
+  suite_id: string | null;
+}
+
+export interface RunPreflightRequest {
+  target_id: string;
+  model_id: string;
+  scenario: ScenarioKind;
+  use_host_telemetry: boolean;
+}
+
+export interface PreflightIssueReadModel extends UIModelIdentity {
+  code: string;
+  message: string;
+  field: string | null;
+}
+
+export interface StarterRunConfigTransport {
+  target_id: string;
+  endpoint_identity: string;
+  endpoint: Record<string, unknown>;
+  model_id: string;
+  output_dir: string;
+  store_path: string;
+  run_id: string | null;
+  write_bundle: boolean;
+  use_host_telemetry: boolean;
+  suite_id: "general-diagnostic-starter";
+  [key: string]: unknown;
+}
+
+export interface FrozenExecutionPreviewReadModel extends UIModelIdentity {
+  scenario: ScenarioKind;
+  config: StarterRunConfigTransport;
+  config_digest: string;
+  target: TargetSummaryReadModel;
+  suite: SuiteSummaryReadModel;
+  datasets: DatasetSummaryReadModel[];
+  evaluator_ids: string[];
+  generation: Record<string, unknown>;
+  load_profile: Record<string, unknown>;
+  prompt_template_version: string;
+  benchmark_protocol_version: string;
+  identity_resolution: "resolved_at_launch";
+}
+
+export interface RunPreflightReadModel extends UIModelIdentity {
+  can_run: boolean;
+  issues: PreflightIssueReadModel[];
+  preview: FrozenExecutionPreviewReadModel | null;
 }
 
 export interface CompatibilityReasonReadModel extends UIModelIdentity {
