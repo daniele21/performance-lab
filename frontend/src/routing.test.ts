@@ -12,6 +12,10 @@ describe("hash routing", () => {
     expect(parseHash("#runs/run%2Fone")).toEqual({ kind: "run-detail", runId: "run/one" });
   });
 
+  it("keeps server-owned job identity in a refresh-safe Live Run route", () => {
+    expect(parseHash("#live-run/job%2Fone")).toEqual({ kind: "live-run", jobId: "job/one" });
+  });
+
   it("preserves compare context without implementing comparison semantics in routing", () => {
     expect(parseHash("#compare?run=run-1")).toEqual({ kind: "compare", runId: "run-1" });
   });
@@ -20,6 +24,10 @@ describe("hash routing", () => {
     expect(parseHash("#runs/%E0%A4%A")).toEqual({
       kind: "not-found",
       path: "runs/%E0%A4%A",
+    });
+    expect(parseHash("#live-run/%E0%A4%A")).toEqual({
+      kind: "not-found",
+      path: "live-run/%E0%A4%A",
     });
   });
 });
