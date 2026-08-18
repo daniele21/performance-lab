@@ -248,13 +248,14 @@ Color alone must never carry the critical meaning of success/failure/comparabili
 | UIX-002 information architecture + critical journeys | DONE in UX alignment change | UIX-001 | task-model-first primary/secondary navigation; J1–J6 named; canonical product/reference surfaces defined |
 | UIX-003 state model + action/progressive-disclosure hierarchy | DONE in UX alignment change | UIX-001, UIX-002 | critical states, recovery expectations, essential/contextual/advanced/expert hierarchy and canonical reference board defined |
 | UIF-001 engineering/UI foundation | DONE in UX alignment change | UIX-001..003 | pinned React/TypeScript/Vite toolchain; exact Node/npm pins; committed npm lockfile; repo-template command mapping; loopback dev/preview; frontend check/test/build CI gate; existing Python 3.12/3.13 + Product E2E remain green |
-| UIA-001 versioned local application API + UI read models | READY | UIF-001 | UI-shaped contracts for tested models, targets, runs, suites, comparisons, baselines/policies; no direct UI-to-SQLite access |
-| UIA-002 run lifecycle + progress | PLANNED | UIA-001 | bounded job ownership, SSE progress, cancellation, terminal recovery and restart semantics |
-| UIK-001 semantic design tokens + canonical primitives | READY | UIF-001, UIX-001..003 | executable tokens from `design/brand-kit.json`; canonical reusable components; responsive shell; WCAG 2.2 AA focus/keyboard/contrast baseline |
-| UI-001 Overview / tested models | PLANNED | UIA-001, UIK-001 | tested-model-first overview from real stored evidence; recent runs; scoped cohort context; one dominant Test a model CTA |
-| UI-002 Runs + Run Detail | PLANNED | UIA-001, UIK-001 | immutable run evidence, separate quality/runtime/resources, typed unavailable states and progressive Evidence/reproducibility drill-down |
-| UI-003 Test a model | PLANNED | UIA-001, UIK-001 | Model -> Scenario -> Test -> Review flow; scenario presets/defaults; advanced disclosure; every visible control maps to supported backend config; frozen preview matches execution input |
-| UI-004 Live Run + recovery | PLANNED | UIA-002, UI-003 | truthful phase/progress, summary signals, cancel, Activity/Telemetry/Diagnostics disclosure; failure/retry leaves system usable and resources released |
+| UIA-001 versioned local application API + UI read models | DONE | UIF-001 | UI-shaped contracts for tested models, targets, runs, suites, comparisons, baselines/policies; no direct UI-to-SQLite access |
+| UIA-002 run lifecycle + progress | DONE | UIA-001 | bounded job ownership, SSE progress, cancellation, terminal recovery and restart semantics |
+| UIA-003 executable local UI composition root | DONE | UIA-001, UIA-002, UI-003, UI-004 | `performance-lab-ui` loopback entrypoint wires store/query/job manager/FastAPI; frozen preflight inherits versioned local execution template; Vite proxies `/api` locally |
+| UIK-001 semantic design tokens + canonical primitives | DONE | UIF-001, UIX-001..003 | executable tokens from `design/brand-kit.json`; canonical reusable components; responsive shell; WCAG 2.2 AA focus/keyboard/contrast baseline |
+| UI-001 Overview / tested models | DONE | UIA-001, UIK-001 | tested-model-first overview from real stored evidence; recent runs; scoped cohort context; one dominant Test a model CTA |
+| UI-002 Runs + Run Detail | DONE | UIA-001, UIK-001 | immutable run evidence, separate quality/runtime/resources, typed unavailable states and progressive Evidence/reproducibility drill-down |
+| UI-003 Test a model | DONE | UIA-001, UIK-001 | Model -> Scenario -> Test -> Review flow; scenario presets/defaults; advanced disclosure; every visible control maps to supported backend config; frozen preview matches execution input |
+| UI-004 Live Run + recovery | DONE | UIA-002, UI-003 | truthful phase/progress, summary signals, cancel, Activity/Telemetry/Diagnostics disclosure; failure/retry leaves system usable and resources released |
 | UI-005 Compare / regression | PLANNED | UI-002 | compatibility-first UI; identity differences before deltas; PASS/FAIL/NOT_COMPARABLE/NOT_EVALUATED preserved; invalid deltas absent |
 | UI-006 Library + Settings | PLANNED | UIA-001, UIK-001 | suites/datasets/baselines/policies/endpoints/targets exposed as secondary surfaces backed by canonical owners |
 | E2E-UI-001 browser acceptance | PLANNED | UI-001..006 | Playwright gate covers required critical journeys, actionable recovery, accessibility essentials, bounded failure artifacts and zero residue |
@@ -306,12 +307,11 @@ UIX-001 -> UIX-002 -> UIX-003
 
 The highest-value implementation parallelism now is:
 
-- **backend lane:** `UIA-001 -> UIA-002`;
-- **design-system lane:** `UIK-001`;
-- after the first stable API + primitives slice, **read-only product lane:** `UI-001` and `UI-002` can run in parallel;
-- `UI-003` can proceed in parallel once the write/config contracts needed by Test a model are explicit;
-- `UI-004` depends on both lifecycle and Test a model;
-- `UI-005` depends primarily on Run Detail/comparison read models.
+- **primary product lane:** `UI-005` compatibility-first Compare;
+- **secondary product lane:** `UI-006` Library + Settings can proceed independently against the integrated read/config API;
+- **acceptance lane:** `E2E-UI-001` can begin browser coverage for the already integrated Overview -> Test a model -> Live Run -> Run Detail path while Compare/Library are completed;
+- **real-evidence lane:** execute representative Local LLM Server model/device runs in parallel with UI completion;
+- `REL-UI-001` remains after browser behavior stabilizes and owns final static assets/process/start-stop-clean lifecycle.
 
 ## Contract/read-model requirements
 
