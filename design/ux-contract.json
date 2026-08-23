@@ -1,10 +1,39 @@
 {
   "schema_version": 1,
-  "contract_version": "0.4.0",
+  "contract_version": "0.5.0",
   "applicable": true,
   "design_source_of_truth": {
     "type": "in-repo",
     "location": "design/"
+  },
+  "experience_context": {
+    "primary_users": [
+      "local AI / LLM engineers",
+      "model and performance evaluators",
+      "developers choosing a model/runtime configuration for a workload and device"
+    ],
+    "primary_jobs": [
+      "test a served model against a representative scenario",
+      "understand quality, runtime and resource evidence without conflating the dimensions",
+      "compare compatible evidence and choose a model/configuration for a workload and device",
+      "detect regressions against an explicit compatible baseline"
+    ],
+    "primary_surfaces": [
+      "Overview",
+      "Test a model",
+      "Live Run",
+      "Runs / Run Detail",
+      "Compare",
+      "Library / Settings"
+    ]
+  },
+  "decision_model": {
+    "user_outcome_first": true,
+    "task_model_before_layout": true,
+    "hierarchy_before_visual_polish": true,
+    "states_before_motion": true,
+    "motion_requires_purpose": true,
+    "evidence_before_completion": true
   },
   "principles": {
     "user_task_model_over_internal_architecture": true,
@@ -72,7 +101,7 @@
     ]
   },
   "design_system": {
-    "component_source": "frontend design-system primitives once UIF-001/UIK-001 land; design/ is the contract until then",
+    "component_source": "frontend/src/components and frontend/src/design",
     "brand_tokens": "design/brand-kit.json",
     "reuse_existing_semantic_component_first": true,
     "canonical_primitives": [
@@ -96,6 +125,37 @@
       "ErrorState",
       "Toast",
       "Dialog"
+    ]
+  },
+  "motion": {
+    "purpose_required": true,
+    "supported_purposes": [
+      "feedback",
+      "continuity",
+      "spatial_relationship",
+      "state_transition",
+      "progress",
+      "attention",
+      "hierarchy",
+      "meaningful_completion"
+    ],
+    "frequent_interactions_are_restrained": true,
+    "gesture_motion_tracks_input": true,
+    "performance_over_decorative_complexity": true,
+    "reduced_motion": true
+  },
+  "graphics": {
+    "functional_before_decorative": true,
+    "ui_understandable_without_decorative_imagery": true,
+    "supported_roles": [
+      "explanation",
+      "orientation",
+      "onboarding",
+      "empty_state",
+      "status",
+      "meaningful_completion",
+      "data_visualization",
+      "brand"
     ]
   },
   "critical_journeys": [
