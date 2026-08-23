@@ -1,6 +1,7 @@
 name: Temporary frontend format preview
 
 on:
+  pull_request:
   push:
     branches: [agent/ui-006-library-settings]
 
