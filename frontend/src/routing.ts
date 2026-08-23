@@ -5,6 +5,8 @@ export type AppRoute =
   | { kind: "test-model" }
   | { kind: "live-run"; jobId: string }
   | { kind: "compare"; runId?: string }
+  | { kind: "library"; section: "test-suites" | "datasets" | "baselines" | "regression-policies" }
+  | { kind: "settings"; section: "endpoints" | "devices-targets" | "advanced" }
   | { kind: "not-found"; path: string };
 
 export function parseHash(hash: string): AppRoute {
@@ -38,6 +40,19 @@ export function parseHash(hash: string): AppRoute {
     const query = new URLSearchParams(raw.slice("compare?".length));
     const runId = query.get("run") ?? undefined;
     return { kind: "compare", runId };
+  }
+
+  if (
+    raw === "test-suites" ||
+    raw === "datasets" ||
+    raw === "baselines" ||
+    raw === "regression-policies"
+  ) {
+    return { kind: "library", section: raw };
+  }
+
+  if (raw === "endpoints" || raw === "devices-targets" || raw === "advanced") {
+    return { kind: "settings", section: raw };
   }
 
   return { kind: "not-found", path: raw };
