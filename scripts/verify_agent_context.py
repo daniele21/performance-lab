@@ -6,8 +6,8 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from pathlib import Path
 import sys
+from pathlib import Path
 
 
 def parse_args() -> argparse.Namespace:
@@ -56,7 +56,8 @@ def main() -> int:
 
     if bootstrap > targets["bootstrap_max_estimated_tokens"]:
         errors.append(
-            f"bootstrap context ~{bootstrap} > {targets['bootstrap_max_estimated_tokens']} token target"
+            f"bootstrap context ~{bootstrap} > "
+            f"{targets['bootstrap_max_estimated_tokens']} token target"
         )
     if worst_focused > targets["root_scoped_workstream_max_estimated_tokens"]:
         errors.append(
