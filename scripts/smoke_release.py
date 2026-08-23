@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke an unpublished built artifact and prove graceful zero-residue shutdown."""
+"""Smoke a built artifact and prove graceful zero-residue shutdown."""
 
 from __future__ import annotations
 
@@ -18,13 +18,27 @@ from pathlib import Path
 
 from performance_lab.release_artifacts import read_manifest, sha256_file
 
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_ARTIFACT_ROOT = ROOT / "build" / "artifacts"
 HOST = "127.0.0.1"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("artifact", type=Path)
+    parser.add_argument("artifact", type=Path, nargs="?", default=None)
+    parser.add_argument("--artifact-root", type=Path, default=DEFAULT_ARTIFACT_ROOT)
     return parser.parse_args()
+
+
+def latest_artifact(root: Path) -> Path:
+    candidates = sorted(
+        root.glob("**/*.zip"),
+        key=lambda path: path.stat().st_mtime_ns,
+        reverse=True,
+    )
+    if not candidates:
+        raise RuntimeError(f"no built release artifact found under {root}")
+    return candidates[0]
 
 
 def safe_extract(archive: zipfile.ZipFile, destination: Path) -> None:
@@ -69,7 +83,7 @@ def free_port() -> int:
 
 
 def request_text(url: str) -> str:
-    with urllib.request.urlopen(url, timeout=1.0) as response:  # noqa: S310 - loopback only
+    with urllib.request.urlopen(url, timeout=1.0) as response:
         if response.status != 200:
             raise RuntimeError(f"unexpected HTTP status {response.status} for {url}")
         return response.read().decode("utf-8")
@@ -184,14 +198,20 @@ def smoke(artifact: Path) -> None:
         assert_port_released(port)
         print(
             "smoke passed: "
-            f"build={manifest.get('build_id', 'unknown')} source={manifest.get('source_revision', 'unknown')}"
+            f"build={manifest.get('build_id', 'unknown')} "
+            f"source={manifest.get('source_revision', 'unknown')}"
         )
 
 
 def main() -> int:
     args = parse_args()
     try:
-        smoke(args.artifact.resolve())
+        artifact = (
+            args.artifact.resolve()
+            if args.artifact is not None
+            else latest_artifact(args.artifact_root.resolve())
+        )
+        smoke(artifact)
     except (OSError, RuntimeError, subprocess.CalledProcessError, zipfile.BadZipFile) as exc:
         print(f"release smoke failed: {exc}", file=sys.stderr)
         return 1
