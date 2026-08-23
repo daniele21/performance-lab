@@ -2,8 +2,11 @@ import type { ReactNode } from "react";
 
 import { PRIMARY_NAVIGATION, SECONDARY_NAVIGATION } from "../navigation";
 
+type SecondaryItem = (typeof SECONDARY_NAVIGATION)[keyof typeof SECONDARY_NAVIGATION][number];
+
 interface AppShellProps {
   activePrimary?: (typeof PRIMARY_NAVIGATION)[number];
+  activeSecondary?: SecondaryItem;
   children: ReactNode;
 }
 
@@ -11,11 +14,15 @@ function slug(label: string) {
   return label.toLowerCase().replaceAll(" / ", "-").replaceAll(" ", "-");
 }
 
-export function AppShell({ activePrimary = "Overview", children }: AppShellProps) {
+export function AppShell({
+  activePrimary,
+  activeSecondary,
+  children,
+}: AppShellProps) {
   return (
     <div className="app-shell">
       <aside className="app-shell__sidebar">
-        <a className="app-shell__brand" href="#main-content" aria-label="Performance Lab home">
+        <a className="app-shell__brand" href="#overview" aria-label="Performance Lab home">
           <span className="app-shell__mark" aria-hidden="true">
             ◈
           </span>
@@ -46,7 +53,12 @@ export function AppShell({ activePrimary = "Overview", children }: AppShellProps
               <ul className="app-navigation app-navigation--secondary">
                 {items.map((item) => (
                   <li key={item}>
-                    <a className="app-navigation__link" href={`#${slug(item)}`}>
+                    <a
+                      className="app-navigation__link"
+                      data-current={item === activeSecondary ? "true" : undefined}
+                      href={`#${slug(item)}`}
+                      aria-current={item === activeSecondary ? "page" : undefined}
+                    >
                       {item}
                     </a>
                   </li>
