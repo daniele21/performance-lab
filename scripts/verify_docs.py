@@ -55,8 +55,20 @@ def main() -> int:
     errors: list[str] = []
 
     check_budget(root / "AGENTS.md", "root AGENTS", budgets["root_agents"], chars_per_token, errors)
-    check_budget(root / "docs/current-state.md", "current state", budgets["current_state"], chars_per_token, errors)
-    check_budget(root / "docs/architecture.md", "architecture", budgets["architecture"], chars_per_token, errors)
+    check_budget(
+        root / "docs/current-state.md",
+        "current state",
+        budgets["current_state"],
+        chars_per_token,
+        errors,
+    )
+    check_budget(
+        root / "docs/architecture.md",
+        "architecture",
+        budgets["architecture"],
+        chars_per_token,
+        errors,
+    )
 
     for path in root.rglob("AGENTS.md"):
         if path == root / "AGENTS.md" or ".git" in path.parts:
@@ -78,7 +90,9 @@ def main() -> int:
             if path.name == "README.md" or path.name.startswith("_"):
                 continue
             active_count += 1
-            check_budget(path, "active workstream", budgets["active_workstream"], chars_per_token, errors)
+            check_budget(
+                path, "active workstream", budgets["active_workstream"], chars_per_token, errors
+            )
             text = path.read_text(encoding="utf-8")
             if any(marker.lower() in text.lower() for marker in completed_markers):
                 errors.append(
