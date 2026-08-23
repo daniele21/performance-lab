@@ -1,4 +1,4 @@
-/* Executable semantic tokens synchronized with design/brand-kit.json contract 0.4.0. */
+/* Executable semantic tokens synchronized with design/brand-kit.json contract 0.5.0. */
 :root {
   --color-surface: #0b0f14;
   --color-surface-elevated: #111820;
@@ -35,5 +35,13 @@
   --radius-major: 16px;
 
   --shadow-overlay: 0 18px 60px rgb(0 0 0 / 35%);
-  --transition-functional: 140ms ease;
+
+  --motion-instant: 0ms;
+  --motion-fast: 100ms;
+  --motion-standard: 140ms;
+  --motion-large: 220ms;
+  --motion-ease-enter: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-move: cubic-bezier(0.2, 0, 0, 1);
+  --transition-functional: var(--motion-standard) var(--motion-ease-move);
 }
