@@ -20,6 +20,19 @@ describe("hash routing", () => {
     expect(parseHash("#compare?run=run-1")).toEqual({ kind: "compare", runId: "run-1" });
   });
 
+  it("routes Library and Settings as secondary product surfaces", () => {
+    expect(parseHash("#datasets")).toEqual({ kind: "library", section: "datasets" });
+    expect(parseHash("#regression-policies")).toEqual({
+      kind: "library",
+      section: "regression-policies",
+    });
+    expect(parseHash("#endpoints")).toEqual({ kind: "settings", section: "endpoints" });
+    expect(parseHash("#devices-targets")).toEqual({
+      kind: "settings",
+      section: "devices-targets",
+    });
+  });
+
   it("keeps malformed run routes explicit", () => {
     expect(parseHash("#runs/%E0%A4%A")).toEqual({
       kind: "not-found",
