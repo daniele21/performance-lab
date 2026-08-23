@@ -43,7 +43,9 @@ const DIMENSION_LABELS: Record<DimensionComparisonReadModel["dimension"], string
 };
 
 function runLabel(run: RunSummaryReadModel) {
-  const completed = run.completed_at ? new Date(run.completed_at).toLocaleString() : "completed run";
+  const completed = run.completed_at
+    ? new Date(run.completed_at).toLocaleString()
+    : "completed run";
   return `${run.identity.model_id} · ${run.suite_id} · ${completed}`;
 }
 
@@ -121,7 +123,9 @@ function DeltaTable({ dimension }: { dimension: DimensionComparisonReadModel }) 
 
 function MissingEvidence({ dimension }: { dimension: DimensionComparisonReadModel }) {
   if (!dimension.comparable) return null;
-  if (!dimension.missing_in_baseline.length && !dimension.missing_in_candidate.length) return null;
+  if (!dimension.missing_in_baseline.length && !dimension.missing_in_candidate.length) {
+    return null;
+  }
 
   return (
     <div className="compare-missing">
@@ -149,7 +153,9 @@ export function CompareView({
 }: CompareViewProps) {
   const baseline = runs.find((run) => run.run_id === baselineRunId);
   const candidate = runs.find((run) => run.run_id === candidateRunId);
-  const canCompare = Boolean(baseline && candidate && baselineRunId !== candidateRunId && !loading);
+  const canCompare = Boolean(
+    baseline && candidate && baselineRunId !== candidateRunId && !loading,
+  );
 
   return (
     <AppShell activePrimary="Compare">
@@ -297,7 +303,9 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
     compareRuns(baselineRunId, candidateRunId)
       .then(setComparison)
       .catch((error: unknown) =>
-        setComparisonError(error instanceof Error ? error.message : "Comparison could not be loaded."),
+        setComparisonError(
+          error instanceof Error ? error.message : "Comparison could not be loaded.",
+        ),
       )
       .finally(() => setComparisonLoading(false));
   };
