@@ -4,14 +4,13 @@ Status: active
 Document type: documentation-governance
 Owner: repository
 Canonical scope: documentation.routing
-Read when: locating the canonical source for a project question
-Last reviewed: 2026-08-17
+Last reviewed: 2026-08-23
 
-Performance Lab documentation uses progressive disclosure: start with the one source that owns the question, then follow focused links. Do not duplicate behavioral truth across planning, architecture and operational docs.
+Performance Lab uses progressive disclosure: start from the single canonical owner of the question, then follow focused references. Do not duplicate behavioral truth across status, workstreams, architecture, design and operational docs.
 
 ## Start here
 
-If you want to **use the current CLI product**:
+To **use the current product**:
 
 1. [`getting-started.md`](getting-started.md)
 2. [`run-config-reference.md`](run-config-reference.md)
@@ -19,23 +18,29 @@ If you want to **use the current CLI product**:
 4. [`output-and-evidence-reference.md`](output-and-evidence-reference.md)
 5. [`troubleshooting.md`](troubleshooting.md)
 
-If you want to **work on the local visual product**:
+To **work on the repository**:
 
-1. [`current-state.md`](current-state.md) — what is active now.
-2. [`workstreams/ui-productization.md`](workstreams/ui-productization.md) — active dependency DAG and acceptance gates.
-3. [`adr/0004-performance-lab-owns-evaluation-product.md`](adr/0004-performance-lab-owns-evaluation-product.md) — Performance Lab vs Local LLM Server ownership decision.
-4. [`assets/design/README.md`](assets/design/README.md) — visual direction and behavioral boundaries of the mockups.
-5. [`architecture.md`](architecture.md) — current durable dependency/ownership model.
+1. [`../AGENTS.md`](../AGENTS.md) — task routing and durable invariants.
+2. [`current-state.md`](current-state.md) — integrated / blocked / next state.
+3. [`architecture.md`](architecture.md) — ownership and dependency boundaries.
+4. [`workstreams/README.md`](workstreams/README.md) — active coordinated work only.
+5. [`../.engineering/commands.json`](../.engineering/commands.json) — canonical operating commands.
+
+For **product UI / UX** also read:
+
+- [`../design/ux-contract.json`](../design/ux-contract.json) — user jobs, task model, hierarchy, states, accessibility, motion/graphics and J1-J6;
+- [`../design/brand-kit.json`](../design/brand-kit.json) — semantic brand and motion tokens;
+- [`../frontend/AGENTS.md`](../frontend/AGENTS.md) — browser-specific ownership and validation.
 
 ## Canonical owners
 
 | Question | Source |
 | --- | --- |
 | What is integrated and what happens next? | [`current-state.md`](current-state.md) |
-| What is the active UI implementation DAG? | [`workstreams/ui-productization.md`](workstreams/ui-productization.md) |
-| Who owns benchmark/evaluation long term? | [`adr/0004-performance-lab-owns-evaluation-product.md`](adr/0004-performance-lab-owns-evaluation-product.md) |
-| What visual direction is approved? | [`assets/design/README.md`](assets/design/README.md) + [`assets/design/ui-reference-board.webp`](assets/design/ui-reference-board.webp) |
+| Which active implementation plan coordinates remaining work? | [`workstreams/README.md`](workstreams/README.md) |
 | What are the durable architecture boundaries? | [`architecture.md`](architecture.md) |
+| Who owns benchmark/evaluation long term? | [`adr/0004-performance-lab-owns-evaluation-product.md`](adr/0004-performance-lab-owns-evaluation-product.md) |
+| What product experience/design rules apply? | [`../design/`](../design/) |
 | How should benchmark/dataset/evaluator semantics work? | [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) |
 | How should telemetry/provenance work? | [`telemetry.md`](telemetry.md) |
 | How does Local LLM Server integrate? | [`local-llm-server-integration.md`](local-llm-server-integration.md) |
@@ -45,13 +50,15 @@ If you want to **work on the local visual product**:
 | What does deterministic product E2E prove? | [`e2e-product-acceptance.md`](e2e-product-acceptance.md) |
 | What is required before DONE? | [`definition-of-done.md`](definition-of-done.md) |
 | Where are durable architecture decisions? | [`adr/README.md`](adr/README.md) |
+| Where should durable feature behavior live when extra docs are needed? | [`features/README.md`](features/README.md) |
 
 ## Documentation lifecycle
 
-- `current-state.md` stays short and volatile.
-- `docs/workstreams/` contains only active bounded plans; completed plans are deleted after durable knowledge is transferred.
-- `architecture.md`, focused feature docs and ADRs own durable truth.
-- operational references describe what the executable product does now, not aspirational UI.
-- visual mockups are references, never evidence that a feature is shipped.
+- `current-state.md` is the only short repository-level operational ledger.
+- `workstreams/` contains only active bounded plans; completed plans are deleted after durable knowledge is transferred.
+- `architecture.md`, `features/`, focused operational references and ADRs own durable truth.
+- `design/` owns product-experience and brand/design-system contracts; generated screenshots/traces are evidence, not default durable design truth.
+- Git history owns implementation/completed-plan history; do not create new plan changelogs or per-branch progress docs.
+- Documentation and agent-context budgets are enforced by `.engineering/documentation-policy.json` as adoption checks are wired in.
 
-When sources conflict, prefer: executable contracts/tests -> accepted ADRs -> architecture/focused specs -> operational references -> active workstream/current state -> roadmap/root README.
+When sources conflict, prefer executable contracts/tests -> accepted ADRs -> architecture/design/feature owners -> operational references -> active workstream/current state -> roadmap/root README.
