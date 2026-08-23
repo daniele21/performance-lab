@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.3.0",
+  "contract_version": "0.5.0",
   "commands": {
     "setup": {
       "status": "required",
@@ -21,12 +21,12 @@
       "run": "python -m pytest tests/e2e -v --tb=short"
     },
     "build": { "status": "required", "run": "npm --prefix frontend run build" },
-    "smoke": {
-      "status": "optional",
-      "run": "npm --prefix frontend run preview -- --host 127.0.0.1"
+    "smoke": { "status": "recommended", "run": "python scripts/smoke_release.py" },
+    "package": { "status": "recommended", "run": "python scripts/package_release.py" },
+    "stop": {
+      "status": "recommended",
+      "run": "Ctrl-C the foreground performance-lab-ui process; release smoke verifies listener cleanup"
     },
-    "package": { "status": "optional", "run": "n/a until REL-UI-001" },
-    "stop": { "status": "optional", "run": "Ctrl-C the foreground Vite dev/preview process" },
     "clean": { "status": "required", "run": "python scripts/clean.py" }
   },
   "end_to_end": {
@@ -39,32 +39,32 @@
     "zero_residue_required": true
   },
   "build_identity": {
-    "implementation_status": "deferred-to-REL-UI-001",
-    "unique_per_build": false,
-    "source_revision_required": false,
-    "dirty_state_required": false,
+    "implementation_status": "implemented-by-REL-UI-001",
+    "unique_per_build": true,
+    "source_revision_required": true,
+    "dirty_state_required": true,
     "lineage_fields": ["project", "platform", "architecture", "channel", "variant"],
     "artifact_name_fields": ["product", "product_version", "build_id", "source_revision"]
   },
   "artifact_lifecycle": {
-    "implementation_status": "deferred-to-REL-UI-001",
-    "immutable_successful_artifacts": false,
-    "promote_only_after_success": false,
-    "manifest_required": false,
+    "implementation_status": "implemented-by-REL-UI-001",
+    "immutable_successful_artifacts": true,
+    "promote_only_after_success": true,
+    "manifest_required": true,
     "manifest_name": "build-manifest.json",
     "checksum_algorithm": "sha256",
     "local_keep_successful_per_lineage": 2,
-    "ci_store": "github-actions-or-equivalent",
+    "ci_store": "github-actions",
     "ci_retention_days": 7,
-    "release_store": "github-releases-or-equivalent",
-    "release_artifacts_immutable": false
+    "release_store": "github-releases",
+    "release_artifacts_immutable": true
   },
   "build_delta": {
-    "implementation_status": "deferred-to-REL-UI-001",
-    "required": false,
+    "implementation_status": "implemented-by-REL-UI-001",
+    "required": true,
     "compare_to": "previous-successful-comparable-build",
     "output": "BUILD_CHANGELOG.md",
-    "bundle_with_artifact": false,
+    "bundle_with_artifact": true,
     "dimensions": [
       "source",
       "dependencies",
@@ -76,9 +76,9 @@
     ]
   },
   "local_runtime": {
-    "applicable": false,
+    "applicable": true,
     "bind_default": "loopback",
-    "port_strategy": "fixed-during-UIF-001; collision-fails-fast",
+    "port_strategy": "configurable-with-collision-check",
     "foreground_default": true,
     "readiness_required": true,
     "graceful_shutdown_required": true,
