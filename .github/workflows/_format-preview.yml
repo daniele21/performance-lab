@@ -1,0 +1,26 @@
+name: Temporary frontend format preview
+
+on:
+  push:
+    branches: [agent/ui-005-compare]
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm install --global npm@11.17.0
+      - run: npm --prefix frontend ci
+      - name: Print canonical Prettier diff
+        shell: bash
+        run: |
+          npm --prefix frontend exec prettier -- --write src/pages/compare/ComparePage.tsx
+          git diff -- frontend/src/pages/compare/ComparePage.tsx
