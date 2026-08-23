@@ -1,45 +1,51 @@
 # Branching and integration policy
 
 Status: active
-Last reviewed: 2026-08-15
+Last reviewed: 2026-08-23
 
-The repository uses a lightweight two-line policy for concurrent implementation.
+Performance Lab uses a lightweight two-line policy for parallel implementation.
 
-- `main` is stable and release-oriented.
+- `main` is stable/release-oriented.
 - `dev` is the canonical integration branch for feature, fix, dependency, documentation and UX work.
-- Feature branches are short-lived and should use a descriptive prefix such as `feat/`, `fix/`, `docs/` or `agent/`.
-- Ordinary pull requests target `dev`; promotion from a validated `dev` to `main` is deliberate.
-- The direct-to-`main` bootstrap exception ended after the validated FND-001/FND-002 foundation. New parallel work starts from `dev`.
+- Ordinary branches start from the latest green `dev` and target `dev`.
+- Use short-lived descriptive prefixes such as `feat/`, `fix/`, `docs/`, `chore/` or `agent/`.
+- Promotion from validated `dev` to `main` is deliberate and should not be confused with merging an ordinary feature branch.
 
 ## Parallel work
 
-The workstream IDs in `docs/implementation-plan.md` define ownership boundaries. Concurrent branches should avoid modifying another lane's implementation unless the shared contract change is coordinated first.
+Parallelism is defined by the active bounded workstream under `docs/workstreams/`, not by historical bootstrap task IDs.
 
-When a shared domain contract changes:
+Parallel branches are safe when:
 
-1. update the owning FND contract and tests;
-2. record material dependency/acceptance changes in `docs/plan-changelog.md`;
-3. rebase/update dependent workstreams;
-4. validate the complete integration before merging subsequent dependent changes.
+- ownership/write boundaries do not conflict; or
+- a shared contract change has an explicit integration point and lands before dependent slices consume it.
 
-Prefer separate branches for the currently unlocked lanes:
+When a shared domain/application/design contract changes:
 
-```text
-agent/fnd-003-plugin-contracts
-agent/adp-001-openai-adapter
-agent/dat-001-dataset-loading
-agent/tel-001-collector-contract
-agent/sto-001-run-store
-```
+1. update the canonical owner and focused tests first;
+2. update the active workstream only if dependencies/acceptance materially change;
+3. rebase/update dependent branches on the new integration contract;
+4. validate the complete shared boundary before merging dependent behavior.
 
-These branches may proceed concurrently after `dev` exists. Shared contract changes should land in `dev` before dependent branches rely on them.
+Current high-value parallel lanes are listed in [`docs/current-state.md`](docs/current-state.md) and [`docs/workstreams/ui-productization.md`](docs/workstreams/ui-productization.md). Do not preserve branch lists in this policy; branches are ephemeral and Git already records them.
 
 ## Merge readiness
 
-A branch is merge-ready when the relevant Definition of Done is satisfied and:
+A branch is merge-ready when:
 
-```bash
-python scripts/validate.py
-```
+- applicable Definition of Done / workstream acceptance criteria are satisfied;
+- the relevant `.engineering/commands.json` validation gates pass;
+- repository-health checks pass;
+- exact evidence is recorded in the PR without upgrading unexecuted hardware/accessibility/release claims to PASS;
+- owned processes/listeners/temp state are cleaned for any lifecycle work.
 
-passes from a clean environment. A green feature branch is not release evidence if required real-endpoint or representative-device evidence is still deferred.
+`dev` branch protection should require the repository-validation/frontend/product-E2E/repository-health checks once repository settings are configured. The branch currently relies on review/CI convention rather than protected required-status enforcement; treat enabling protection as repository administration work, not as an application-code workaround.
+
+## Promotion to main
+
+Before `dev` -> `main` promotion:
+
+- reconcile any commits that landed directly on `main` so neither line silently drops product/documentation truth;
+- require the applicable release/build lifecycle evidence;
+- preserve immutable run/build evidence and source identity where the release claim depends on it;
+- keep representative device/model evidence explicitly pending unless it was actually executed.

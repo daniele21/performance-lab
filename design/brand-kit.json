@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.4.0",
+  "contract_version": "0.5.0",
   "product_name": "Performance Lab",
   "assets": {
     "logo_primary": "docs/assets/brand/logo-lockup.svg",
@@ -40,8 +40,26 @@
   },
   "style": {
     "iconography": "simple outline icons with consistent 1.5-2px stroke; never decorative when a text label is clearer",
-    "motion": "short functional transitions only; honor reduced-motion preferences",
+    "motion": "short functional transitions only; motion communicates feedback, continuity, progress or state change and honors reduced-motion preferences",
     "imagery": "no decorative stock imagery in core workflows; charts and evidence visuals must encode real data",
     "voice_microcopy": "concise, concrete, user-goal language; prefer 'Test a model' over internal evaluation terminology; errors state what failed and the next recovery action"
+  },
+  "motion_tokens": {
+    "durations": {
+      "instant": "0ms",
+      "fast": "100ms",
+      "standard": "140ms",
+      "large": "220ms"
+    },
+    "easing": {
+      "enter": "cubic-bezier(0.2, 0, 0, 1)",
+      "exit": "cubic-bezier(0.4, 0, 1, 1)",
+      "move": "cubic-bezier(0.2, 0, 0, 1)"
+    },
+    "spring": {
+      "default": "n/a - restrained CSS transitions are canonical",
+      "bounce": "none for repeated product workflows"
+    },
+    "reduced_motion_strategy": "remove non-essential transitions and spatial movement while preserving immediate state, focus and progress feedback"
   }
 }

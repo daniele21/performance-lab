@@ -1,4 +1,4 @@
-export const BRAND_CONTRACT_VERSION = "0.4.0" as const;
+export const BRAND_CONTRACT_VERSION = "0.5.0" as const;
 
 export const COLOR_TOKENS = {
   surface: "#0B0F14",
@@ -18,6 +18,26 @@ export const COLOR_TOKENS = {
   evidence_unavailable: "#475569",
   border: "#24303C",
   focus: "#67E8F9",
+} as const;
+
+export const MOTION_TOKENS = {
+  durations: {
+    instant: "0ms",
+    fast: "100ms",
+    standard: "140ms",
+    large: "220ms",
+  },
+  easing: {
+    enter: "cubic-bezier(0.2, 0, 0, 1)",
+    exit: "cubic-bezier(0.4, 0, 1, 1)",
+    move: "cubic-bezier(0.2, 0, 0, 1)",
+  },
+  spring: {
+    default: "n/a - restrained CSS transitions are canonical",
+    bounce: "none for repeated product workflows",
+  },
+  reduced_motion_strategy:
+    "remove non-essential transitions and spatial movement while preserving immediate state, focus and progress feedback",
 } as const;
 
 export type ColorTokenName = keyof typeof COLOR_TOKENS;

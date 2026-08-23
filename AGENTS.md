@@ -1,174 +1,113 @@
-# AGENTS.md — AI Performance Lab contributor guide
+# Performance Lab — coding agent guide
 
-This repository treats documentation, reproducible evidence and implementation state as part of the product contract.
+This file is the repository-wide navigation layer for coding agents. It owns durable invariants, routing and validation selection. It is not a status ledger or a substitute for architecture, feature or workstream documentation.
 
-## 1. Required reading order
+## Read only what the task requires
 
-For normal implementation work, read only what is needed:
+Always read this guide, then only:
 
-1. [`README.md`](README.md) — product boundary.
-2. [`docs/current-state.md`](docs/current-state.md) — integrated baseline, blockers and next work.
-3. [`docs/implementation-plan.md`](docs/implementation-plan.md) — locate the task ID, dependencies and acceptance criteria.
-4. The closest focused specification:
-   - [`docs/architecture.md`](docs/architecture.md)
-   - [`docs/evaluation-and-benchmarking.md`](docs/evaluation-and-benchmarking.md)
-   - [`docs/telemetry.md`](docs/telemetry.md)
-5. [`docs/definition-of-done.md`](docs/definition-of-done.md) before marking work complete.
+1. the closest scoped `AGENTS.md` for the target subtree (`frontend/AGENTS.md` for browser work);
+2. the canonical architecture/feature/workstream source required by the change;
+3. `.engineering/commands.json` when setup, test, E2E, build, runtime or cleanup behavior is relevant;
+4. for meaningful user-facing work, `design/ux-contract.json` and `design/brand-kit.json`;
+5. the owning implementation, direct consumers and nearby tests.
 
-Use [`docs/README.md`](docs/README.md) to route unfamiliar questions. Do not treat every document as mandatory reading.
+Use `docs/current-state.md` only when the task depends on current integrated/blocked/next state. Do not load every plan or all documentation for a local change.
 
-## 2. Canonical documentation ownership
+## Repository purpose
 
-- live integrated/blocked/next state -> `docs/current-state.md`
-- target, task decomposition, dependencies, acceptance -> `docs/implementation-plan.md`
-- capability milestone sequencing -> `docs/roadmap.md`
-- material changes to the plan and rationale -> `docs/plan-changelog.md`
-- architectural boundaries -> `docs/architecture.md` / ADR
-- evaluator/dataset/performance protocol -> `docs/evaluation-and-benchmarking.md`
-- telemetry/resource protocol -> `docs/telemetry.md`
-- completion requirements -> `docs/definition-of-done.md`
+Performance Lab evaluates externally served AI inference endpoints. It answers a deployment decision: for a use case and device, which available model/configuration provides the best evidence-backed trade-off? The lab owns evaluation, evidence, comparison and regression; the serving runtime remains external.
 
-Do not copy the same detailed status table into several files.
+## Non-negotiable invariants
 
-## 3. Planning discipline
+- Core does not own model loading or serving-runtime lifecycle.
+- A model name alone is never a complete benchmark identity; execution fingerprints remain explicit and immutable.
+- Completed run evidence and dataset snapshots are immutable/versioned.
+- Quality, runtime performance and resource evidence remain separate dimensions.
+- Compatibility is established before deltas, rankings or regression verdicts are shown.
+- Unknown/unavailable evidence is never encoded as zero or silently fabricated.
+- Endpoint-reported and lab-observed measurements retain distinct provenance.
+- Secrets and raw authorization material are never persisted in portable evidence.
+- UI/application projections consume canonical Python semantics; TypeScript must not reimplement benchmark/comparability truth or read SQLite directly.
+- Local UI/API listeners default to loopback. Run jobs, listeners, temporary state and evidence artifacts are bounded and have explicit cleanup ownership.
+- Real device/model claims require real evidence; deterministic fakes or hosted CI must not be promoted into hardware claims.
 
-Every implementation branch/work block should name the task ID(s) it addresses, for example:
+## Ownership and routing
 
-```text
-ADP-001 OpenAI-compatible adapter
-PERF-001 single-request latency protocol
-```
+| Change | Start here | Inspect next |
+| --- | --- | --- |
+| Domain / fingerprint / comparability | `src/performance_lab/domain/` | `docs/architecture.md`, consumers, tests |
+| Inference integration | `src/performance_lab/adapters/` | plugin contracts, performance/orchestrator tests |
+| Dataset / evaluator behavior | `src/performance_lab/datasets/`, `src/performance_lab/evaluation/` | evaluation spec, fixtures/tests |
+| Runtime benchmark / telemetry | `src/performance_lab/performance/`, `src/performance_lab/telemetry/` | provenance/resource contracts, tests |
+| Persistence / comparison / regression | `src/performance_lab/storage/`, `src/performance_lab/regression/` | evidence reference, tests |
+| UI application/API lifecycle | `src/performance_lab/application/`, `src/performance_lab/ui_api.py`, `src/performance_lab/ui_server.py` | frontend API client, lifecycle tests |
+| Browser UI | `frontend/AGENTS.md` | `design/`, owning page/components/tests |
+| Product experience / design system | `design/ux-contract.json` | `design/brand-kit.json`, `frontend/src/design/`, critical journeys |
+| Active coordinated work | `docs/current-state.md` | relevant `docs/workstreams/*.md` only |
 
-Before starting:
+Add another scoped `AGENTS.md` only when a subtree has meaningful local hazards, ownership or validation rules.
 
-- verify dependencies in `implementation-plan.md`;
-- verify live state in `current-state.md`;
-- if a task is blocked, do not silently bypass the dependency by inventing a duplicate contract.
+## Project operating commands
 
-After implementation:
+`.engineering/commands.json` is the canonical intent-to-command map. Use it rather than inventing a second command path.
 
-- update task status in `current-state.md`;
-- update `roadmap.md` only when a milestone outcome/status changes;
-- update `implementation-plan.md` only when target/dependencies/acceptance change;
-- append `plan-changelog.md` only for a material planning change.
+- `check` — broad cheap validation while iterating.
+- `test` — unit/integration/contract behavior.
+- `e2e` — complete critical workflow evidence when lower-level tests are insufficient.
+- `build` — production browser build when shipped code changes.
+- `smoke` — minimal built/runtime viability when applicable.
+- `stop` / `clean` — release project-owned runtime/generated state.
 
-## 4. Parallelization discipline
+E2E and smoke are not synonyms. The current build-identity/artifact-promotion gap is explicitly owned by `REL-UI-001`; do not mark those deferred guarantees complete before the implementation exists.
 
-The repository deliberately separates work into lanes:
+## Product experience routing
 
-```text
-FND repository/contracts
-ADP inference adapters
-DAT datasets/suites
-EVAL capability evaluation
-PERF runtime benchmarking
-TEL telemetry
-STO storage/comparison
-CLI developer control plane
-REG regression/CI
-UI visual product
-INT external integrations
-DOC documentation/evidence
-```
-
-When dependencies are satisfied, prefer independent workstreams in parallel rather than serializing unrelated tasks.
-
-Current planned fan-out after FND-002:
+The repository adopts the `product-ui` profile. Meaningful UX/UI work follows this dependency order at the depth justified by the change:
 
 ```text
-ADP-001  ||  DAT-001  ||  TEL-001  ||  STO-001  ||  CLI-001(fakes)
+user outcome
+-> task model
+-> information architecture / critical journey
+-> information + action hierarchy
+-> progressive disclosure / defaults
+-> interactions / states / feedback / recovery
+-> adaptive / platform behavior
+-> accessibility
+-> design system / components
+-> motion
+-> visual polish / graphics
+-> validation
 ```
 
-Later:
+Structural UX changes traverse the full sequence. Interaction changes start at the earliest affected task/state boundary. Visual-only changes preserve the settled task model and use existing semantic components/tokens.
 
-```text
-EVAL-001  ||  PERF-001  ||  TEL-002  ||  STO-003
-```
+Do not expose internal benchmark architecture merely because the backend has more options. Motion and graphics need an experience purpose; they must not compensate for unresolved hierarchy, flow, feedback or recovery.
 
-Parallel work must still converge on one canonical domain contract. Do not create competing copies of schemas/interfaces in separate lanes.
+## Change workflow
 
-## 5. Core architectural invariants
+1. Confirm the owning boundary and smallest coherent scope.
+2. Inspect owner, direct consumers, fakes and tests before changing shared contracts.
+3. For coordinated work, use the single active bounded workstream instead of creating branch-progress documents.
+4. Implement one coherent slice without speculative layers.
+5. Validate narrowly while iterating, then expand according to blast radius using `.engineering/commands.json`.
+6. Update only canonical durable docs/design contracts whose current behavior or decision changed.
+7. Update `docs/current-state.md` only for integrated/blocked/next state changes.
+8. Finalize completed workstreams by transferring durable knowledge and deleting the workstream by default.
+9. Inspect the complete diff before publishing.
 
-Do not violate these without an ADR + plan update:
+## Documentation lifecycle
 
-- Performance Lab evaluates externally served inference; core does not own model loading/runtime lifecycle.
-- Provider/runtime differences belong behind adapters.
-- A model name alone is never the complete benchmark identity.
-- Completed run evidence is immutable.
-- Dataset selection is frozen into an immutable snapshot identity.
-- Effective generation configuration is recorded or explicitly unknown.
-- Quality, runtime performance and resource efficiency remain separate metric dimensions.
-- Comparison is dimension-specific and must surface incompatibility reasons.
-- Unavailable metrics remain unavailable; never encode them as zero.
-- Endpoint-reported metrics and lab-observed metrics retain different provenance.
-- TTFT is not total latency.
-- Token throughput requires trustworthy token counts.
-- A first request is not called cold unless a controlled cold precondition exists.
-- Telemetry failure does not fail inference unless a suite explicitly requires that telemetry metric.
+- `docs/architecture.md` owns current architecture and ownership boundaries.
+- `docs/features/` owns durable shipped feature behavior when extra explanation is needed.
+- `docs/adr/` owns accepted durable architectural decisions.
+- `docs/current-state.md` is the single short operational ledger.
+- `docs/workstreams/` contains only active bounded implementation plans.
+- `design/` owns product-experience and brand/design-system contracts.
+- Git history owns implementation and completed-plan history.
 
-## 6. Privacy invariants
+Do not create new plan changelogs, per-branch progress docs or duplicate status registries.
 
-Never persist in normal aggregate-safe evidence:
+## Evidence and stop conditions
 
-- API keys or authorization headers;
-- signed URLs/tokens;
-- arbitrary environment variables;
-- secrets from endpoint configuration;
-- private file paths unless sanitized;
-- prompt/output text when aggregate-safe mode is active.
-
-Evidence-rich prompt/output persistence must be explicit and documented.
-
-## 7. Test expectations
-
-Use deterministic fakes at the narrowest useful layer.
-
-Expected patterns:
-
-- pure tests for fingerprints, compatibility, evaluators and statistics;
-- fake local HTTP server for inference adapter behavior;
-- fake collectors for telemetry/orchestrator behavior;
-- persistence integration tests for atomic/immutable evidence;
-- end-to-end fake-endpoint execution before real-model tests;
-- real endpoint/device evidence only for claims that require it.
-
-Do not make CI depend on downloading a large model for ordinary deterministic validation unless a later release gate explicitly requires it.
-
-## 8. Validation
-
-FND-001 will establish the canonical repository validation command and CI workflow. Until then, documentation-only changes should at minimum verify:
-
-```text
-all relative documentation links resolve
-Markdown is structurally readable
-git diff --check equivalent passes
-canonical owners do not contradict each other
-current-state matches the implementation-plan task IDs
-```
-
-Once repository commands exist, update this file and `definition-of-done.md` in the same change.
-
-## 9. New documents
-
-Before adding a document:
-
-1. read `docs/README.md`;
-2. update an existing canonical owner if possible;
-3. create a new specification only for a durable independently readable concern;
-4. give it required metadata and a unique canonical scope;
-5. add it to `docs/README.md`;
-6. use an ADR for durable architectural decisions with meaningful alternatives.
-
-Do not create per-branch progress documents. Use `current-state.md` and task IDs.
-
-## 10. Scope changes discovered during implementation
-
-If implementation reveals that a task must be split or reordered:
-
-1. do not silently expand the task;
-2. update `implementation-plan.md` with the new task/dependency structure;
-3. append the rationale to `plan-changelog.md`;
-4. update `current-state.md` and roadmap if affected;
-5. continue with the now-canonical plan.
-
-This keeps parallel agents from working from stale assumptions.
+Never claim validation, accessibility, real-device performance, cleanup or release evidence that was not executed. Surface the conflict instead of improvising when a change would violate a durable invariant/ADR, expose sensitive state, create a second source of truth, bypass comparability/evidence identity, bypass required lifecycle cleanup, or contradict the adopted product-experience contract.
