@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -116,8 +117,6 @@ def test_prune_keeps_latest_successful_artifacts_per_lineage(tmp_path: Path) -> 
         timestamp = 1_700_000_000 + index
         manifest_path.touch()
         manifest_path.chmod(0o600)
-        import os
-
         os.utime(manifest_path, (timestamp, timestamp))
 
     removed = prune_successful_artifacts(lineage, keep=2)
