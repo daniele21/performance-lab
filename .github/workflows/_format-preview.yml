@@ -21,7 +21,8 @@ jobs:
       - run: npm install --global npm@11.17.0
       - run: npm --prefix frontend ci
       - name: Print canonical Prettier diff
+        working-directory: frontend
         shell: bash
         run: |
-          npm --prefix frontend exec prettier -- --write src/api/types.ts src/components/AppShell.tsx src/pages/library/LibraryPage.tsx src/pages/settings/SettingsPage.tsx
-          git diff -- frontend/src/api/types.ts frontend/src/components/AppShell.tsx frontend/src/pages/library/LibraryPage.tsx frontend/src/pages/settings/SettingsPage.tsx
+          npm exec prettier -- --write src/api/types.ts src/components/AppShell.tsx src/pages/library/LibraryPage.tsx src/pages/settings/SettingsPage.tsx
+          git diff -- src/api/types.ts src/components/AppShell.tsx src/pages/library/LibraryPage.tsx src/pages/settings/SettingsPage.tsx
