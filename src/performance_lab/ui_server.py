@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import socket
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -32,6 +33,17 @@ def _validated_assets_dir(assets_dir: Path | None) -> Path | None:
     if not (resolved / "index.html").is_file():
         raise ValueError(f"frontend assets directory is missing index.html: {resolved}")
     return resolved
+
+
+def _ensure_port_available(port: int) -> None:
+    if not 1 <= port <= 65535:
+        raise ValueError("port must be between 1 and 65535")
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            probe.bind((UI_SERVER_HOST, port))
+        except OSError as exc:
+            raise OSError(f"loopback port {port} is already in use") from exc
 
 
 def build_local_ui_app(
@@ -75,8 +87,7 @@ def serve_local_ui(
 ) -> None:
     """Serve the API and optional built frontend from one loopback-owned process."""
 
-    if not 1 <= port <= 65535:
-        raise ValueError("port must be between 1 and 65535")
+    _ensure_port_available(port)
     try:
         import uvicorn
     except ModuleNotFoundError as exc:  # pragma: no cover - exercised outside ui extra
