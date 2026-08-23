@@ -1,4 +1,4 @@
-"""Remove project-owned generated validation and frontend build output."""
+"""Remove project-owned generated validation, build and frontend output."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ GENERATED_PATHS = (
     ROOT / ".pytest_cache",
     ROOT / ".ruff_cache",
     ROOT / "htmlcov",
+    ROOT / "build",
     ROOT / "frontend" / "dist",
     ROOT / "frontend" / "coverage",
     ROOT / "frontend" / "node_modules" / ".vite",
