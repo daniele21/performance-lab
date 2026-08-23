@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import socket
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 from typing import TextIO
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from performance_lab.application import UIQueryService
 from performance_lab.application.run_jobs import RunJobManager
@@ -21,7 +24,33 @@ UI_SERVER_HOST = "127.0.0.1"
 UI_SERVER_PORT = 8765
 
 
-def build_local_ui_app(config: StarterRunConfig) -> FastAPI:
+def _validated_assets_dir(assets_dir: Path | None) -> Path | None:
+    if assets_dir is None:
+        return None
+    resolved = assets_dir.resolve()
+    if not resolved.is_dir():
+        raise ValueError(f"frontend assets directory does not exist: {resolved}")
+    if not (resolved / "index.html").is_file():
+        raise ValueError(f"frontend assets directory is missing index.html: {resolved}")
+    return resolved
+
+
+def _ensure_port_available(port: int) -> None:
+    if not 1 <= port <= 65535:
+        raise ValueError("port must be between 1 and 65535")
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            probe.bind((UI_SERVER_HOST, port))
+        except OSError as exc:
+            raise OSError(f"loopback port {port} is already in use") from exc
+
+
+def build_local_ui_app(
+    config: StarterRunConfig,
+    *,
+    assets_dir: Path | None = None,
+) -> FastAPI:
     """Build the real local UI graph from one versioned starter execution config."""
 
     bundle = build_general_starter_suite()
@@ -42,27 +71,32 @@ def build_local_ui_app(config: StarterRunConfig) -> FastAPI:
         starter_run_template=config,
     )
     run_jobs = RunJobManager(recovered_runs=store.list_working())
-    return create_ui_app(queries, run_jobs=run_jobs)
+    app = create_ui_app(queries, run_jobs=run_jobs)
+
+    built_assets = _validated_assets_dir(assets_dir)
+    if built_assets is not None:
+        app.mount("/", StaticFiles(directory=str(built_assets), html=True), name="frontend")
+    return app
 
 
-def serve_local_ui(config: StarterRunConfig, *, port: int = UI_SERVER_PORT) -> None:
-    """Serve the UI API on loopback only.
+def serve_local_ui(
+    config: StarterRunConfig,
+    *,
+    port: int = UI_SERVER_PORT,
+    assets_dir: Path | None = None,
+) -> None:
+    """Serve the API and optional built frontend from one loopback-owned process."""
 
-    Built-product/static-asset ownership remains a later release task. During UI
-    development Vite proxies `/api` to this fixed local API listener.
-    """
-
-    if not 1 <= port <= 65535:
-        raise ValueError("port must be between 1 and 65535")
+    _ensure_port_available(port)
     try:
         import uvicorn
-    except ModuleNotFoundError as exc:  # pragma: no cover - exercised outside dev extra
+    except ModuleNotFoundError as exc:  # pragma: no cover - exercised outside ui extra
         raise RuntimeError(
             "UI server dependency missing; install the project with the 'ui' extra"
         ) from exc
 
     uvicorn.run(
-        build_local_ui_app(config),
+        build_local_ui_app(config, assets_dir=assets_dir),
         host=UI_SERVER_HOST,
         port=port,
         log_level="info",
@@ -76,6 +110,12 @@ def build_ui_parser() -> argparse.ArgumentParser:
         required=True,
         type=str,
         help="Versioned StarterRunConfig JSON defining the local endpoint and evidence store.",
+    )
+    parser.add_argument(
+        "--assets",
+        type=str,
+        default=None,
+        help="Optional built frontend directory. When set, the UI and /api share one loopback process.",
     )
     parser.add_argument("--port", type=int, default=UI_SERVER_PORT)
     return parser
@@ -91,20 +131,20 @@ def main(
     errors = stderr or sys.stderr
     args = build_ui_parser().parse_args(list(argv) if argv is not None else None)
 
-    from pathlib import Path
-
     try:
         config = load_starter_run_config(Path(args.config))
         if not 1 <= args.port <= 65535:
             raise ValueError("port must be between 1 and 65535")
+        assets_dir = _validated_assets_dir(Path(args.assets)) if args.assets else None
     except (RunConfigError, ValueError) as exc:
         errors.write(f"error: {exc}\n")
         return 2
 
-    output.write(f"Performance Lab UI API: http://{UI_SERVER_HOST}:{args.port}\n")
+    mode = "built product" if assets_dir is not None else "UI API"
+    output.write(f"Performance Lab {mode}: http://{UI_SERVER_HOST}:{args.port}\n")
     try:
-        serve_local_ui(config, port=args.port)
-    except (RuntimeError, OSError) as exc:
+        serve_local_ui(config, port=args.port, assets_dir=assets_dir)
+    except (RuntimeError, OSError, ValueError) as exc:
         errors.write(f"error: {exc}\n")
         return 2
     return 0
