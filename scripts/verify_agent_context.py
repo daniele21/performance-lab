@@ -25,7 +25,9 @@ def estimate(path: Path, chars_per_token: int) -> int:
 def main() -> int:
     args = parse_args()
     root = Path(args.root).resolve()
-    policy = json.loads((root / ".engineering/documentation-policy.json").read_text(encoding="utf-8"))
+    policy = json.loads(
+        (root / ".engineering/documentation-policy.json").read_text(encoding="utf-8")
+    )
     chars_per_token = int(policy.get("estimated_token_characters", 4))
     targets = policy["context_targets"]
 
