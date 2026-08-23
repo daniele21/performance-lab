@@ -1,5 +1,8 @@
 import type {
+  BaselineSummaryReadModel,
   ComparisonReadModel,
+  DatasetSummaryReadModel,
+  PolicySummaryReadModel,
   RunDetailReadModel,
   RunJobSnapshot,
   RunLaunchRequest,
@@ -7,6 +10,7 @@ import type {
   RunPreflightRequest,
   RunSummaryReadModel,
   ScenarioSummaryReadModel,
+  SuiteSummaryReadModel,
   TargetSummaryReadModel,
   TestedModelReadModel,
 } from "./types";
@@ -93,6 +97,22 @@ export function getRun(runId: string, options?: RequestOptions) {
 
 export function listTargets(options?: RequestOptions) {
   return getJson<TargetSummaryReadModel[]>("/api/v1/targets", options);
+}
+
+export function listSuites(options?: RequestOptions) {
+  return getJson<SuiteSummaryReadModel[]>("/api/v1/suites", options);
+}
+
+export function listDatasets(options?: RequestOptions) {
+  return getJson<DatasetSummaryReadModel[]>("/api/v1/datasets", options);
+}
+
+export function listBaselines(options?: RequestOptions) {
+  return getJson<BaselineSummaryReadModel[]>("/api/v1/baselines", options);
+}
+
+export function listRegressionPolicies(options?: RequestOptions) {
+  return getJson<PolicySummaryReadModel[]>("/api/v1/regression-policies", options);
 }
 
 export function listScenarios(options?: RequestOptions) {
