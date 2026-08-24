@@ -40,7 +40,7 @@ jobs:
               text = text.replace(before, after)
           path.write_text(text)
           PY
-          npm --prefix frontend exec prettier -- --write e2e/critical-journeys.spec.ts
+          npm --prefix frontend exec prettier -- --write frontend/e2e/critical-journeys.spec.ts
       - name: Commit fixes
         shell: bash
         run: |
