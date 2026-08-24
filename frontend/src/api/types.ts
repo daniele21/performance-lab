@@ -102,6 +102,20 @@ export interface SuiteSummaryReadModel extends UIModelIdentity {
   task_ids: string[];
 }
 
+export interface BaselineSummaryReadModel extends UIModelIdentity {
+  baseline_id: string;
+  run_id: string;
+  fingerprint_id: string;
+  selected_at: string;
+  label: string | null;
+}
+
+export interface PolicySummaryReadModel extends UIModelIdentity {
+  policy_id: string;
+  policy_version: string;
+  rule_count: number;
+}
+
 export interface ScenarioSummaryReadModel extends UIModelIdentity {
   scenario: ScenarioKind;
   title: string;
