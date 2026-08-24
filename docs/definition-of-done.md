@@ -5,7 +5,7 @@ Document type: completion-policy
 Owner: repository
 Canonical scope: delivery.definition-of-done
 Read when: assessing task completion, merge readiness, milestone completion or release readiness
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-24
 
 A Performance Lab change is complete only when the behavior, evidence semantics, failure/resource lifecycle, tests and applicable durable documentation agree. A successful happy-path demo or green compile is not sufficient.
 
@@ -136,7 +136,7 @@ When build/package/release behavior is affected, the strict `.engineering/comman
 - bounded local/CI retention;
 - smoke/stop/clean proving no orphan project-owned process/listener/temp state.
 
-Until `REL-UI-001` implements those guarantees, they remain pending rather than being declared complete for compliance.
+These guarantees are enforced by the canonical Built Product and strict operations-verifier paths; changes to that lifecycle must keep those gates green rather than weakening the contract.
 
 ## Validation evidence
 
