@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { AppShell, Button, StateSurface } from "./components";
 import "./foundation.css";
+import { ComparePage } from "./pages/compare";
 import { LiveRunPage } from "./pages/live-run";
 import { OverviewPage } from "./pages/overview";
 import { RunDetailPage } from "./pages/run-detail";
@@ -55,16 +56,7 @@ export function App() {
   }
 
   if (route.kind === "compare") {
-    return (
-      <AppShell activePrimary="Compare">
-        <StateSurface
-          kind="empty"
-          title="Compare is not active yet"
-          description="Comparison will be enabled only with compatibility-first evidence. Invalid metric deltas will remain hidden for non-comparable runs."
-          action={<Button onClick={() => navigate("overview")}>Back to Overview</Button>}
-        />
-      </AppShell>
-    );
+    return <ComparePage initialCandidateRunId={route.runId} />;
   }
 
   return (
