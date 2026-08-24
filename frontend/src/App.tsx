@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import { AppShell, Button, StateSurface } from "./components";
 import "./foundation.css";
 import { ComparePage } from "./pages/compare";
+import { LibraryPage } from "./pages/library";
 import { LiveRunPage } from "./pages/live-run";
 import { OverviewPage } from "./pages/overview";
 import { RunDetailPage } from "./pages/run-detail";
 import { RunsPage } from "./pages/runs";
+import { SettingsPage } from "./pages/settings";
 import { TestModelPage } from "./pages/test-model";
 import { navigate, parseHash, type AppRoute } from "./routing";
 
@@ -54,6 +56,10 @@ export function App() {
       />
     );
   }
+
+  if (route.kind === "library") return <LibraryPage section={route.section} />;
+
+  if (route.kind === "settings") return <SettingsPage section={route.section} />;
 
   if (route.kind === "compare") {
     return <ComparePage initialCandidateRunId={route.runId} />;
