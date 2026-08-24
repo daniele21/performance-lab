@@ -4,13 +4,15 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   preview:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: test/e2e-ui-playwright
       - uses: actions/setup-node@v4
         with:
           node-version-file: frontend/.nvmrc
@@ -18,9 +20,17 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm install --global npm@11.17.0
       - run: npm --prefix frontend ci
-      - name: Print canonical Prettier diff
+      - name: Apply canonical Prettier output
         working-directory: frontend
+        run: npm exec prettier -- --write e2e/critical-journeys.spec.ts
+      - name: Commit canonical formatting
         shell: bash
         run: |
-          npm exec prettier -- --write e2e/critical-journeys.spec.ts
-          git diff -- e2e/critical-journeys.spec.ts
+          if git diff --quiet -- frontend/e2e/critical-journeys.spec.ts; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/e2e/critical-journeys.spec.ts
+          git commit -m "Format Playwright critical journeys"
+          git push origin HEAD:test/e2e-ui-playwright
