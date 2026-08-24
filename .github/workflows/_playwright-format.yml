@@ -35,3 +35,5 @@ jobs:
           git add frontend/e2e/critical-journeys.spec.ts
           git commit -m "Format Playwright critical journeys"
           git push origin HEAD:test/e2e-ui-playwright
+
+# Second push intentionally triggers this temporary formatter after the workflow exists.
