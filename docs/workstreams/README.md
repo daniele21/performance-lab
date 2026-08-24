@@ -7,7 +7,7 @@ Current active workstreams:
 - [`representative-device-evidence.md`](representative-device-evidence.md) — validate real model/runtime/device identity, telemetry, repeatability and representative comparison/regression evidence.
 - [`local-llm-migration.md`](local-llm-migration.md) — migrate or deliberately retain/remove overlapping Local LLM Server evaluation workflows after parity and consumer evidence.
 
-The completed UI productization workstream was deleted after Compare, Library/Settings, browser J1-J6 acceptance and the built-product lifecycle were integrated; Git history owns that completed plan.
+The completed UI productization workstream was deleted after Compare, Library/Settings, browser J1-J6 acceptance and the built-product lifecycle were integrated; Git history owns that completed plan. New empirical or migration work belongs in the active bounded owners above rather than reopening the completed UI plan.
 
 Lifecycle rules:
 
