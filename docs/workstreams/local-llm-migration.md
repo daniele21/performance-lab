@@ -23,8 +23,8 @@ Performance Lab is the evaluation product. Local LLM Server remains the inferenc
 | Task | State | Depends on | Acceptance |
 | --- | --- | --- | --- |
 | MIG-001 parity map | **DONE** | integrated Performance Lab product | LLS evaluation workflows classified; data/history/consumer dependencies and non-overlapping runtime evidence identified |
-| MIG-002 replacement + deprecation | **POLICY DONE / EVIDENCE-BLOCKED** | MIG-001 + representative real-runtime evidence | replacement/history/non-parity policy is fixed; remaining gate is user redirect plus real-runtime replacement evidence |
-| MIG-003 remove redundant evaluation paths | **BLOCKED** | MIG-002 | EV-3 retained; no required consumer depends on removed behavior; cross-repo real-runtime smoke green; serving/runtime responsibilities intact |
+| MIG-002 replacement + deprecation | **IMPLEMENTATION DONE / EVIDENCE-BLOCKED** | MIG-001 + representative real-runtime evidence | replacement/history/non-parity policy fixed and Studio redirect integrated; remaining gates are EV-3 plus the real PL replacement run |
+| MIG-003 remove redundant evaluation paths | **BLOCKED** | MIG-002 evidence gates | EV-3 retained; no required consumer depends on removed behavior; cross-repo real-runtime smoke green; serving/runtime responsibilities intact |
 
 ## MIG-001 parity map
 
@@ -36,9 +36,9 @@ Performance Lab is the evaluation product. Local LLM Server remains the inferenc
 | `evaluation_service.py` + `evaluation_runner.py` | **MIGRATE** | Performance Lab run engine evaluates the external endpoint and freezes model/runtime/device/dataset/evaluator identity | LLS keeps model residency, request execution and capability truth |
 | `evaluation_reasoning.py` | **DROP EVAL-SPECIFIC POLICY BY DEFAULT / RETAIN RUNTIME CAPABILITY** | future PL evaluation uses PL-native configuration; provider-supported thinking remains LLS runtime truth | do not build a legacy adapter unless a retained consumer/use case requires exact ON/OFF reproduction |
 | evaluation store/history/comparison | **HISTORICAL LLS / NEW RUNS PL** | PL SQLite store, `.plab.zip`, Runs/Run Detail/Compare for all new PL evidence | no automatic history import in the initial migration; no cross-product comparability claim |
-| `/api/v1/evaluation/history*` | **TRANSITIONAL READ PATH** | PL run/read/comparison APIs for new evidence | keep until EV-3 and user redirect/removal gate; legacy reports remain LLS historical evidence |
+| `/api/v1/evaluation/history*` | **TRANSITIONAL READ PATH** | PL run/read/comparison APIs for new evidence | keep until EV-3/removal gate; legacy reports remain LLS historical evidence |
 | evaluation run/test-set HTTP endpoints | **DEPRECATE AFTER REPLACEMENT EVIDENCE** | PL Test a model + canonical run API/CLI | cross-repo smoke must prove LLS serving/identity/status are sufficient after evaluation routes are disabled |
-| Studio `control-plane-evaluation*` and history UI | **DEPRECATE AFTER REDIRECT** | PL Test/Live Run/Runs/Run Detail/Compare/Library | repository-known direct consumer of evaluation APIs; replace navigation before removal |
+| Studio `control-plane-evaluation*` and history UI | **REDIRECTED / TRANSITIONAL** | PL Test/Live Run/Runs/Run Detail/Compare/Library | LLS PR #149 adds the visible PL transition notice while deliberately retaining EV-3 and legacy history behavior |
 | evaluation unit/UI tests | **REMOVE WITH OWNER** | PL dataset/evaluator/run/browser tests plus retained LLS runtime tests | remove only tests whose production owner disappears |
 | `test_inference.py`, `inference_test_config.json`, `inference_results_report.json` | **LEGACY / ARCHIVE OR DROP** | PL CLI/product evidence bundles | not canonical current evaluation evidence; do not import into PL run history |
 | `/v1/models`, `/v1/chat/completions` | **RETAIN OPERATIONAL** | consumed by PL OpenAI-compatible adapter | core LLS serving contract |
@@ -70,7 +70,7 @@ Legacy LLS-specific mechanics are intentionally **not** copied unless a current 
 - LLS evaluation reasoning policy (`enable_thinking` / `show_thinking`) is not reproduced automatically. Runtime support/capability remains LLS-owned; PL gains an explicit integration control only if an actual replacement workflow requires it;
 - per-sample LLS `CHAT` vs `STRUCTURED_GENERATION` request semantics make exact legacy-suite replay a separate compatibility feature, not a prerequisite for the new product owner.
 
-### Repository-known consumers
+### Repository-known consumers and redirect
 
 The source repository proves these current consumers:
 
@@ -79,21 +79,20 @@ The source repository proves these current consumers:
 - evaluation API/service/history/UI tests exercise those same owners;
 - the active device-evidence runbook/workstream requires the frozen EV-3 path.
 
-No additional external consumer can be established from repository contents. Absence from the repository is not proof that no external script exists, so the cutover still requires visible deprecation/replacement messaging before route removal.
+No additional external consumer can be established from repository contents. LLS PR #149 now provides the visible, non-destructive transition notice: new evaluation work is directed to Performance Lab while the current EV-3 path and legacy history remain available. The PR passed Ruff, Python 3.10/3.11/3.12 and Playwright E2E before merge.
 
-## Remaining executable MIG-002 work
+## Remaining executable MIG-002 evidence work
 
 1. **Finish EV-3 on the real device.** Retain the two post-convergence `general-purpose@1.0.0 / 10 / seed 0 / reasoning off` reports before touching the legacy owner.
 2. **Run the PL replacement path on a real LLS endpoint.** Require runtime identity, sample `/status`, retain the PL fingerprint and `.plab.zip`, and verify the new run appears in PL Runs/Run Detail.
-3. **Redirect the Studio consumer.** Replace Benchmark & Evaluation navigation/copy with the supported Performance Lab path before disabling evaluation write/run routes.
-4. **Freeze legacy history at cutover.** Once no new LLS evaluation run is required, stop creating legacy evaluation evidence; preserve the retained reports as historical artifacts according to the LLS release/archive policy.
-5. **Cross-repo smoke after disable/removal.** Prove `/v1/models`, `/v1/chat/completions`, `/v1/runtime/identity`, `/status` and runtime/resource correctness remain intact while PL evaluation still works.
+3. **Freeze legacy history at cutover.** Once no new LLS evaluation run is required, stop creating legacy evaluation evidence; preserve the retained reports as historical artifacts according to the LLS release/archive policy.
+4. **Cross-repo smoke after disable/removal.** Prove `/v1/models`, `/v1/chat/completions`, `/v1/runtime/identity`, `/status` and runtime/resource correctness remain intact while PL evaluation still works.
 
 ## Current blockers
 
-MIG-003 is intentionally blocked. Local LLM Server still requires EV-3 on the frozen legacy evaluation contract, and Performance Lab's representative-device workstream still lacks a real cross-repository run. Browser/fixture CI cannot satisfy either claim.
+MIG-002 has no remaining architecture, history-policy, consumer-inventory or redirect implementation gap. It is evidence-blocked only: Local LLM Server still requires EV-3 on the frozen legacy evaluation contract, and Performance Lab's representative-device workstream still lacks a real cross-repository run. Browser/fixture CI cannot satisfy either claim.
 
-No additional compatibility implementation is justified before those evidence gates. Building an exact legacy suite/reasoning adapter now would add a second semantic path without a demonstrated consumer.
+MIG-003 therefore remains intentionally blocked. No additional compatibility implementation is justified before those evidence gates; building an exact legacy suite/reasoning adapter now would add a second semantic path without a demonstrated consumer.
 
 ## Migration rules
 
@@ -102,11 +101,11 @@ No additional compatibility implementation is justified before those evidence ga
 - Preserve legacy history under its original identity; never silently rewrite provenance.
 - New PL runs use PL-native evidence contracts; do not claim cross-product comparability without an explicit compatibility protocol.
 - Add compatibility adapters only for demonstrated retained requirements.
-- Redirect users before removing the old surface.
+- Keep the redirect visible until the old surface is removed.
 - Cross-repository claims require evidence from both products, not only fixture/unit tests.
 
 ## Completion gate
 
-Complete when EV-3 and the representative PL real-runtime run are retained, Studio/users are redirected, redundant LLS evaluation behavior is disabled/removed without affecting serving/runtime behavior, and the final cross-repository smoke is green.
+Complete when EV-3 and the representative PL real-runtime run are retained, redundant LLS evaluation behavior is disabled/removed without affecting serving/runtime behavior, and the final cross-repository smoke is green.
 
 After completion, transfer durable migration outcomes to integration/ADR docs, update `current-state.md`, and delete this workstream by default.
