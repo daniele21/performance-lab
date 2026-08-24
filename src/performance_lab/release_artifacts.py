@@ -169,7 +169,7 @@ def prune_successful_artifacts(lineage_dir: Path, keep: int = 2) -> list[Path]:
     manifests.sort(key=lambda item: item[0].stat().st_mtime_ns, reverse=True)
 
     removed: list[Path] = []
-    for manifest_path, manifest in manifests[keep:]:
+    for _manifest_path, manifest in manifests[keep:]:
         stem = manifest.get("artifact_stem")
         if not isinstance(stem, str) or not stem:
             continue
