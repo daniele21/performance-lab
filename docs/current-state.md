@@ -14,9 +14,11 @@ The benchmark/evidence core and the local browser product are integrated on `dev
 
 Performance Lab now supports reproducible endpoint evaluation, immutable run evidence, quality/runtime/resource measurements, compatible comparison/regression, CLI/CI operation, reviewed run launch, server-owned progress/cancellation, immutable Run Detail, secondary Library/Settings surfaces and a packaged loopback browser product.
 
-Primary product question remains:
+Primary product question:
 
-> Which model/configuration works best for my workload on this device, and why?
+> For this use case on this device, which available model/configuration gives me the best evidence-backed trade-off, and why?
+
+The use case determines the relevant capability/evaluation evidence; regression is one downstream use of the same evidence rather than the product's primary framing.
 
 Primary UI task model:
 
@@ -47,23 +49,27 @@ The final E2E-UI-001 merge head passed Repository Health, Repository Validation,
 | Workstream | State | Next gate |
 | --- | --- | --- |
 | [Representative device evidence](workstreams/representative-device-evidence.md) | READY | first real Local LLM Server/model/device run with retained fingerprint/bundle |
-| [Local LLM Server migration](workstreams/local-llm-migration.md) | READY | MIG-001 parity map before any deprecation/removal |
+| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 READY-EVIDENCE-BLOCKED | freeze legacy dataset/history policy and run replacement path on a representative real runtime before deprecation/removal |
+
+MIG-001 confirmed that Local LLM Server still owns a complete evaluation subsystem: test-set/scoring contracts, built-in/custom datasets, resident evaluation execution, history/comparison APIs and evaluation UI. Those are migration candidates. Runtime identity, `/status`, serving, residency/resource/reclamation evidence and provider-observed metrics remain Local LLM Server responsibilities and must not move into Performance Lab.
+
+The frozen LLS `general-purpose@1.0.0` evaluation set is a temporary migration dependency because the active LLS correctness evidence campaign still requires EV-3 real-device runs on that exact identity. MIG-003 removal is therefore correctly blocked until those results and the Performance Lab cross-repo replacement smoke exist.
 
 ## Repository-template alignment status
 
-Repo-local `repo-template-sw` 0.5 contracts are now enforced for documentation budgets, agent context, product experience, repository health and the built-product lifecycle. `.engineering/commands.json` is the canonical command map and the strict operations verifier is active.
+Repo-local `repo-template-sw` 0.5 contracts are enforced for documentation budgets, agent context, product experience, repository health and the built-product lifecycle. `.engineering/commands.json` is the canonical command map and the strict operations verifier is active.
 
 Still not interchangeable with repository-local compliance:
 
 - representative hardware/model evidence is required before device/performance/thermal/resource claims;
 - human usability acceptance may still be required for claims that automated browser checks cannot establish;
-- `dev` branch protection/required checks are repository-administration settings and are not configured through the currently available connector.
+- `dev` branch protection/required checks are repository-administration settings and cannot be configured through the currently exposed GitHub connector.
 
 ## Integration lines and drift
 
 - `dev` is the implementation/integration line; feature branches start from current green `dev` and target `dev`.
 - `main` is stable/release-oriented and is promoted deliberately after evidence.
-- `main` still contains docs-only commit `#52` (use-case-driven README positioning) that must be reconciled into `dev` before a deliberate `dev` -> `main` promotion.
+- this branch reconciles the use-case-first positioning introduced by main-only PR #52 into the current `dev` README without restoring obsolete foundation/status text. After merge, `main` will remain behind `dev` but will no longer own unique product-positioning truth that could be lost on promotion.
 
 ## Evidence still required before broad performance claims
 
@@ -71,4 +77,5 @@ Still not interchangeable with repository-local compliance:
 - controlled repeated/load evidence on known hardware;
 - representative compatible/incompatible and regression evidence where the claim depends on it;
 - real identity/telemetry validation for supported device/runtime combinations;
+- cross-repository replacement evidence before redundant LLS evaluation paths are removed;
 - human acceptance when hierarchy/progressive-disclosure usability is part of the release claim.
