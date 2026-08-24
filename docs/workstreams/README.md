@@ -1,10 +1,13 @@
 # Active workstreams
 
-This directory contains only bounded implementation plans that need explicit dependency/state coordination.
+This directory contains only bounded implementation/evidence plans that need explicit dependency/state coordination.
 
-Current active workstream:
+Current active workstreams:
 
-- [`ui-productization.md`](ui-productization.md) — complete the local visual product, browser acceptance, migration gates and built-product lifecycle.
+- [`representative-device-evidence.md`](representative-device-evidence.md) — validate real model/runtime/device identity, telemetry, repeatability and representative comparison/regression evidence.
+- [`local-llm-migration.md`](local-llm-migration.md) — migrate or deliberately retain/remove overlapping Local LLM Server evaluation workflows after parity and consumer evidence.
+
+The completed UI productization workstream was deleted after Compare, Library/Settings, browser J1-J6 acceptance and the built-product lifecycle were integrated; Git history owns that completed plan.
 
 Lifecycle rules:
 
