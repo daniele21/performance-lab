@@ -33,7 +33,10 @@ interface LibraryData {
 
 const EMPTY_DATA: LibraryData = { suites: [], datasets: [], baselines: [], policies: [] };
 
-const SECTION_LABEL: Record<LibrarySection, "Test suites" | "Datasets" | "Baselines" | "Regression policies"> = {
+const SECTION_LABEL: Record<
+  LibrarySection,
+  "Test suites" | "Datasets" | "Baselines" | "Regression policies"
+> = {
   "test-suites": "Test suites",
   datasets: "Datasets",
   baselines: "Baselines",
@@ -63,7 +66,11 @@ const BASELINE_COLUMNS: readonly DataColumn<BaselineSummaryReadModel>[] = [
     render: (item) => <a href={`#runs/${encodeURIComponent(item.run_id)}`}>{item.run_id}</a>,
   },
   { id: "fingerprint", header: "Fingerprint", render: (item) => item.fingerprint_id },
-  { id: "selected", header: "Selected", render: (item) => new Date(item.selected_at).toLocaleString() },
+  {
+    id: "selected",
+    header: "Selected",
+    render: (item) => new Date(item.selected_at).toLocaleString(),
+  },
 ];
 
 const POLICY_COLUMNS: readonly DataColumn<PolicySummaryReadModel>[] = [
@@ -186,7 +193,10 @@ export function LibraryPage({ section }: { section: LibrarySection }) {
   if (state.status === "loading") {
     return (
       <AppShell activeSecondary={label}>
-        <LoadingState title={`Loading ${label.toLowerCase()}`} description="Reading canonical local configuration and evidence references." />
+        <LoadingState
+          title={`Loading ${label.toLowerCase()}`}
+          description="Reading canonical local configuration and evidence references."
+        />
       </AppShell>
     );
   }
