@@ -45,3 +45,21 @@
   --motion-ease-move: cubic-bezier(0.2, 0, 0, 1);
   --transition-functional: var(--motion-standard) var(--motion-ease-move);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-standard: 0ms;
+    --motion-large: 0ms;
+    --transition-functional: 0ms linear;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+  }
+}
