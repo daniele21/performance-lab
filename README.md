@@ -1,22 +1,38 @@
 # AI Performance Lab
 
-AI Performance Lab is a model- and runtime-agnostic evaluation system for measuring whether an AI model exposed through an inference service is **good enough, fast enough and resource-efficient enough for a specific device and workload**.
+AI Performance Lab is a model- and runtime-agnostic evaluation system for answering one practical deployment question:
 
-The lab does not own model loading or inference runtimes. It connects to an inference endpoint, executes reproducible evaluation suites, captures quality and runtime measurements, optionally correlates them with host/device/runtime telemetry, and stores immutable comparable run evidence.
+> **For my use case, which of the models available to me is the best fit for this device, and with which configuration?**
+
+Rather than ranking models in the abstract, Performance Lab evaluates **model × configuration × device** combinations against the requirements of a specific use case.
+
+The use case determines what matters. Performance Lab maps it to relevant capabilities, benchmarks and evaluation datasets, runs candidate combinations through an external inference service, measures quality, runtime and resource behavior, and stores reproducible evidence that supports a deployment decision.
+
+The lab does not own model loading or inference runtimes. It connects to inference endpoints, executes reproducible evaluation suites, captures measurements, optionally correlates them with host/device/runtime telemetry, and compares resulting evidence across compatible runs.
 
 ## Product question
 
-> Can this model/runtime/configuration replace another model for this workload on this device, without unacceptable quality, latency or resource regressions?
+> **Given my target use case, target device and available models/configurations, which combination gives me the best evidence-backed trade-off for what I actually need?**
+
+The goal is not another generic LLM leaderboard. The goal is to turn use-case-relevant benchmark and runtime evidence into a practical deployment decision, with the trade-offs visible rather than hidden in a universal score.
+
+## How it works
+
+**Use case → required capabilities → relevant benchmarks/datasets → candidate model/configuration runs → quality + runtime + resource comparison → evidence-backed decision**
+
+For example, document summarization may emphasize factual consistency, instruction following and long-context behavior, while structured extraction may emphasize field accuracy, schema adherence and hallucination resistance. User-provided datasets can represent the real workload when generic benchmarks are insufficient.
 
 ## Core principles
 
+- **Use case first.** Benchmarks and datasets are selected because they are relevant to the workload objective, not because they are popular in isolation.
 - **Inference is external.** The lab evaluates endpoints; it does not embed a model runtime in its core.
 - **A model name is not a benchmark identity.** Results belong to a complete execution fingerprint: model, quantization, runtime, effective serving configuration, generation configuration, endpoint, hardware, dataset snapshot and evaluator version.
-- **Quality and runtime performance are separate dimensions.** A single opaque performance score must never hide trade-offs.
+- **Quality, runtime and resources are separate evidence dimensions.** A single opaque score must never hide trade-offs.
 - **Black-box first, instrumentation optional.** Any compatible inference endpoint can be evaluated; richer host/runtime measurements and first-party identity are optional integrations.
 - **Reproducibility before leaderboard aesthetics.** Runs are versioned, immutable and comparable only when their relevant identities are compatible.
-- **Workload evaluation matters as much as public benchmarks.** General-purpose suites, workload packs and user-provided datasets share the same execution model.
-- **Regression testing is a first-class use case.** The same evidence can be inspected interactively or consumed by deterministic CI gates.
+- **Use-case-aligned evaluation matters more than generic ranking.** General-purpose suites, workload packs and user-provided datasets share the same execution model.
+- **Recommendations stay evidence-backed.** A preferred model/configuration must expose the evidence and constraints behind the decision rather than becoming an unexplained winner.
+- **Regression testing is a first-class secondary use case.** The same evidence supports replacement validation, regression analysis and deterministic CI gates.
 
 ## What can be evaluated
 
@@ -221,9 +237,12 @@ The repository now includes:
 - compatible run comparison, explicit immutable baselines and versioned regression policies;
 - executable `run`, `regress` and `regress-ci` flows with machine-readable results and deterministic exit codes;
 - a reusable GitHub Actions regression integration;
+- a local browser product with Overview, Test a model, Live Run, Runs/Run Detail, Compare, Library and Settings;
+- Playwright J1-J6 browser acceptance plus compact/wide, overflow, duplicate-ID and reduced-motion checks;
+- unique build/source identity, immutable packaged artifacts, manifest/checksums, build delta, bounded retention and built-product smoke/cleanup;
 - constrained CI dependency snapshots validated on Python 3.12 and 3.13.
 
-The next high-value work remains a **representative evidence campaign on real models, runtimes and devices**: preserve real run bundles, identity snapshots, repeatability/load evidence, runtime telemetry and CI regression outcomes.
+The next high-value work is a **representative evidence campaign on real models, runtimes and devices**, in parallel with staged removal of evaluation responsibilities duplicated in Local LLM Server after parity/history/consumer evidence is complete.
 
 See [`docs/current-state.md`](docs/current-state.md) for the operational ledger.
 
@@ -234,10 +253,9 @@ Documentation uses progressive disclosure: one canonical source owns each kind o
 | Question | Canonical source |
 | --- | --- |
 | What is integrated, blocked or next? | [`docs/current-state.md`](docs/current-state.md) |
-| What exactly are we building and what are the acceptance criteria? | [`docs/implementation-plan.md`](docs/implementation-plan.md) |
+| Which active coordinated workstreams and gates remain? | [`docs/workstreams/README.md`](docs/workstreams/README.md) |
 | Which capability milestones come next? | [`docs/roadmap.md`](docs/roadmap.md) |
-| Why did the plan change? | [`docs/plan-changelog.md`](docs/plan-changelog.md) |
-| What architecture and boundaries should implementation preserve? | [`docs/architecture.md`](docs/architecture.md) |
+| What architecture and ownership boundaries should implementation preserve? | [`docs/architecture.md`](docs/architecture.md) |
 | How should benchmarks, datasets and metrics behave? | [`docs/evaluation-and-benchmarking.md`](docs/evaluation-and-benchmarking.md) |
 | What telemetry is required and optional? | [`docs/telemetry.md`](docs/telemetry.md) |
 | How does `local-llm-server` connect to Performance Lab? | [`docs/local-llm-server-integration.md`](docs/local-llm-server-integration.md) |
