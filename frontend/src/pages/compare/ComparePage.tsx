@@ -153,9 +153,7 @@ export function CompareView({
 }: CompareViewProps) {
   const baseline = runs.find((run) => run.run_id === baselineRunId);
   const candidate = runs.find((run) => run.run_id === candidateRunId);
-  const canCompare = Boolean(
-    baseline && candidate && baselineRunId !== candidateRunId && !loading,
-  );
+  const canCompare = Boolean(baseline && candidate && baselineRunId !== candidateRunId && !loading);
 
   return (
     <AppShell activePrimary="Compare">
@@ -269,7 +267,8 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
       .then((runs) => {
         setLoadState({ status: "ready", runs });
         const candidate =
-          (initialCandidateRunId && runs.find((run) => run.run_id === initialCandidateRunId)?.run_id) ||
+          (initialCandidateRunId &&
+            runs.find((run) => run.run_id === initialCandidateRunId)?.run_id) ||
           runs[0]?.run_id ||
           "";
         const baseline = runs.find((run) => run.run_id !== candidate)?.run_id || "";
@@ -286,10 +285,7 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
     return () => controller.abort();
   }, [attempt, initialCandidateRunId]);
 
-  const runs = useMemo(
-    () => (loadState.status === "ready" ? loadState.runs : []),
-    [loadState],
-  );
+  const runs = useMemo(() => (loadState.status === "ready" ? loadState.runs : []), [loadState]);
 
   const resetComparison = () => {
     setComparison(null);
