@@ -28,31 +28,33 @@ Merged on `dev`:
 - `REL-UI-001` — unique build/source identity, immutable artifact publication, manifest/checksum, build delta, bounded retention and built-product smoke/cleanup;
 - `E2E-UI-001` — Playwright Chromium J1-J6 plus compact/wide, duplicate-ID, overflow and reduced-motion checks;
 - `MIG-001` — Local LLM Server evaluation parity/ownership map;
+- `MIG-002` non-hardware work — replacement/history policy fixed and Local LLM Server Studio transition notice integrated in LLS PR #149;
 - main-only PR #52 use-case-first positioning reconciled into the current `dev` README without restoring stale implementation state.
 
-The E2E/productization merge heads passed Repository Health, Repository Validation, Browser Acceptance and Built Product on the same commits.
+The E2E/productization merge heads passed Repository Health, Repository Validation, Browser Acceptance and Built Product on the same commits. LLS PR #149 passed Ruff, Python 3.10/3.11/3.12 and Playwright E2E before merge.
 
 ## Active work
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
 | [Representative device evidence](workstreams/representative-device-evidence.md) | READY | first real Local LLM Server/model/device run with retained fingerprint/bundle |
-| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 POLICY DONE-EVIDENCE BLOCKED / MIG-003 BLOCKED | retain LLS EV-3 + run PL replacement on real LLS endpoint, then redirect/disable redundant evaluation surfaces |
+| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 IMPLEMENTATION DONE-EVIDENCE BLOCKED / MIG-003 BLOCKED | retain LLS EV-3 + run PL replacement on real LLS endpoint, then disable/remove redundant evaluation surfaces and run cross-repo smoke |
 
 ## Evaluation migration policy
 
-The migration no longer has an unresolved history/parity-policy question:
+The migration no longer has an unresolved architecture, history or redirect question:
 
 - `general-purpose@1.0.0` and existing LLS evaluation JSON stay **legacy Local LLM Server evidence** under their original identities;
 - new evaluation evidence after cutover belongs to Performance Lab and uses PL-native suite/dataset/evaluator/fingerprint identities;
 - no automatic import into the PL canonical run store is required for the initial migration;
 - `general-purpose@1.0.0` is not relabeled as equivalent to `general-diagnostic-starter`, and cross-product comparisons are not claimed;
 - exact LLS custom-test-set JSON, per-sample request/task semantics and evaluation-specific reasoning controls are not cloned without a demonstrated retained consumer;
-- LLS serving, model residency, `/v1/runtime/identity`, `/status`, provider metrics and resource/hardware correctness remain LLS-owned.
+- LLS serving, model residency, `/v1/runtime/identity`, `/status`, provider metrics and resource/hardware correctness remain LLS-owned;
+- LLS PR #149 visibly directs new Studio evaluation work to Performance Lab while deliberately preserving EV-3 and legacy history behavior until the evidence gate is satisfied.
 
-Repository-known consumers of the legacy evaluation APIs are the LLS Studio evaluation/history surfaces, their tests and the active EV-3 device-evidence workflow. No other external consumer can be proven from repository contents, so visible deprecation/redirect remains required before removal.
+Repository-known consumers of the legacy evaluation APIs are the LLS Studio evaluation/history surfaces, their tests and the active EV-3 device-evidence workflow. The redirect requirement is now satisfied; removal is blocked by real evidence, not by missing migration design.
 
-MIG-003 is therefore blocked by evidence rather than by an undefined architecture decision: two post-convergence EV-3 reports must be retained, a real Performance Lab run must succeed against LLS with identity/status evidence, and the post-disable cross-repo smoke must preserve serving/runtime behavior.
+MIG-003 requires two post-convergence EV-3 reports, a real Performance Lab run against LLS with identity/status evidence, then a post-disable cross-repository smoke that preserves serving/runtime behavior.
 
 ## Repository-template alignment status
 
