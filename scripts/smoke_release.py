@@ -101,7 +101,7 @@ def wait_ready(port: int, process: subprocess.Popen[str]) -> None:
         try:
             health = json.loads(request_text(f"http://{HOST}:{port}/api/v1/health"))
             page = request_text(f"http://{HOST}:{port}/")
-            if health.get("status") == "ok" and "id=\"root\"" in page:
+            if health.get("status") == "ok" and 'id="root"' in page:
                 return
         except (OSError, RuntimeError, json.JSONDecodeError, urllib.error.URLError) as exc:
             last_error = exc
