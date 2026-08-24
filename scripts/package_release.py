@@ -169,9 +169,7 @@ def main() -> int:
     lineage_dir = args.artifact_root.resolve() / lineage_slug
     lineage_dir.mkdir(parents=True, exist_ok=True)
 
-    artifact_stem = safe_slug(
-        f"ai-performance-lab-{version}-{current_build_id}-{revision[:12]}"
-    )
+    artifact_stem = safe_slug(f"ai-performance-lab-{version}-{current_build_id}-{revision[:12]}")
     work_dir = DEFAULT_BUILD_ROOT / current_build_id
     if work_dir.exists():
         shutil.rmtree(work_dir)
