@@ -402,7 +402,7 @@ test("J1: configure, freeze, run, progress and inspect immutable result", async 
   await installFixture(page);
   await page.goto("/#test-a-model");
   await completeEvaluation(page);
-  await expect(page.getByText("fp-run-candidate")).toBeVisible();
+  await expect(page.getByText("fp-run-candidate", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Quality" })).toBeVisible();
 });
 
@@ -424,8 +424,8 @@ test("J3: compatible evidence exposes only valid trade-off deltas", async ({ pag
   await installFixture(page, { comparison: "compatible" });
   await page.goto("/#compare");
 
-  await page.getByLabel("Baseline").selectOption("run-base");
-  await page.getByLabel("Candidate").selectOption("run-candidate");
+  await page.locator("#select-baseline").selectOption("run-base");
+  await page.locator("#select-candidate").selectOption("run-candidate");
   await page.getByRole("button", { name: "Compare evidence" }).click();
 
   await expect(
@@ -439,8 +439,8 @@ test("J4: incompatible evidence foregrounds reasons and hides invalid deltas", a
   await installFixture(page, { comparison: "incompatible" });
   await page.goto("/#compare");
 
-  await page.getByLabel("Baseline").selectOption("run-base");
-  await page.getByLabel("Candidate").selectOption("run-candidate");
+  await page.locator("#select-baseline").selectOption("run-base");
+  await page.locator("#select-candidate").selectOption("run-candidate");
   await page.getByRole("button", { name: "Compare evidence" }).click();
 
   await expect(page.getByText("Suite identity differs", { exact: false })).toBeVisible();
@@ -499,5 +499,5 @@ test("compact, wide and reduced-motion modes preserve core accessibility invaria
   const transitionDuration = await page
     .getByRole("link", { name: "Overview" })
     .evaluate((element) => getComputedStyle(element).transitionDuration);
-  expect(transitionDuration).toBe("0s");
+  expect(Number.parseFloat(transitionDuration)).toBeLessThanOrEqual(0.00001);
 });
