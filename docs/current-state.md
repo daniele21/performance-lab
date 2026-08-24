@@ -4,21 +4,21 @@ Status: active
 Document type: current-state
 Owner: repository
 Canonical scope: state.repository
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-24
 
 This is the single short operational ledger for Performance Lab. Durable behavior belongs in architecture/feature/ADR/design contracts; active implementation detail belongs in bounded workstreams; Git history owns implementation history.
 
 ## Current phase
 
-The benchmark/evidence core and the first end-to-end local UI path are integrated on `dev`. The remaining productization work is **Compare + secondary management surfaces + browser acceptance + release/build lifecycle**, while representative real-device evidence proceeds independently.
+The benchmark/evidence core and the local browser product are integrated on `dev`. Compare, Library/Settings, browser acceptance and the built-product lifecycle are no longer implementation gaps. The remaining work is empirical validation on representative hardware plus staged migration of overlapping Local LLM Server evaluation workflows.
 
-Performance Lab already supports reproducible endpoint evaluation, immutable run evidence, quality/runtime/resource measurements, compatible comparison/regression, CLI/CI operation, local UI read models, reviewed run launch, server-owned progress/cancellation and immutable Run Detail.
+Performance Lab now supports reproducible endpoint evaluation, immutable run evidence, quality/runtime/resource measurements, compatible comparison/regression, CLI/CI operation, reviewed run launch, server-owned progress/cancellation, immutable Run Detail, secondary Library/Settings surfaces and a packaged loopback browser product.
 
 Primary product question remains:
 
 > Which model/configuration works best for my workload on this device, and why?
 
-Primary UI task model remains:
+Primary UI task model:
 
 ```text
 Overview -> Test a model -> Live Run -> Run Detail
@@ -27,67 +27,48 @@ Overview -> Test a model -> Live Run -> Run Detail
 Library / Settings -> secondary expert capability
 ```
 
-## Integrated UI/product baseline
+## Integrated product baseline
 
 Merged on `dev`:
 
 - `UIA-001` — versioned UI read API, scenario catalog, preflight and frozen execution preview;
 - `UIK-001` — executable semantic tokens/primitives and responsive application shell;
-- `UI-001` — tested-model Overview;
-- `UI-002` — Runs list, immutable Run Detail and read-only routing;
-- `UI-003` — Model -> Scenario -> Test -> Review with server-validated frozen configuration;
-- `UIA-002` — bounded server-owned run jobs, progress, cancellation and restart/interruption semantics;
-- `UI-004` — reconnectable Live Run and explicit cancellation/recovery;
-- `UIA-003` — executable loopback UI composition root and Vite API proxy.
+- `UI-001..004` — Overview, Runs/Run Detail, Test Model wizard and reconnectable Live Run;
+- `UIA-002..003` — server-owned run lifecycle and executable loopback composition root;
+- `UI-005` — compatibility-first Compare/regression surface;
+- `UI-006` — read-only Library and Settings surfaces backed by canonical Python owners;
+- `REL-UI-001` — unique build/source identity, immutable artifact publication, manifest/checksum, build delta, bounded retention and built-product smoke/cleanup;
+- `E2E-UI-001` — Playwright Chromium acceptance for J1-J6 plus compact/wide, duplicate-ID, overflow and reduced-motion checks.
 
-These slices were merged with Python 3.12/3.13, frontend check/test/build and deterministic Product E2E evidence on their respective heads. That evidence does not prove representative hardware/model performance or browser-level J1-J6 acceptance.
+The final E2E-UI-001 merge head passed Repository Health, Repository Validation, Browser Acceptance and Built Product on the same commit. Browser acceptance ran all seven tests successfully; Built Product executed package, smoke, atomic publication, strict operations verification, bounded history and artifact upload.
 
 ## Active work
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
-| [UI productization](workstreams/ui-productization.md) | ACTIVE | `UI-005 Compare` and `UI-006 Library / Settings` can proceed in parallel |
-| Representative model/device evidence | READY | first real Local LLM Server run + retained run bundle |
-| Repo-template-sw 0.5 alignment | ACTIVE in current change | governance/design contracts and bounded documentation; release lifecycle remains truthful/pending |
-
-## Immediate next block
-
-1. Build **UI-005 Compare** compatibility-first: identity/reasons before valid dimension-specific deltas; invalid deltas stay absent.
-2. Build **UI-006 Library / Settings** in parallel as secondary surfaces backed by canonical Python owners.
-3. Add focused **Playwright J1-J6** browser acceptance only after UI-005/UI-006 complete the critical product surface.
-4. Implement **REL-UI-001**: unique build identity, source/dirty metadata, manifest/checksum, build delta, bounded artifact retention, built-product smoke/stop/clean and zero-residue evidence.
-5. Run representative Local LLM Server/device evidence in parallel; do not block UI work on hardware access.
-6. Start Local LLM Server evaluation deprecation only after replacement parity and cross-product evidence are complete.
+| [Representative device evidence](workstreams/representative-device-evidence.md) | READY | first real Local LLM Server/model/device run with retained fingerprint/bundle |
+| [Local LLM Server migration](workstreams/local-llm-migration.md) | READY | MIG-001 parity map before any deprecation/removal |
 
 ## Repository-template alignment status
 
-Aligned or being enforced in the current change:
+Repo-local `repo-template-sw` 0.5 contracts are now enforced for documentation budgets, agent context, product experience, repository health and the built-product lifecycle. `.engineering/commands.json` is the canonical command map and the strict operations verifier is active.
 
-- repo-template-sw baseline metadata and documentation budgets;
-- task-routed root/scoped `AGENTS.md` model;
-- `product-ui` UX contract 0.5 decision order, motion/graphics rules and motion tokens;
-- security/trust-boundary policy and evidence-oriented PR template;
-- bounded `current-state` and active-workstream documentation.
+Still not interchangeable with repository-local compliance:
 
-Still intentionally **not claimed complete**:
-
-- `REL-UI-001` build identity, immutable artifact lifecycle and build-delta requirements;
-- full repository-health verifier adoption that depends on those guarantees;
-- browser Playwright/accessibility/usability evidence;
-- representative model/device evidence.
+- representative hardware/model evidence is required before device/performance/thermal/resource claims;
+- human usability acceptance may still be required for claims that automated browser checks cannot establish;
+- `dev` branch protection/required checks are repository-administration settings and are not configured through the currently available connector.
 
 ## Integration lines and drift
 
 - `dev` is the implementation/integration line; feature branches start from current green `dev` and target `dev`.
 - `main` is stable/release-oriented and is promoted deliberately after evidence.
-- At this review, `dev` is one docs-only commit behind `main` (`#52`, use-case-driven README positioning). Reconcile that drift before the next deliberate `dev` -> `main` promotion.
+- `main` still contains docs-only commit `#52` (use-case-driven README positioning) that must be reconciled into `dev` before a deliberate `dev` -> `main` promotion.
 
-## Evidence still required before broad release claims
+## Evidence still required before broad performance claims
 
 - representative resident-model run(s) with retained fingerprints/bundles;
 - controlled repeated/load evidence on known hardware;
-- browser J1-J6, recovery and cleanup evidence;
-- automated/manual accessibility evidence toward WCAG 2.2 AA;
-- compact/standard/wide adaptive-layout evidence;
-- release build identity/artifact lifecycle evidence;
-- human acceptance of hierarchy and progressive disclosure.
+- representative compatible/incompatible and regression evidence where the claim depends on it;
+- real identity/telemetry validation for supported device/runtime combinations;
+- human acceptance when hierarchy/progressive-disclosure usability is part of the release claim.
