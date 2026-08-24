@@ -32,6 +32,6 @@ While iterating, run the narrowest useful gate. Before merge, expand according t
 
 At minimum, repository code changes should satisfy the applicable Python/frontend `check` and `test` gates. User-facing/build/runtime changes add the corresponding build, E2E, smoke, accessibility/adaptive or real-device evidence when the claim requires it.
 
-Repository-health CI separately checks the adopted repo-template-sw structural, product-experience, documentation and agent-context contracts. The strict operating-contract verifier is intentionally deferred until `REL-UI-001` implements build identity and artifact lifecycle rather than claiming guarantees that do not yet exist.
+Repository-health CI checks the adopted repo-template-sw structural, product-experience, documentation, agent-context and strict operating contracts. Built-product changes must preserve unique build/source identity, immutable artifact publication, manifest/checksum, comparable-build delta, bounded retention and smoke/cleanup evidence.
 
 Use the pull-request template to record exact validation executed and evidence still pending. A green host/fixture branch is not representative hardware or usability evidence.

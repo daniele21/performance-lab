@@ -59,7 +59,7 @@ Add another scoped `AGENTS.md` only when a subtree has meaningful local hazards,
 - `smoke` — minimal built/runtime viability when applicable.
 - `stop` / `clean` — release project-owned runtime/generated state.
 
-E2E and smoke are not synonyms. The current build-identity/artifact-promotion gap is explicitly owned by `REL-UI-001`; do not mark those deferred guarantees complete before the implementation exists.
+E2E and smoke are not synonyms. The built-product lifecycle is active: build identity, immutable artifact promotion, manifest/checksum, build delta, retention and smoke/cleanup are enforced through the canonical operating contract and strict verifier.
 
 ## Product experience routing
 
@@ -88,7 +88,7 @@ Do not expose internal benchmark architecture merely because the backend has mor
 
 1. Confirm the owning boundary and smallest coherent scope.
 2. Inspect owner, direct consumers, fakes and tests before changing shared contracts.
-3. For coordinated work, use the single active bounded workstream instead of creating branch-progress documents.
+3. For coordinated work, use the single owning active bounded workstream instead of creating branch-progress documents.
 4. Implement one coherent slice without speculative layers.
 5. Validate narrowly while iterating, then expand according to blast radius using `.engineering/commands.json`.
 6. Update only canonical durable docs/design contracts whose current behavior or decision changed.
@@ -102,7 +102,7 @@ Do not expose internal benchmark architecture merely because the backend has mor
 - `docs/features/` owns durable shipped feature behavior when extra explanation is needed.
 - `docs/adr/` owns accepted durable architectural decisions.
 - `docs/current-state.md` is the single short operational ledger.
-- `docs/workstreams/` contains only active bounded implementation plans.
+- `docs/workstreams/` contains only active bounded implementation/evidence plans.
 - `design/` owns product-experience and brand/design-system contracts.
 - Git history owns implementation and completed-plan history.
 
