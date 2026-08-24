@@ -24,9 +24,5 @@ jobs:
         run: python3 scripts/verify_docs.py
       - name: Verify agent context budget
         run: python3 scripts/verify_agent_context.py
-
-      # Intentionally not running scripts/verify_operations.py yet.
-      # REL-UI-001 owns the still-missing build identity, immutable artifact
-      # lifecycle, build-delta and final built-product cleanup guarantees.
-      # Keep commands.json truthful/false until that implementation exists,
-      # then enable the strict operating-contract gate in the same change.
+      - name: Verify build, artifact and runtime operating contract
+        run: python3 scripts/verify_operations.py
