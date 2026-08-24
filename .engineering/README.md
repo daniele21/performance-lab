@@ -12,15 +12,18 @@ Use the native Python/npm commands declared in `commands.json` rather than inven
 
 ## Current adoption boundary
 
-The repository can already truthfully enforce product-experience contracts, bounded docs/agent context, deterministic Python/frontend tests and product E2E.
+The repository now truthfully enforces the repo-local product and operating contracts adopted in the 0.5 baseline:
 
-The template's full built-product guarantees are **not yet complete**. `REL-UI-001` owns:
+- bounded documentation and agent context;
+- deterministic Python/frontend checks and Product E2E;
+- Playwright Chromium browser acceptance for the declared J1-J6 journeys;
+- executable product-experience, adaptive and reduced-motion contracts;
+- unique build/source identity and comparable build history;
+- immutable successful artifact publication after validation;
+- build manifest and SHA-256 checksum metadata;
+- bounded local/CI artifact retention;
+- built-product smoke, stop/clean and strict operations verification.
 
-- unique build ID plus source revision and dirty-state identity;
-- immutable successful artifact publication;
-- build manifest + SHA-256 checksums;
-- comparable-build delta output;
-- bounded artifact retention and release promotion;
-- built-artifact smoke/stop/clean and zero-residue verification.
+`.engineering/commands.json` must remain the truthful source for these guarantees and `scripts/verify_operations.py` is a blocking check.
 
-Until `REL-UI-001` lands, `commands.json` intentionally reports those guarantees as deferred/false. Do not flip the contract to green merely to satisfy a verifier; implement the lifecycle first, then enable the strict operations/repository-health checks in the same change.
+Repository-local compliance does not prove representative hardware/model performance. Real device/runtime/telemetry claims require the separate representative-evidence workstream. Branch protection/required-check settings are repository administration and remain outside the executable source-tree contract.
