@@ -6,75 +6,74 @@ Owner: repository
 Canonical scope: state.repository
 Last reviewed: 2026-08-24
 
-This is the single short operational ledger for Performance Lab. Durable behavior belongs in architecture/feature/ADR/design contracts; active implementation detail belongs in bounded workstreams; Git history owns implementation history.
+Short operational ledger only. Durable behavior belongs in architecture/ADR/design docs; active detail belongs in workstreams; Git history owns implementation history.
 
 ## Current phase
 
-The benchmark/evidence core and local browser product are integrated on `dev`. Compare, Library/Settings, browser acceptance and the built-product lifecycle are no longer implementation gaps. Remaining work is empirical validation on representative hardware plus evidence-gated cutover of evaluation responsibilities duplicated in Local LLM Server.
-
-Performance Lab now supports reproducible endpoint evaluation, immutable run evidence, quality/runtime/resource measurements, compatible comparison/regression, CLI/CI operation, reviewed run launch, server-owned progress/cancellation, immutable Run Detail, secondary Library/Settings surfaces and a packaged loopback browser product.
+The benchmark/evidence core and local browser product are integrated on `dev`. Remaining work is representative-hardware validation plus the evidence-gated cutover of evaluation responsibilities duplicated in Local LLM Server.
 
 Primary product question:
 
 > For this use case on this device, which available model/configuration gives me the best evidence-backed trade-off, and why?
 
-The use case determines the relevant capability/evaluation evidence; regression is one downstream use of the same evidence rather than the product's primary framing.
+Use case determines the relevant capability/evaluation evidence; regression is a downstream use of the same evidence.
 
-## Integrated product baseline
+## Integrated baseline
 
 Merged on `dev`:
 
-- `UIA-001`, `UIK-001`, `UI-001..006`, `UIA-002..003` — versioned browser/product path through Overview, Test, Live Run, Runs/Run Detail, Compare, Library and Settings;
-- `REL-UI-001` — unique build/source identity, immutable artifact publication, manifest/checksum, build delta, bounded retention and built-product smoke/cleanup;
-- `E2E-UI-001` — Playwright Chromium J1-J6 plus compact/wide, duplicate-ID, overflow and reduced-motion checks;
-- `MIG-001` — Local LLM Server evaluation parity/ownership map;
-- main-only PR #52 use-case-first positioning reconciled into the current `dev` README without restoring stale implementation state.
+- `UIA-001`, `UIK-001`, `UI-001..006`, `UIA-002..003` — browser path through Overview, Test, Live Run, Runs/Run Detail, Compare, Library and Settings;
+- `REL-UI-001` — unique build/source identity, immutable artifacts, manifest/checksum, delta, retention and built-product smoke/cleanup;
+- `E2E-UI-001` — Playwright J1-J6 plus compact/wide, duplicate-ID, overflow and reduced-motion checks;
+- `MIG-001` — LLS evaluation parity/ownership map;
+- `MIG-002` non-hardware work — replacement/history policy fixed and LLS Studio transition notice integrated in PR #149;
+- main-only PR #52 use-case-first positioning reconciled into `dev`.
 
-The E2E/productization merge heads passed Repository Health, Repository Validation, Browser Acceptance and Built Product on the same commits.
+Productization merge heads passed Repository Health, Repository Validation, Browser Acceptance and Built Product. LLS PR #149 passed Ruff, Python 3.10/3.11/3.12 and Playwright E2E.
 
 ## Active work
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
-| [Representative device evidence](workstreams/representative-device-evidence.md) | READY | first real Local LLM Server/model/device run with retained fingerprint/bundle |
-| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 POLICY DONE-EVIDENCE BLOCKED / MIG-003 BLOCKED | retain LLS EV-3 + run PL replacement on real LLS endpoint, then redirect/disable redundant evaluation surfaces |
+| [Representative device evidence](workstreams/representative-device-evidence.md) | READY | first real LLS/model/device run with retained fingerprint/bundle |
+| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 IMPLEMENTATION DONE-EVIDENCE BLOCKED / MIG-003 BLOCKED | retain EV-3 + run PL against real LLS, then remove redundant evaluation paths and smoke |
 
-## Evaluation migration policy
+## Evaluation migration
 
-The migration no longer has an unresolved history/parity-policy question:
+Architecture, history and redirect decisions are settled:
 
-- `general-purpose@1.0.0` and existing LLS evaluation JSON stay **legacy Local LLM Server evidence** under their original identities;
-- new evaluation evidence after cutover belongs to Performance Lab and uses PL-native suite/dataset/evaluator/fingerprint identities;
-- no automatic import into the PL canonical run store is required for the initial migration;
-- `general-purpose@1.0.0` is not relabeled as equivalent to `general-diagnostic-starter`, and cross-product comparisons are not claimed;
-- exact LLS custom-test-set JSON, per-sample request/task semantics and evaluation-specific reasoning controls are not cloned without a demonstrated retained consumer;
-- LLS serving, model residency, `/v1/runtime/identity`, `/status`, provider metrics and resource/hardware correctness remain LLS-owned.
+- `general-purpose@1.0.0` and existing LLS evaluation JSON remain legacy LLS evidence;
+- post-cutover evaluation evidence belongs to PL under PL-native identities; no automatic legacy import is required;
+- `general-purpose@1.0.0` is not relabeled as `general-diagnostic-starter` or assumed comparable;
+- legacy custom-test/task/reasoning semantics are not cloned without a demonstrated consumer;
+- serving, residency, `/v1/runtime/identity`, `/status`, provider metrics and hardware/resource correctness remain LLS-owned;
+- LLS PR #149 directs new Studio evaluation work to PL while preserving EV-3 and legacy history until the evidence gate passes.
 
-Repository-known consumers of the legacy evaluation APIs are the LLS Studio evaluation/history surfaces, their tests and the active EV-3 device-evidence workflow. No other external consumer can be proven from repository contents, so visible deprecation/redirect remains required before removal.
+Known legacy consumers are the LLS Studio evaluation/history surfaces, their tests and EV-3. The redirect requirement is satisfied; removal is evidence-blocked.
 
-MIG-003 is therefore blocked by evidence rather than by an undefined architecture decision: two post-convergence EV-3 reports must be retained, a real Performance Lab run must succeed against LLS with identity/status evidence, and the post-disable cross-repo smoke must preserve serving/runtime behavior.
+MIG-003 requires two post-convergence EV-3 reports, a real PL run against LLS with identity/status evidence, then a post-disable cross-repository smoke preserving serving/runtime behavior.
 
-## Repository-template alignment status
+## Repository-template alignment
 
-Repo-local `repo-template-sw` 0.5 contracts are enforced for documentation budgets, agent context, product experience, repository health and the built-product lifecycle. `.engineering/commands.json` is the canonical command map and the strict operations verifier is active.
+Repo-local `repo-template-sw` 0.5 contracts enforce documentation budgets, agent context, product experience, repository health and built-product lifecycle. `.engineering/commands.json` is canonical and strict operations verification is active.
 
-Still outside automated repo-local compliance:
+Outside automated repo-local compliance:
 
-- representative hardware/model evidence is required before device/performance/thermal/resource claims;
-- human usability acceptance may still be required for claims automated browser checks cannot establish;
-- `dev` branch protection/required checks are repository-administration settings. Issue #61 records the exact required-check configuration because the current GitHub connector cannot write branch protection/rulesets.
+- representative hardware/model evidence for performance/thermal/resource claims;
+- human usability acceptance where automated browser evidence is insufficient;
+- `dev` branch protection/required checks: issue #61 records the configuration because the current GitHub connector cannot write rulesets.
 
 ## Integration lines
 
-- `dev` is the implementation/integration line; feature branches start from current green `dev` and target `dev`.
+- `dev` is the integration line; feature branches start from current green `dev` and target `dev`.
 - `main` is stable/release-oriented and is promoted deliberately after evidence.
-- PR #52 no longer contains unique product-positioning truth absent from `dev`; future `dev -> main` promotion can preserve the use-case-first framing from the current line.
+- PR #52 no longer owns product-positioning truth absent from `dev`.
 
-## Evidence still required before broad performance or migration claims
+## Evidence still required
 
 - representative resident-model run(s) with retained fingerprints/bundles;
 - controlled repeated/load evidence on known hardware;
-- real identity/telemetry validation for supported device/runtime combinations;
-- LLS EV-3 on the frozen legacy evaluation contract;
-- a real cross-repository PL replacement run and post-disable serving/runtime smoke;
-- human acceptance when hierarchy/progressive-disclosure usability is part of the release claim.
+- real identity/telemetry validation;
+- LLS EV-3 on the frozen legacy contract;
+- real cross-repository PL replacement run and post-disable serving/runtime smoke;
+- human acceptance where release claims depend on usability.
