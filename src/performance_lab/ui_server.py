@@ -115,7 +115,10 @@ def build_ui_parser() -> argparse.ArgumentParser:
         "--assets",
         type=str,
         default=None,
-        help="Optional built frontend directory. When set, the UI and /api share one loopback process.",
+        help=(
+            "Optional built frontend directory. When set, the UI and /api share one loopback "
+            "process."
+        ),
     )
     parser.add_argument("--port", type=int, default=UI_SERVER_PORT)
     return parser
