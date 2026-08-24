@@ -14,11 +14,7 @@ function slug(label: string) {
   return label.toLowerCase().replaceAll(" / ", "-").replaceAll(" ", "-");
 }
 
-export function AppShell({
-  activePrimary,
-  activeSecondary,
-  children,
-}: AppShellProps) {
+export function AppShell({ activePrimary, activeSecondary, children }: AppShellProps) {
   return (
     <div className="app-shell">
       <aside className="app-shell__sidebar">
