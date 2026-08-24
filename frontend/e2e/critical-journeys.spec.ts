@@ -86,10 +86,7 @@ function runDetail(runId: string) {
   };
 }
 
-function jobSnapshot(
-  jobId: string,
-  state: "running" | "succeeded" | "failed" | "cancelled",
-) {
+function jobSnapshot(jobId: string, state: "running" | "succeeded" | "failed" | "cancelled") {
   const terminal = state !== "running";
   return {
     api_version: "v1",
@@ -107,7 +104,13 @@ function jobSnapshot(
     total_samples: 4,
     run_id: state === "succeeded" ? "run-candidate" : null,
     run_status:
-      state === "succeeded" ? "succeeded" : state === "failed" ? "failed" : state === "cancelled" ? "cancelled" : "running",
+      state === "succeeded"
+        ? "succeeded"
+        : state === "failed"
+          ? "failed"
+          : state === "cancelled"
+            ? "cancelled"
+            : "running",
     error_code: state === "failed" ? "fixture_failure" : null,
     error_message: state === "failed" ? "Fixture inference failed. Retry is safe." : null,
   };
@@ -363,7 +366,11 @@ async function installFixture(page: Page, options: FixtureOptions = {}): Promise
       return;
     }
 
-    await fulfillJson(route, { detail: `Unhandled browser fixture route: ${request.method()} ${path}` }, 500);
+    await fulfillJson(
+      route,
+      { detail: `Unhandled browser fixture route: ${request.method()} ${path}` },
+      500,
+    );
   });
 
   return state;
@@ -421,7 +428,9 @@ test("J3: compatible evidence exposes only valid trade-off deltas", async ({ pag
   await page.getByLabel("Candidate").selectOption("run-candidate");
   await page.getByRole("button", { name: "Compare evidence" }).click();
 
-  await expect(page.getByRole("table", { name: "Capability / quality metric deltas" })).toBeVisible();
+  await expect(
+    page.getByRole("table", { name: "Capability / quality metric deltas" }),
+  ).toBeVisible();
   await expect(page.getByText("normalized_exact_match")).toBeVisible();
   await expect(page.getByText("Suite identity differs", { exact: false })).toHaveCount(0);
 });
@@ -435,7 +444,9 @@ test("J4: incompatible evidence foregrounds reasons and hides invalid deltas", a
   await page.getByRole("button", { name: "Compare evidence" }).click();
 
   await expect(page.getByText("Suite identity differs", { exact: false })).toBeVisible();
-  await expect(page.getByRole("table", { name: "Capability / quality metric deltas" })).toHaveCount(0);
+  await expect(page.getByRole("table", { name: "Capability / quality metric deltas" })).toHaveCount(
+    0,
+  );
 });
 
 test("J5: failed run exposes actionable recovery and a successful retry", async ({ page }) => {
@@ -462,7 +473,9 @@ test("J6: cancellation completes before the next evaluation succeeds", async ({ 
   expect(state.launchRequests).toBe(1);
 });
 
-test("compact, wide and reduced-motion modes preserve core accessibility invariants", async ({ page }) => {
+test("compact, wide and reduced-motion modes preserve core accessibility invariants", async ({
+  page,
+}) => {
   await installFixture(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
 
