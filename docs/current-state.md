@@ -69,7 +69,7 @@ Still not interchangeable with repository-local compliance:
 
 - `dev` is the implementation/integration line; feature branches start from current green `dev` and target `dev`.
 - `main` is stable/release-oriented and is promoted deliberately after evidence.
-- the use-case-first positioning introduced by main-only PR #52 is being reconciled into the current `dev` README without restoring its obsolete foundation/status text. After this lands, `main` will remain behind `dev` but no longer own unique product-positioning truth that could be lost on promotion.
+- this branch reconciles the use-case-first positioning introduced by main-only PR #52 into the current `dev` README without restoring obsolete foundation/status text. After merge, `main` will remain behind `dev` but will no longer own unique product-positioning truth that could be lost on promotion.
 
 ## Evidence still required before broad performance claims
 
