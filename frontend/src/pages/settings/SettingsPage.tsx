@@ -25,7 +25,11 @@ const SECTION_LABEL: Record<SettingsSection, "Endpoints" | "Devices / targets" |
 const ENDPOINT_COLUMNS: readonly DataColumn<TargetSummaryReadModel>[] = [
   { id: "profile", header: "Endpoint profile", render: (item) => item.endpoint_profile_id },
   { id: "adapter", header: "Adapter", render: (item) => item.adapter_type },
-  { id: "identity", header: "Safe identity", render: (item) => <code>{item.endpoint_identity}</code> },
+  {
+    id: "identity",
+    header: "Safe identity",
+    render: (item) => <code>{item.endpoint_identity}</code>,
+  },
   { id: "target", header: "Used by target", render: (item) => item.display_name },
 ];
 
@@ -144,7 +148,10 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   if (state.status === "loading") {
     return (
       <AppShell activeSecondary={label}>
-        <LoadingState title={`Loading ${label.toLowerCase()}`} description="Reading configured target context from the local backend." />
+        <LoadingState
+          title={`Loading ${label.toLowerCase()}`}
+          description="Reading configured target context from the local backend."
+        />
       </AppShell>
     );
   }
