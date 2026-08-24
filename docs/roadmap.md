@@ -5,7 +5,7 @@ Document type: roadmap
 Owner: repository
 Canonical scope: roadmap.repository
 Read when: selecting the next capability milestone or understanding product sequencing
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-24
 
 This roadmap tracks capability outcomes. Live state belongs in [`current-state.md`](current-state.md); detailed active dependencies belong in bounded workstreams.
 
@@ -20,7 +20,7 @@ This roadmap tracks capability outcomes. Live state belongs in [`current-state.m
 | M4 — Workload evaluation | IMPLEMENTED / EVIDENCE PENDING | workload packs on representative models |
 | M5 — Resource-aware local evaluation | IMPLEMENTED / EVIDENCE PENDING | real identity/telemetry/device evidence |
 | M6 — Regression automation | IMPLEMENTED / EVIDENCE PENDING | real baseline/candidate CI evidence |
-| M7 — Local product UI | **ACTIVE / CORE PATH INTEGRATED** | Compare, Library/Settings, browser acceptance, release lifecycle and migration gates |
+| M7 — Local product UI | **DONE** | Compare, Library/Settings, J1-J6 browser acceptance and built-product lifecycle integrated |
 | M8 — External benchmark ecosystem | DEFERRED | start only when real product evidence exposes a concrete coverage gap |
 | M9 — Additional task families | FUTURE | ASR/embeddings/reranking/vision after the text product stabilizes |
 
@@ -34,39 +34,41 @@ Integrated on `dev`:
 - Model -> Scenario -> Test -> Review;
 - server-owned run launch/progress/cancellation/reconnect;
 - Runs and immutable Run Detail;
+- compatibility-first Compare/regression;
+- secondary read-only Library/Settings;
 - versioned UI read/preflight contracts;
-- executable semantic design system and loopback composition root.
+- executable semantic design system and loopback composition root;
+- Playwright Chromium J1-J6 browser acceptance, compact/wide checks and reduced-motion behavior;
+- unique built-product/source identity, immutable package publication, manifest/checksum, build delta, bounded retention and package smoke/cleanup.
 
-Remaining product surfaces/gates:
+M7 software/productization is complete. Real-device evidence is intentionally tracked separately because synthetic CI cannot establish hardware performance, telemetry, thermal or device-specific claims. Local LLM Server deprecation/removal is also a separate migration lifecycle rather than a UI-completion gate.
 
-- compatibility-first Compare / regression;
-- secondary Library / Settings;
-- focused Playwright J1-J6 and accessibility/adaptive evidence;
-- representative Local LLM Server/device evidence;
-- `REL-UI-001` built-product identity/artifact/smoke/cleanup lifecycle;
-- staged Local LLM Server evaluation parity/deprecation/removal.
+## Active evidence and migration tracks
 
-The active dependency DAG and acceptance gates live only in [`workstreams/ui-productization.md`](workstreams/ui-productization.md).
-
-## Parallel evidence track
-
-Representative evidence proceeds independently from remaining UI work:
+Representative evidence: [`workstreams/representative-device-evidence.md`](workstreams/representative-device-evidence.md)
 
 1. run a real Local LLM Server target through a representative suite/workload;
 2. retain the execution fingerprint and `.plab.zip`;
 3. exercise identity and `/status` telemetry on the real device;
 4. repeat/load the same controlled target;
-5. preserve a real baseline/candidate regression outcome.
+5. preserve representative comparison/regression outcomes.
 
-This evidence must inform product claims and catch fixture-only assumptions, but lack of physical hardware must not serialize unrelated browser implementation.
+LLS migration: [`workstreams/local-llm-migration.md`](workstreams/local-llm-migration.md)
+
+1. map every overlapping evaluation workflow and consumer;
+2. establish replacement parity plus history/data policy;
+3. deprecate before removal;
+4. remove redundant paths only after cross-repo and real-runtime evidence.
 
 ## Product maturity
 
 **Engine-capable** — integrated core can execute and compare evidence through CLI/CI.
 
-**Usable local benchmark product** — M7 product surfaces and browser acceptance are complete, and representative M1-M5 evidence exists.
+**Product-software complete for the current local UI scope** — M7 surfaces, browser acceptance and built-product lifecycle are integrated.
 
-**Engineering regression platform** — usable product + representative M6 CI gate evidence.
+**Evidence-backed local benchmark product** — product software + representative M1-M5 evidence.
+
+**Engineering regression platform** — evidence-backed product + representative M6 CI gate evidence.
 
 **Broader platform** — only then add justified M8 integrations and selected M9 task families.
 
