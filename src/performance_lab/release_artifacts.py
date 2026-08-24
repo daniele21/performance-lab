@@ -66,6 +66,10 @@ def previous_successful_manifest(lineage_dir: Path) -> tuple[Path, dict[str, Any
     return None
 
 
+def _mapping(value: Any) -> Mapping[str, Any]:
+    return value if isinstance(value, Mapping) else {}
+
+
 def build_delta_markdown(
     current: Mapping[str, Any],
     previous: Mapping[str, Any] | None,
@@ -98,8 +102,8 @@ def build_delta_markdown(
         ]
     )
 
-    current_inputs = current.get("inputs") if isinstance(current.get("inputs"), Mapping) else {}
-    previous_inputs = previous.get("inputs") if isinstance(previous.get("inputs"), Mapping) else {}
+    current_inputs = _mapping(current.get("inputs"))
+    previous_inputs = _mapping(previous.get("inputs"))
     input_names = sorted(set(current_inputs) | set(previous_inputs))
     for name in input_names:
         before = previous_inputs.get(name, "missing")
@@ -108,12 +112,8 @@ def build_delta_markdown(
         lines.append(f"- {name}: {marker} (`{before}` -> `{after}`)")
 
     lines.extend(["", "## Toolchain", ""])
-    current_toolchain = (
-        current.get("toolchain") if isinstance(current.get("toolchain"), Mapping) else {}
-    )
-    previous_toolchain = (
-        previous.get("toolchain") if isinstance(previous.get("toolchain"), Mapping) else {}
-    )
+    current_toolchain = _mapping(current.get("toolchain"))
+    previous_toolchain = _mapping(previous.get("toolchain"))
     tool_names = sorted(set(current_toolchain) | set(previous_toolchain))
     for name in tool_names:
         before = previous_toolchain.get(name, "missing")
@@ -122,10 +122,8 @@ def build_delta_markdown(
         lines.append(f"- {name}: {marker} (`{before}` -> `{after}`)")
 
     lines.extend(["", "## Configuration / lineage", ""])
-    current_lineage = current.get("lineage") if isinstance(current.get("lineage"), Mapping) else {}
-    previous_lineage = (
-        previous.get("lineage") if isinstance(previous.get("lineage"), Mapping) else {}
-    )
+    current_lineage = _mapping(current.get("lineage"))
+    previous_lineage = _mapping(previous.get("lineage"))
     for name in sorted(set(current_lineage) | set(previous_lineage)):
         before = previous_lineage.get(name, "missing")
         after = current_lineage.get(name, "missing")
