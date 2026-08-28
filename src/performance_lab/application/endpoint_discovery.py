@@ -117,7 +117,10 @@ async def _probe_local_llm_server_registry(
         response.raise_for_status()
         payload = response.json()
     except (httpx.HTTPError, ValueError, TypeError):
-        return {}, "Model discovery succeeded, but Local LLM Server runtime details are unavailable."
+        return (
+            {},
+            "Model discovery succeeded, but Local LLM Server runtime details are unavailable.",
+        )
 
     if not isinstance(payload, Mapping):
         return {}, "Local LLM Server returned an invalid runtime registry response."
