@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import {
-  launchRunJob,
-  listScenarios,
-  listTargets,
-  preflightRun,
-  probeEndpoint,
-} from "../../api";
+import { launchRunJob, listScenarios, listTargets, preflightRun, probeEndpoint } from "../../api";
 import type {
   EndpointConnectionInput,
   EndpointProbeReadModel,
@@ -185,7 +179,9 @@ export function TestModelView({
               <Select
                 label="Model source"
                 value={modelSource}
-                onChange={(event) => onModelSourceChange?.(event.currentTarget.value as ModelSource)}
+                onChange={(event) =>
+                  onModelSourceChange?.(event.currentTarget.value as ModelSource)
+                }
               >
                 <option value="local">Connect local server</option>
                 <option value="configured" disabled={!targets.length}>
@@ -221,7 +217,9 @@ export function TestModelView({
                     <Field
                       label="Connection name"
                       value={connection.displayName}
-                      onChange={(event) => updateConnection({ displayName: event.currentTarget.value })}
+                      onChange={(event) =>
+                        updateConnection({ displayName: event.currentTarget.value })
+                      }
                     />
                     <Select
                       label="Server type"
@@ -259,7 +257,9 @@ export function TestModelView({
                         label="API base path"
                         description="OpenAI-compatible servers normally expose /v1/."
                         value={connection.basePath}
-                        onChange={(event) => updateConnection({ basePath: event.currentTarget.value })}
+                        onChange={(event) =>
+                          updateConnection({ basePath: event.currentTarget.value })
+                        }
                       />
                       <Field
                         label="Probe timeout (seconds)"
@@ -292,7 +292,9 @@ export function TestModelView({
                     <div className="test-model-discovery" aria-live="polite">
                       <div className="test-model-discovery-heading">
                         <div>
-                          <strong>{probe.healthy ? "Connection discovered" : "Connection unavailable"}</strong>
+                          <strong>
+                            {probe.healthy ? "Connection discovered" : "Connection unavailable"}
+                          </strong>
                           <span>{probe.endpoint_identity}</span>
                         </div>
                         <Status tone={probe.healthy ? "success" : "error"}>
@@ -300,7 +302,9 @@ export function TestModelView({
                         </Status>
                       </div>
 
-                      {probe.warning ? <p className="test-model-discovery-warning">{probe.warning}</p> : null}
+                      {probe.warning ? (
+                        <p className="test-model-discovery-warning">{probe.warning}</p>
+                      ) : null}
 
                       {probe.healthy && probe.target ? (
                         probe.models.length ? (
@@ -308,7 +312,9 @@ export function TestModelView({
                             label="Model"
                             description={`${probe.models.length} model${probe.models.length === 1 ? "" : "s"} reported by the server.`}
                             value={selection.modelId}
-                            onChange={(event) => updateSelection({ modelId: event.currentTarget.value })}
+                            onChange={(event) =>
+                              updateSelection({ modelId: event.currentTarget.value })
+                            }
                           >
                             {probe.models.map((model) => (
                               <option key={model.model_id} value={model.model_id}>
@@ -324,11 +330,16 @@ export function TestModelView({
                       ) : null}
 
                       {probe.capabilities.length ? (
-                        <div className="test-model-capabilities" aria-label="Discovered endpoint capabilities">
+                        <div
+                          className="test-model-capabilities"
+                          aria-label="Discovered endpoint capabilities"
+                        >
                           {probe.capabilities.map((capability) => (
                             <div key={capability.name}>
                               <span>{capability.name.replaceAll("_", " ")}</span>
-                              <Status tone={capabilityTone(capability.state)}>{capability.state}</Status>
+                              <Status tone={capabilityTone(capability.state)}>
+                                {capability.state}
+                              </Status>
                             </div>
                           ))}
                         </div>
@@ -361,7 +372,8 @@ export function TestModelView({
                           </dl>
                           <p className="test-model-disclosure-note">
                             Runtime-load settings are evidence only in this slice. Performance Lab
-                            does not take ownership of loading or reconfiguring the external runtime.
+                            does not take ownership of loading or reconfiguring the external
+                            runtime.
                           </p>
                         </Disclosure>
                       ) : null}
@@ -683,7 +695,9 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
       })
       .catch((error: unknown) => {
         setSelection((current) => ({ ...current, targetId: "", modelId: "" }));
-        setProbeError(error instanceof Error ? error.message : "The local server could not be probed.");
+        setProbeError(
+          error instanceof Error ? error.message : "The local server could not be probed.",
+        );
       })
       .finally(() => setProbeLoading(false));
   };
