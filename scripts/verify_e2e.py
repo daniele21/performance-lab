@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 FIDELITY_ORDER = [
     "host_or_fake",
@@ -219,7 +219,8 @@ def main() -> int:
         dimensions = target.get("material_dimensions")
         if not list_of_strings(dimensions) or not dimensions:
             errors.append(
-                f"target_environments.{target_id}.material_dimensions must be a non-empty string list"
+                f"target_environments.{target_id}.material_dimensions "
+                "must be a non-empty string list"
             )
 
     automated_ids: set[str] = set()
@@ -227,12 +228,14 @@ def main() -> int:
         fidelity = environment.get("fidelity_class")
         if fidelity not in FIDELITY_CLASSES:
             errors.append(
-                f"execution_environments.{environment_id}.fidelity_class must be one of {FIDELITY_ORDER}"
+                f"execution_environments.{environment_id}.fidelity_class "
+                f"must be one of {FIDELITY_ORDER}"
             )
         automation = environment.get("automation")
         if automation not in AUTOMATION:
             errors.append(
-                f"execution_environments.{environment_id}.automation must be one of {sorted(AUTOMATION)}"
+                f"execution_environments.{environment_id}.automation "
+                f"must be one of {sorted(AUTOMATION)}"
             )
         elif automation == "automated":
             automated_ids.add(environment_id)
@@ -273,7 +276,8 @@ def main() -> int:
             environment = executions.get(ref)
             if environment and environment.get("automation") != "automated":
                 errors.append(
-                    f"critical_journeys.{journey_id}.automated_environment_refs must reference automated environments: {ref}"
+                    f"critical_journeys.{journey_id}.automated_environment_refs "
+                    f"must reference automated environments: {ref}"
                 )
             if environment and environment.get("automation") == "automated":
                 fidelity = environment.get("fidelity_class")
@@ -282,17 +286,23 @@ def main() -> int:
         minimum = journey.get("minimum_automated_fidelity")
         if minimum not in FIDELITY_CLASSES:
             errors.append(
-                f"critical_journeys.{journey_id}.minimum_automated_fidelity must be one of {FIDELITY_ORDER}"
+                f"critical_journeys.{journey_id}.minimum_automated_fidelity "
+                f"must be one of {FIDELITY_ORDER}"
             )
-        elif automated_refs and automated_fidelity_ranks:
-            if max(automated_fidelity_ranks) < FIDELITY_RANK[minimum]:
-                errors.append(
-                    f"critical_journeys.{journey_id} does not reach minimum_automated_fidelity {minimum}"
-                )
+        elif (
+            automated_refs
+            and automated_fidelity_ranks
+            and max(automated_fidelity_ranks) < FIDELITY_RANK[minimum]
+        ):
+            errors.append(
+                f"critical_journeys.{journey_id} does not reach "
+                f"minimum_automated_fidelity {minimum}"
+            )
         confirmation = journey.get("real_environment_confirmation")
         if confirmation not in REAL_CONFIRMATION:
             errors.append(
-                f"critical_journeys.{journey_id}.real_environment_confirmation must be one of {sorted(REAL_CONFIRMATION)}"
+                f"critical_journeys.{journey_id}.real_environment_confirmation "
+                f"must be one of {sorted(REAL_CONFIRMATION)}"
             )
         residual = journey.get("residual_gaps")
         if not isinstance(residual, list) or not all(non_empty_string(gap) for gap in residual):
@@ -300,7 +310,8 @@ def main() -> int:
         gap_reason = journey.get("automation_gap_reason")
         if not automated_refs and not non_empty_string(gap_reason):
             errors.append(
-                f"critical_journeys.{journey_id} needs automated_environment_refs or an explicit automation_gap_reason"
+                f"critical_journeys.{journey_id} needs automated_environment_refs "
+                "or an explicit automation_gap_reason"
             )
         if automated_refs and not any(ref in automated_ids for ref in automated_refs):
             errors.append(
@@ -308,7 +319,8 @@ def main() -> int:
             )
         if confirmation == "not_required" and residual:
             warnings.append(
-                f"critical_journeys.{journey_id} declares residual gaps but real_environment_confirmation is not_required"
+                f"critical_journeys.{journey_id} declares residual gaps but "
+                "real_environment_confirmation is not_required"
             )
 
     if not args.template_mode and contains_placeholder(data):

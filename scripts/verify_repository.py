@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 CORE_SKILLS = (
     "plan-workstream",
@@ -131,7 +131,8 @@ def main() -> int:
 
     if not any((root / name).is_file() for name in ("LICENSE", "LICENSE.md", "LICENSE.txt")):
         warnings.append(
-            "no project license file detected; select an explicit license before public distribution"
+            "no project license file detected; select an explicit license "
+            "before public distribution"
         )
 
     print("Repository baseline check")

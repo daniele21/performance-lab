@@ -6,9 +6,9 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 PROFILE_RANK = {"lean": 0, "scoped": 1, "strong": 2, "full": 3}
 EXECUTABLE_SUFFIXES = {".py", ".js", ".jsx", ".ts", ".tsx", ".toml", ".json", ".yml", ".yaml"}
