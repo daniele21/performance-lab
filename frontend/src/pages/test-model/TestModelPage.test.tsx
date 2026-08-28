@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import type {
+  EndpointProbeReadModel,
   RunPreflightReadModel,
   ScenarioSummaryReadModel,
   TargetSummaryReadModel,
@@ -90,6 +91,50 @@ const preflight: RunPreflightReadModel = {
   },
 };
 
+const probe: EndpointProbeReadModel = {
+  api_version: "v1",
+  read_model_version: 1,
+  healthy: true,
+  endpoint_identity: "127.0.0.1:1235/v1/",
+  target: {
+    ...target,
+    target_id: "session-123",
+    display_name: "Local LLM Server",
+    endpoint_profile_id: "session-profile-123",
+    endpoint_identity: "127.0.0.1:1235/v1/",
+  },
+  models: [
+    {
+      api_version: "v1",
+      read_model_version: 1,
+      model_id: "model-a",
+      runtime_parameters: [
+        {
+          api_version: "v1",
+          read_model_version: 1,
+          name: "n_batch",
+          scope: "runtime_load",
+          current_value: 512,
+          editable: false,
+          provenance: "local_llm_server",
+        },
+      ],
+    },
+  ],
+  capabilities: [
+    {
+      api_version: "v1",
+      read_model_version: 1,
+      name: "model_discovery",
+      state: "supported",
+      source: "observed",
+      detail: "GET /v1/models responded successfully",
+    },
+  ],
+  supported_generation_parameters: ["max_output_tokens", "temperature", "top_p"],
+  warning: null,
+};
+
 describe("TestModelView", () => {
   it("keeps unsupported scenarios visible but disabled with the backend reason", () => {
     const markup = renderToStaticMarkup(
@@ -105,6 +150,27 @@ describe("TestModelView", () => {
     expect(markup).toContain("Performance");
     expect(markup).toContain("Dedicated performance presets are not wired yet.");
     expect(markup).toContain("disabled");
+  });
+
+  it("shows discovered local models and honest runtime/request capabilities", () => {
+    const markup = renderToStaticMarkup(
+      <TestModelView
+        targets={[target]}
+        scenarios={scenarios}
+        selection={{ ...selection, targetId: "session-123" }}
+        step="model"
+        preflight={null}
+        modelSource="local"
+        probe={probe}
+      />,
+    );
+
+    expect(markup).toContain("Connect &amp; discover");
+    expect(markup).toContain("model-a");
+    expect(markup).toContain("temperature");
+    expect(markup).toContain("n_batch");
+    expect(markup).toContain("not persisted");
+    expect(markup).toContain("do not imply server-specific min/max ranges");
   });
 
   it("shows the frozen config digest and enables launch only after executable preflight", () => {
