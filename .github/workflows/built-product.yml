@@ -10,8 +10,40 @@ permissions:
   contents: read
 
 jobs:
+  scope:
+    name: Select validation profile
+    runs-on: ubuntu-latest
+    outputs:
+      run_built_product: ${{ steps.selector.outputs.run_built_product }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - id: selector
+        name: Resolve blast radius
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            args=(
+              --base "${{ github.event.pull_request.base.sha }}"
+              --head "${{ github.event.pull_request.head.sha }}"
+              --github-output "$GITHUB_OUTPUT"
+            )
+            if [[ "${{ github.base_ref }}" == "main" ]]; then
+              args+=(--promotion)
+            fi
+            python scripts/select_validation_profile.py "${args[@]}"
+          else
+            python scripts/select_validation_profile.py --full --github-output "$GITHUB_OUTPUT"
+          fi
+
   built-product:
-    name: Build, smoke, package
+    name: Build, smoke, full-product E2E, package
+    needs: scope
+    if: needs.scope.outputs.run_built_product == 'true'
     runs-on: ubuntu-latest
     env:
       PERFORMANCE_LAB_BUILD_ID: gh-${{ github.run_id }}-${{ github.run_attempt }}
@@ -52,6 +84,8 @@ jobs:
         run: |
           npm install --global npm@11.17.0
           npm --prefix frontend ci
+      - name: Install Chromium
+        run: npm --prefix frontend exec -- playwright install --with-deps chromium
       - name: Validate dependency snapshot
         run: python scripts/validate_ci_constraints.py requirements/ci-constraints.txt
       - name: Validate Python repository
@@ -62,10 +96,12 @@ jobs:
           npm --prefix frontend run test
       - name: Validate deterministic product journey
         run: python -m pytest tests/e2e -v --tb=short
-      - name: Build, smoke and atomically publish local artifact
-        run: python scripts/package_release.py --validated
-      - name: Verify operating contract is now enforced
-        run: python scripts/verify_operations.py
+      - name: Build, smoke, run packaged J1 and atomically publish local artifact
+        run: python scripts/package_release.py --validated --require-full-product-e2e
+      - name: Verify operating and E2E contracts are enforced
+        run: |
+          python scripts/verify_operations.py
+          python scripts/verify_e2e.py
       - name: Save successful comparable build history
         uses: actions/cache/save@v4
         with:
@@ -78,33 +114,11 @@ jobs:
           path: build/artifacts/**
           if-no-files-found: error
           retention-days: 7
-
-  publish-release:
-    name: Publish immutable GitHub release
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: built-product
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
+      - name: Upload bounded packaged E2E failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          fetch-depth: 0
-      - uses: actions/download-artifact@v4
-        with:
-          name: performance-lab-built-${{ github.run_id }}-${{ github.run_attempt }}
-          path: release-artifact
-      - name: Create release without clobbering existing assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          mapfile -t files < <(find release-artifact -type f -print | sort)
-          if [[ ${#files[@]} -eq 0 ]]; then
-            echo "No release files found" >&2
-            exit 1
-          fi
-          gh release create "$GITHUB_REF_NAME" "${files[@]}" \
-            --verify-tag \
-            --generate-notes \
-            --title "Performance Lab $GITHUB_REF_NAME"
+          name: packaged-e2e-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: frontend/test-results-full-product
+          if-no-files-found: ignore
+          retention-days: 7

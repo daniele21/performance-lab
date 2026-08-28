@@ -4,13 +4,13 @@ Status: active
 Document type: current-state
 Owner: repository
 Canonical scope: state.repository
-Last reviewed: 2026-08-24
+Last reviewed: 2026-08-29
 
 Short operational ledger only. Durable behavior belongs in architecture/ADR/design docs; active detail belongs in workstreams; Git history owns implementation history.
 
 ## Current phase
 
-The benchmark/evidence core and local browser product are integrated on `dev`. Remaining work is representative-hardware validation plus the evidence-gated cutover of evaluation responsibilities duplicated in Local LLM Server.
+The benchmark/evidence core and local browser product are integrated on `dev`. Remaining product evidence is representative-hardware validation plus the evidence-gated cutover of evaluation responsibilities duplicated in Local LLM Server.
 
 Primary product question:
 
@@ -20,16 +20,34 @@ Use case determines the relevant capability/evaluation evidence; regression is a
 
 ## Integrated baseline
 
-Merged on `dev`:
+Merged on `dev` before the 0.8 engineering migration:
 
-- `UIA-001`, `UIK-001`, `UI-001..006`, `UIA-002..003` — browser path through Overview, Test, Live Run, Runs/Run Detail, Compare, Library and Settings;
-- `REL-UI-001` — unique build/source identity, immutable artifacts, manifest/checksum, delta, retention and built-product smoke/cleanup;
-- `E2E-UI-001` — Playwright J1-J6 plus compact/wide, duplicate-ID, overflow and reduced-motion checks;
+- `UIA-001`, `UIK-001`, `UI-001..006`, `UIA-002..003` — Overview, Test, Live Run, Runs/Run Detail, Compare, Library and Settings;
+- `REL-UI-001` — unique build/source identity, immutable artifacts, manifest/checksum, build delta, retention and built-product smoke/cleanup;
+- `E2E-UI-001` — Playwright J1-J6 plus adaptive, duplicate-ID, overflow and reduced-motion checks;
+- deterministic Python Product E2E — real CLI/HTTP/orchestrator/SQLite/regression against a deterministic external inference fixture;
 - `MIG-001` — LLS evaluation parity/ownership map;
 - `MIG-002` non-hardware work — replacement/history policy fixed and LLS Studio transition notice integrated in PR #149;
 - main-only PR #52 use-case-first positioning reconciled into `dev`.
 
 Productization merge heads passed Repository Health, Repository Validation, Browser Acceptance and Built Product. LLS PR #149 passed Ruff, Python 3.10/3.11/3.12 and Playwright E2E.
+
+## Engineering-standard migration
+
+The current integration target adopts `repo-template-sw` **0.8.0** at L2 with `python`, `typescript` and `product-ui` profiles.
+
+The migration adds:
+
+- exact-head pre-publication readiness and material-ambiguity/base/diff checks;
+- `AGENT_LOCAL` / `REMOTE_AUTOMATED` / `REAL_ENVIRONMENT` classification with no human-as-runner fallback for deterministic automation;
+- automatic `LEAN` / `SCOPED` / `STRONG` / `FULL` blast-radius selection;
+- `.engineering/e2e.json` environment-fidelity ownership;
+- packaged J1 full-product E2E: Chromium -> built frontend -> packaged Python API -> real SQLite -> deterministic external inference fixture;
+- strict E2E-fidelity verification and bounded failure evidence.
+
+Existing strong mechanisms are preserved: native Python/npm commands, Playwright, Product E2E, package/build identity, smoke/cleanup, product-experience contracts and representative-runtime evidence.
+
+Hosted CI/fixtures do not prove `RUNTIME-1`. Real model/runtime identity, physical memory/resources, telemetry sensor provenance, thermals and repeated-load behavior remain target-environment evidence.
 
 ## Active work
 
@@ -49,24 +67,12 @@ Architecture, history and redirect decisions are settled:
 - serving, residency, `/v1/runtime/identity`, `/status`, provider metrics and hardware/resource correctness remain LLS-owned;
 - LLS PR #149 directs new Studio evaluation work to PL while preserving EV-3 and legacy history until the evidence gate passes.
 
-Known legacy consumers are the LLS Studio evaluation/history surfaces, their tests and EV-3. The redirect requirement is satisfied; removal is evidence-blocked.
-
 MIG-003 requires two post-convergence EV-3 reports, a real PL run against LLS with identity/status evidence, then a post-disable cross-repository smoke preserving serving/runtime behavior.
-
-## Repository-template alignment
-
-Repo-local `repo-template-sw` 0.5 contracts enforce documentation budgets, agent context, product experience, repository health and built-product lifecycle. `.engineering/commands.json` is canonical and strict operations verification is active.
-
-Outside automated repo-local compliance:
-
-- representative hardware/model evidence for performance/thermal/resource claims;
-- human usability acceptance where automated browser evidence is insufficient;
-- `dev` branch protection/required checks: issue #61 records the configuration because the current GitHub connector cannot write rulesets.
 
 ## Integration lines
 
-- `dev` is the integration line; feature branches start from current green `dev` and target `dev`.
-- `main` is stable/release-oriented and is promoted deliberately after evidence.
+- `dev` is the integration line; ordinary feature branches start from current green `dev` and target `dev`.
+- `main` is stable/release-oriented and is promoted deliberately with `FULL` validation.
 - PR #52 no longer owns product-positioning truth absent from `dev`.
 
 ## Evidence still required
