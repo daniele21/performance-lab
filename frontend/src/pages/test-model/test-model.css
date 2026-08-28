@@ -47,10 +47,136 @@
   min-height: 22rem;
 }
 
-.test-model-fields {
+.test-model-fields,
+.test-model-connection-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
+}
+
+.test-model-connection {
+  display: grid;
+  gap: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  padding: var(--space-4);
+  background: var(--color-surface-elevated);
+}
+
+.test-model-connect-action,
+.test-model-discovery-heading {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.test-model-connect-action p,
+.test-model-discovery-warning,
+.test-model-disclosure-note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.test-model-connection-error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 0.86rem;
+}
+
+.test-model-discovery {
+  display: grid;
+  gap: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+}
+
+.test-model-discovery-heading > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.test-model-discovery-heading span {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.test-model-capabilities {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.test-model-capabilities > div {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+}
+
+.test-model-capabilities > div > span:first-child {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.test-model-parameter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.test-model-parameter-tags code {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.test-model-runtime-parameters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0 0 var(--space-3);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-border);
+}
+
+.test-model-runtime-parameters > div {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+}
+
+.test-model-runtime-parameters dt {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.test-model-runtime-parameters dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .test-model-scenarios {
@@ -182,6 +308,9 @@
 @media (max-width: 54rem) {
   .test-model-steps,
   .test-model-fields,
+  .test-model-connection-grid,
+  .test-model-capabilities,
+  .test-model-runtime-parameters,
   .test-model-scenarios,
   .test-model-review-grid {
     grid-template-columns: 1fr;
@@ -195,6 +324,8 @@
     display: flex;
   }
 
+  .test-model-connect-action,
+  .test-model-discovery-heading,
   .test-model-launch {
     align-items: flex-start;
     flex-direction: column;
