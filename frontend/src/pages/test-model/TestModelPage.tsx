@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { launchRunJob, listScenarios, listTargets, preflightRun } from "../../api";
+import {
+  launchRunJob,
+  listScenarios,
+  listTargets,
+  preflightRun,
+  probeEndpoint,
+} from "../../api";
 import type {
+  EndpointConnectionInput,
+  EndpointProbeReadModel,
   RunPreflightReadModel,
   ScenarioKind,
   ScenarioSummaryReadModel,
@@ -24,6 +32,7 @@ import {
 import "./test-model.css";
 
 type WizardStep = "model" | "scenario" | "test" | "review";
+type ModelSource = "configured" | "local";
 
 const STEPS: readonly { id: WizardStep; label: string }[] = [
   { id: "model", label: "Model" },
@@ -39,24 +48,64 @@ interface WizardSelection {
   useHostTelemetry: boolean;
 }
 
+interface ConnectionDraft {
+  displayName: string;
+  host: string;
+  port: string;
+  basePath: string;
+  serverType: EndpointConnectionInput["server_type"];
+  timeoutSeconds: string;
+}
+
 interface TestModelViewProps {
   targets: TargetSummaryReadModel[];
   scenarios: ScenarioSummaryReadModel[];
   selection: WizardSelection;
   step: WizardStep;
   preflight: RunPreflightReadModel | null;
+  modelSource?: ModelSource;
+  connection?: ConnectionDraft;
+  probe?: EndpointProbeReadModel | null;
+  probeLoading?: boolean;
+  probeError?: string | null;
   preflightLoading?: boolean;
   preflightError?: string | null;
   launchLoading?: boolean;
   launchError?: string | null;
   onSelectionChange?: (selection: WizardSelection) => void;
+  onModelSourceChange?: (source: ModelSource) => void;
+  onConnectionChange?: (connection: ConnectionDraft) => void;
+  onProbe?: () => void;
   onStepChange?: (step: WizardStep) => void;
   onReview?: () => void;
   onLaunch?: () => void;
 }
 
+const DEFAULT_CONNECTION: ConnectionDraft = {
+  displayName: "Local model server",
+  host: "127.0.0.1",
+  port: "1235",
+  basePath: "/v1/",
+  serverType: "local_llm_server",
+  timeoutSeconds: "5",
+};
+
 function stepIndex(step: WizardStep) {
   return STEPS.findIndex((item) => item.id === step);
+}
+
+function capabilityTone(state: "supported" | "unsupported" | "unknown") {
+  if (state === "supported") return "success" as const;
+  if (state === "unsupported") return "warning" as const;
+  return "neutral" as const;
+}
+
+function renderRuntimeValue(value: unknown) {
+  if (value === null || value === undefined) return "Unknown";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return JSON.stringify(value);
 }
 
 export function TestModelView({
@@ -65,22 +114,35 @@ export function TestModelView({
   selection,
   step,
   preflight,
+  modelSource = "configured",
+  connection = DEFAULT_CONNECTION,
+  probe = null,
+  probeLoading = false,
+  probeError = null,
   preflightLoading = false,
   preflightError = null,
   launchLoading = false,
   launchError = null,
   onSelectionChange,
+  onModelSourceChange,
+  onConnectionChange,
+  onProbe,
   onStepChange,
   onReview,
   onLaunch,
 }: TestModelViewProps) {
   const currentIndex = stepIndex(step);
   const selectedScenario = scenarios.find((item) => item.scenario === selection.scenario);
+  const selectedDiscoveredModel = probe?.models.find((item) => item.model_id === selection.modelId);
   const canLeaveModel = Boolean(selection.targetId && selection.modelId.trim());
   const canLeaveScenario = Boolean(selectedScenario?.supported);
 
   const updateSelection = (patch: Partial<WizardSelection>) => {
     onSelectionChange?.({ ...selection, ...patch });
+  };
+
+  const updateConnection = (patch: Partial<ConnectionDraft>) => {
+    onConnectionChange?.({ ...connection, ...patch });
   };
 
   const goBack = () => {
@@ -101,7 +163,7 @@ export function TestModelView({
         <PageHeader
           eyebrow="New evaluation"
           title="Test a model"
-          description="Choose the model and what you want to learn. Performance Lab keeps benchmark internals behind sensible defaults, then freezes the exact execution input before launch."
+          description="Connect to a local model server or use an existing target, choose what you want to learn, then review the exact frozen execution before launch."
         />
 
         <ol className="test-model-steps" aria-label="Evaluation setup progress">
@@ -118,29 +180,195 @@ export function TestModelView({
             <>
               <SectionHeader
                 title="Which model are you testing?"
-                description="Select a registered local target and the model identifier exposed by that endpoint."
+                description="Performance Lab talks to the inference server; the browser never calls the model runtime directly."
               />
-              <div className="test-model-fields">
-                <Select
-                  label="Target"
-                  value={selection.targetId}
-                  onChange={(event) => updateSelection({ targetId: event.currentTarget.value })}
-                >
-                  <option value="">Choose a target</option>
-                  {targets.map((target) => (
-                    <option key={target.target_id} value={target.target_id}>
-                      {target.display_name} · {target.endpoint_identity}
-                    </option>
-                  ))}
-                </Select>
-                <Field
-                  label="Model ID"
-                  description="Use the model identifier accepted by the selected endpoint."
-                  value={selection.modelId}
-                  onChange={(event) => updateSelection({ modelId: event.currentTarget.value })}
-                  placeholder="e.g. local-model"
-                />
-              </div>
+              <Select
+                label="Model source"
+                value={modelSource}
+                onChange={(event) => onModelSourceChange?.(event.currentTarget.value as ModelSource)}
+              >
+                <option value="local">Connect local server</option>
+                <option value="configured" disabled={!targets.length}>
+                  Configured target{targets.length ? "" : " · none available"}
+                </option>
+              </Select>
+
+              {modelSource === "configured" ? (
+                <div className="test-model-fields">
+                  <Select
+                    label="Target"
+                    value={selection.targetId}
+                    onChange={(event) => updateSelection({ targetId: event.currentTarget.value })}
+                  >
+                    <option value="">Choose a target</option>
+                    {targets.map((target) => (
+                      <option key={target.target_id} value={target.target_id}>
+                        {target.display_name} · {target.endpoint_identity}
+                      </option>
+                    ))}
+                  </Select>
+                  <Field
+                    label="Model ID"
+                    description="Manual fallback for targets that do not yet expose model discovery through the UI."
+                    value={selection.modelId}
+                    onChange={(event) => updateSelection({ modelId: event.currentTarget.value })}
+                    placeholder="e.g. local-model"
+                  />
+                </div>
+              ) : (
+                <div className="test-model-connection">
+                  <div className="test-model-connection-grid">
+                    <Field
+                      label="Connection name"
+                      value={connection.displayName}
+                      onChange={(event) => updateConnection({ displayName: event.currentTarget.value })}
+                    />
+                    <Select
+                      label="Server type"
+                      value={connection.serverType}
+                      onChange={(event) =>
+                        updateConnection({
+                          serverType: event.currentTarget.value as ConnectionDraft["serverType"],
+                        })
+                      }
+                    >
+                      <option value="local_llm_server">Local LLM Server</option>
+                      <option value="openai_compatible">OpenAI-compatible</option>
+                    </Select>
+                    <Field
+                      label="Host"
+                      description="This first UI slice intentionally accepts localhost/loopback only."
+                      value={connection.host}
+                      onChange={(event) => updateConnection({ host: event.currentTarget.value })}
+                      placeholder="127.0.0.1"
+                    />
+                    <Field
+                      label="Port"
+                      type="number"
+                      min="1"
+                      max="65535"
+                      value={connection.port}
+                      onChange={(event) => updateConnection({ port: event.currentTarget.value })}
+                      placeholder="1235"
+                    />
+                  </div>
+
+                  <Disclosure summary="Advanced connection settings">
+                    <div className="test-model-connection-grid">
+                      <Field
+                        label="API base path"
+                        description="OpenAI-compatible servers normally expose /v1/."
+                        value={connection.basePath}
+                        onChange={(event) => updateConnection({ basePath: event.currentTarget.value })}
+                      />
+                      <Field
+                        label="Probe timeout (seconds)"
+                        type="number"
+                        min="0.1"
+                        max="120"
+                        step="0.1"
+                        value={connection.timeoutSeconds}
+                        onChange={(event) =>
+                          updateConnection({ timeoutSeconds: event.currentTarget.value })
+                        }
+                      />
+                    </div>
+                  </Disclosure>
+
+                  <div className="test-model-connect-action">
+                    <Button variant="primary" disabled={probeLoading} onClick={onProbe}>
+                      {probeLoading ? "Connecting…" : "Connect & discover"}
+                    </Button>
+                    <p>Session connection · it is not persisted when Performance Lab stops.</p>
+                  </div>
+
+                  {probeError ? (
+                    <p className="test-model-connection-error" role="alert">
+                      {probeError}
+                    </p>
+                  ) : null}
+
+                  {probe ? (
+                    <div className="test-model-discovery" aria-live="polite">
+                      <div className="test-model-discovery-heading">
+                        <div>
+                          <strong>{probe.healthy ? "Connection discovered" : "Connection unavailable"}</strong>
+                          <span>{probe.endpoint_identity}</span>
+                        </div>
+                        <Status tone={probe.healthy ? "success" : "error"}>
+                          {probe.healthy ? "Connected" : "Unavailable"}
+                        </Status>
+                      </div>
+
+                      {probe.warning ? <p className="test-model-discovery-warning">{probe.warning}</p> : null}
+
+                      {probe.healthy && probe.target ? (
+                        probe.models.length ? (
+                          <Select
+                            label="Model"
+                            description={`${probe.models.length} model${probe.models.length === 1 ? "" : "s"} reported by the server.`}
+                            value={selection.modelId}
+                            onChange={(event) => updateSelection({ modelId: event.currentTarget.value })}
+                          >
+                            {probe.models.map((model) => (
+                              <option key={model.model_id} value={model.model_id}>
+                                {model.model_id}
+                              </option>
+                            ))}
+                          </Select>
+                        ) : (
+                          <p className="test-model-discovery-warning">
+                            The endpoint is reachable, but GET /v1/models did not report a model.
+                          </p>
+                        )
+                      ) : null}
+
+                      {probe.capabilities.length ? (
+                        <div className="test-model-capabilities" aria-label="Discovered endpoint capabilities">
+                          {probe.capabilities.map((capability) => (
+                            <div key={capability.name}>
+                              <span>{capability.name.replaceAll("_", " ")}</span>
+                              <Status tone={capabilityTone(capability.state)}>{capability.state}</Status>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {probe.supported_generation_parameters.length ? (
+                        <Disclosure summary="Request controls available through this adapter">
+                          <div className="test-model-parameter-tags">
+                            {probe.supported_generation_parameters.map((parameter) => (
+                              <code key={parameter}>{parameter}</code>
+                            ))}
+                          </div>
+                          <p className="test-model-disclosure-note">
+                            These names describe controls the Performance Lab adapter can send. They
+                            do not imply server-specific min/max ranges when the runtime has not
+                            published them.
+                          </p>
+                        </Disclosure>
+                      ) : null}
+
+                      {selectedDiscoveredModel?.runtime_parameters.length ? (
+                        <Disclosure summary="Runtime configuration reported by Local LLM Server">
+                          <dl className="test-model-runtime-parameters">
+                            {selectedDiscoveredModel.runtime_parameters.map((parameter) => (
+                              <div key={parameter.name}>
+                                <dt>{parameter.name}</dt>
+                                <dd>{renderRuntimeValue(parameter.current_value)}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                          <p className="test-model-disclosure-note">
+                            Runtime-load settings are evidence only in this slice. Performance Lab
+                            does not take ownership of loading or reconfiguring the external runtime.
+                          </p>
+                        </Disclosure>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </>
           ) : null}
 
@@ -176,7 +404,7 @@ export function TestModelView({
             <>
               <SectionHeader
                 title="Test settings"
-                description="The selected scenario supplies the benchmark suite and deterministic defaults. Only supported execution controls are exposed here."
+                description="The selected scenario supplies the benchmark suite and deterministic defaults. Endpoint capabilities stay visible without exposing unsupported controls as if they worked."
               />
               <Toggle
                 label="Collect host telemetry"
@@ -186,6 +414,20 @@ export function TestModelView({
                   updateSelection({ useHostTelemetry: event.currentTarget.checked })
                 }
               />
+              {modelSource === "local" && probe?.supported_generation_parameters.length ? (
+                <Disclosure summary="Discovered request parameters">
+                  <div className="test-model-parameter-tags">
+                    {probe.supported_generation_parameters.map((parameter) => (
+                      <code key={parameter}>{parameter}</code>
+                    ))}
+                  </div>
+                  <p className="test-model-disclosure-note">
+                    The current starter scenario keeps its versioned generation defaults. A server
+                    must publish a typed configuration contract before Performance Lab can safely
+                    offer server-specific ranges instead of guessing them.
+                  </p>
+                </Disclosure>
+              ) : null}
               <Disclosure summary="Advanced execution details">
                 <p>
                   General capability uses the canonical starter suite. Dataset snapshots,
@@ -354,10 +596,26 @@ interface TestModelPageProps {
   onLaunched?: (jobId: string) => void;
 }
 
+function connectionRequest(connection: ConnectionDraft): EndpointConnectionInput {
+  const path = connection.basePath.trim() || "/v1/";
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return {
+    display_name: connection.displayName.trim() || "Local model server",
+    base_url: `http://${connection.host.trim()}:${connection.port.trim()}${normalizedPath}`,
+    server_type: connection.serverType,
+    timeout_seconds: Number(connection.timeoutSeconds),
+  };
+}
+
 export function TestModelPage({ onLaunched }: TestModelPageProps) {
   const [catalog, setCatalog] = useState<LoadState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [step, setStep] = useState<WizardStep>("model");
+  const [modelSource, setModelSource] = useState<ModelSource>("configured");
+  const [connection, setConnection] = useState<ConnectionDraft>(DEFAULT_CONNECTION);
+  const [probe, setProbe] = useState<EndpointProbeReadModel | null>(null);
+  const [probeLoading, setProbeLoading] = useState(false);
+  const [probeError, setProbeError] = useState<string | null>(null);
   const [selection, setSelection] = useState<WizardSelection>({
     targetId: "",
     modelId: "",
@@ -378,6 +636,7 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
     ])
       .then(([targets, scenarios]) => {
         setCatalog({ status: "ready", targets, scenarios });
+        setModelSource(targets.length ? "configured" : "local");
         setSelection((current) => ({
           ...current,
           targetId: current.targetId || targets[0]?.target_id || "",
@@ -403,6 +662,31 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
     }),
     [selection],
   );
+
+  const connectAndDiscover = () => {
+    setProbeLoading(true);
+    setProbeError(null);
+    setProbe(null);
+    setPreflight(null);
+    probeEndpoint(connectionRequest(connection))
+      .then((result) => {
+        setProbe(result);
+        if (result.healthy && result.target) {
+          setSelection((current) => ({
+            ...current,
+            targetId: result.target?.target_id ?? "",
+            modelId: result.models[0]?.model_id ?? "",
+          }));
+        } else {
+          setSelection((current) => ({ ...current, targetId: "", modelId: "" }));
+        }
+      })
+      .catch((error: unknown) => {
+        setSelection((current) => ({ ...current, targetId: "", modelId: "" }));
+        setProbeError(error instanceof Error ? error.message : "The local server could not be probed.");
+      })
+      .finally(() => setProbeLoading(false));
+  };
 
   const prepareReview = () => {
     setPreflightLoading(true);
@@ -436,7 +720,7 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
       <AppShell activePrimary="Test a model">
         <LoadingState
           title="Loading evaluation setup"
-          description="Reading registered local targets and supported scenarios."
+          description="Reading configured targets and supported scenarios."
         />
       </AppShell>
     );
@@ -452,16 +736,6 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
       </AppShell>
     );
   }
-  if (!catalog.targets.length) {
-    return (
-      <AppShell activePrimary="Test a model">
-        <EmptyState
-          title="No targets configured"
-          description="Register a model endpoint before preparing an evaluation."
-        />
-      </AppShell>
-    );
-  }
 
   return (
     <TestModelView
@@ -470,6 +744,11 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
       selection={selection}
       step={step}
       preflight={preflight}
+      modelSource={modelSource}
+      connection={connection}
+      probe={probe}
+      probeLoading={probeLoading}
+      probeError={probeError}
       preflightLoading={preflightLoading}
       preflightError={preflightError}
       launchLoading={launchLoading}
@@ -479,6 +758,30 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
         setPreflight(null);
         setLaunchError(null);
       }}
+      onModelSourceChange={(source) => {
+        setModelSource(source);
+        setProbeError(null);
+        setPreflight(null);
+        setLaunchError(null);
+        if (source === "configured") {
+          setProbe(null);
+          setSelection((current) => ({
+            ...current,
+            targetId: catalog.targets[0]?.target_id ?? "",
+            modelId: "",
+          }));
+        } else {
+          setSelection((current) => ({ ...current, targetId: "", modelId: "" }));
+        }
+      }}
+      onConnectionChange={(next) => {
+        setConnection(next);
+        setProbe(null);
+        setProbeError(null);
+        setPreflight(null);
+        setSelection((current) => ({ ...current, targetId: "", modelId: "" }));
+      }}
+      onProbe={connectAndDiscover}
       onStepChange={setStep}
       onReview={prepareReview}
       onLaunch={launch}
