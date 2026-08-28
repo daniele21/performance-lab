@@ -8,6 +8,7 @@ from hashlib import sha256
 from typing import Protocol
 
 from performance_lab.domain import (
+    Capability,
     DatasetSnapshot,
     EndpointProfile,
     EvaluationSuite,
@@ -19,15 +20,17 @@ from performance_lab.domain import (
     Target,
 )
 from performance_lab.regression import BaselineBinding, RegressionPolicy
-from performance_lab.run_config import StarterRunConfig
+from performance_lab.run_config import LocalLLMServerIdentityConfig, StarterRunConfig
 from performance_lab.storage import RunComparisonService
 
+from .endpoint_discovery import endpoint_identity, local_server_root
 from .ui_models import (
     BaselineSummaryReadModel,
     ComparisonReadModel,
     CompatibilityReasonReadModel,
     DatasetSummaryReadModel,
     DimensionComparisonReadModel,
+    EndpointConnectionInput,
     EvidenceAvailability,
     FrozenExecutionPreviewReadModel,
     IdentitySummary,
@@ -50,6 +53,7 @@ from .ui_models import (
 STARTER_SUITE_ID = "general-diagnostic-starter"
 STARTER_PROMPT_TEMPLATE_VERSION = "direct-user-v1"
 STARTER_BENCHMARK_PROTOCOL_VERSION = "starter-quality-v1"
+SESSION_CONNECTION_LIMIT = 8
 
 
 class CompletedRunReader(Protocol):
@@ -82,6 +86,9 @@ class UIQueryService:
         self.policies = policies
         self.starter_run_template = starter_run_template
         self.comparisons = RunComparisonService(store)
+        self._session_targets: dict[str, Target] = {}
+        self._session_endpoint_profiles: dict[str, EndpointProfile] = {}
+        self._session_connections: dict[str, EndpointConnectionInput] = {}
 
     def list_runs(self, *, offset: int = 0, limit: int = 50) -> tuple[RunSummaryReadModel, ...]:
         if offset < 0:
@@ -140,9 +147,40 @@ class UIQueryService:
         )
 
     def list_targets(self) -> tuple[TargetSummaryReadModel, ...]:
-        return tuple(
-            _target_summary(target) for target in sorted(self.targets, key=lambda x: x.target_id)
+        targets = (*self.targets, *self._session_targets.values())
+        return tuple(_target_summary(target) for target in sorted(targets, key=lambda x: x.target_id))
+
+    def register_session_connection(
+        self,
+        connection: EndpointConnectionInput,
+    ) -> TargetSummaryReadModel:
+        """Register a bounded process-lifetime target after a successful endpoint probe."""
+        digest = sha256(str(connection.base_url).encode("utf-8")).hexdigest()[:12]
+        target_id = f"session-{digest}"
+        profile_id = f"session-profile-{digest}"
+        if target_id not in self._session_targets and len(self._session_targets) >= SESSION_CONNECTION_LIMIT:
+            oldest_target_id = next(iter(self._session_targets))
+            oldest_target = self._session_targets.pop(oldest_target_id)
+            self._session_endpoint_profiles.pop(oldest_target.endpoint_profile_id, None)
+            self._session_connections.pop(oldest_target_id, None)
+
+        endpoint = EndpointProfile(
+            profile_id=profile_id,
+            base_url=connection.base_url,
+            timeout_seconds=connection.timeout_seconds,
         )
+        target = Target(
+            target_id=target_id,
+            display_name=connection.display_name,
+            adapter_type="openai-compatible",
+            endpoint_profile_id=profile_id,
+            endpoint_identity=endpoint_identity(connection),
+            declared_capabilities=(Capability.TEXT_GENERATION,),
+        )
+        self._session_endpoint_profiles[profile_id] = endpoint
+        self._session_targets[target_id] = target
+        self._session_connections[target_id] = connection
+        return _target_summary(target)
 
     def list_suites(self) -> tuple[SuiteSummaryReadModel, ...]:
         return tuple(
@@ -203,7 +241,8 @@ class UIQueryService:
             )
             return RunPreflightReadModel(can_run=False, issues=tuple(issues))
 
-        target = next((item for item in self.targets if item.target_id == request.target_id), None)
+        targets = (*self.targets, *self._session_targets.values())
+        target = next((item for item in targets if item.target_id == request.target_id), None)
         if target is None:
             issues.append(
                 PreflightIssueReadModel(
@@ -225,12 +264,9 @@ class UIQueryService:
                 )
             )
 
+        endpoint_profiles = (*self.endpoint_profiles, *self._session_endpoint_profiles.values())
         endpoint = next(
-            (
-                item
-                for item in self.endpoint_profiles
-                if item.profile_id == target.endpoint_profile_id
-            ),
+            (item for item in endpoint_profiles if item.profile_id == target.endpoint_profile_id),
             None,
         )
         if endpoint is None:
@@ -276,9 +312,24 @@ class UIQueryService:
             if self.starter_run_template is not None
             else {}
         )
+        session_connection = self._session_connections.get(target.target_id)
+        session_overrides: dict[str, object] = {}
+        if session_connection is not None:
+            session_overrides["local_llm_server_telemetry"] = None
+            session_overrides["local_llm_server_identity"] = (
+                LocalLLMServerIdentityConfig(
+                    base_url=local_server_root(session_connection),
+                    model_id=request.model_id,
+                    required=False,
+                )
+                if session_connection.server_type == "local_llm_server"
+                else None
+            )
+
         config = StarterRunConfig.model_validate(
             {
                 **template,
+                **session_overrides,
                 "target_id": target.target_id,
                 "endpoint_identity": target.endpoint_identity,
                 "endpoint": endpoint,
