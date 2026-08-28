@@ -2,7 +2,12 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from performance_lab.application import RunPreflightRequest, ScenarioKind, UIQueryService
+from performance_lab.application import (
+    EndpointConnectionInput,
+    RunPreflightRequest,
+    ScenarioKind,
+    UIQueryService,
+)
 from performance_lab.datasets import build_general_starter_suite
 from performance_lab.domain import Capability, EndpointProfile, Target
 from performance_lab.storage import SQLiteRunStore
@@ -57,6 +62,33 @@ def test_preflight_freezes_exact_starter_execution_input(tmp_path: Path) -> None
     assert len(result.preview.config_digest) == 64
     assert result.preview.load_profile.request_count > 0
     assert result.preview.identity_resolution == "resolved_at_launch"
+
+
+def test_discovered_session_connection_becomes_executable_target(tmp_path: Path) -> None:
+    queries = _queries(tmp_path)
+    target = queries.register_session_connection(
+        EndpointConnectionInput(
+            display_name="Local LLM Server",
+            base_url="http://127.0.0.1:1235/v1/",
+            server_type="local_llm_server",
+        )
+    )
+
+    result = queries.preflight(
+        RunPreflightRequest(
+            target_id=target.target_id,
+            model_id="discovered-model",
+            scenario=ScenarioKind.GENERAL_CAPABILITY,
+        )
+    )
+
+    assert result.can_run
+    assert result.preview is not None
+    assert result.preview.target.target_id == target.target_id
+    assert str(result.preview.config.endpoint.base_url).startswith("http://127.0.0.1:1235/v1")
+    assert result.preview.config.local_llm_server_identity is not None
+    assert result.preview.config.local_llm_server_identity.model_id == "discovered-model"
+    assert result.preview.config.local_llm_server_telemetry is None
 
 
 def test_preflight_rejects_unwired_scenario_without_faking_support(tmp_path: Path) -> None:
