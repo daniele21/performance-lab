@@ -120,7 +120,9 @@ def main() -> int:
             text = path.read_text(encoding="utf-8")
             for marker in PLACEHOLDER_MARKERS:
                 if marker in text:
-                    errors.append(f"unresolved adopter placeholder {marker} in {path.relative_to(root)}")
+                    errors.append(
+                        f"unresolved adopter placeholder {marker} in {path.relative_to(root)}"
+                    )
 
     common_generated = ("node_modules", ".venv", "build", "dist", "__pycache__")
     present = [name for name in common_generated if (root / name).exists()]
@@ -128,7 +130,9 @@ def main() -> int:
         warnings.append("generated/local directories present in worktree: " + ", ".join(present))
 
     if not any((root / name).is_file() for name in ("LICENSE", "LICENSE.md", "LICENSE.txt")):
-        warnings.append("no project license file detected; select an explicit license before public distribution")
+        warnings.append(
+            "no project license file detected; select an explicit license before public distribution"
+        )
 
     print("Repository baseline check")
     print(f"root: {root}")

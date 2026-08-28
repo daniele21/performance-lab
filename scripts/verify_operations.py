@@ -144,7 +144,12 @@ def main() -> int:
     if missing_classes:
         errors.append("validation_execution.classes missing: " + ", ".join(missing_classes))
     expect_true(execution, "no_human_runner_for_automatable_gates", errors, "validation_execution")
-    expect_true(execution, "remote_automation_required_when_agent_local_unavailable", errors, "validation_execution")
+    expect_true(
+        execution,
+        "remote_automation_required_when_agent_local_unavailable",
+        errors,
+        "validation_execution",
+    )
 
     profiles = data.get("validation_profiles")
     if not isinstance(profiles, dict):
@@ -235,9 +240,13 @@ def main() -> int:
         errors.append("artifact_lifecycle.checksum_algorithm must be sha256")
     keep = artifacts.get("local_keep_successful_per_lineage")
     if not isinstance(keep, int) or keep < 1:
-        errors.append("artifact_lifecycle.local_keep_successful_per_lineage must be a positive integer")
+        errors.append(
+            "artifact_lifecycle.local_keep_successful_per_lineage must be a positive integer"
+        )
     elif keep > 2:
-        warnings.append("local artifact retention exceeds the default of 2 successful builds per lineage")
+        warnings.append(
+            "local artifact retention exceeds the default of 2 successful builds per lineage"
+        )
     retention = artifacts.get("ci_retention_days")
     if not isinstance(retention, int) or retention < 1:
         errors.append("artifact_lifecycle.ci_retention_days must be a positive integer")
@@ -267,7 +276,9 @@ def main() -> int:
         runtime = {}
     if runtime.get("applicable") is True:
         if runtime.get("bind_default") != "loopback":
-            errors.append("local_runtime.bind_default must be loopback when local runtime is applicable")
+            errors.append(
+                "local_runtime.bind_default must be loopback when local runtime is applicable"
+            )
         if runtime.get("port_strategy") != "configurable-with-collision-check":
             errors.append("local_runtime.port_strategy must be configurable-with-collision-check")
         for key in (

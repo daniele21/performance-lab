@@ -126,8 +126,13 @@ def select(paths: Iterable[str], *, promotion: bool = False, force_full: bool = 
         reason = "validation/build/dependency contract changed"
     elif any(path in STRONG_FILES or _has_prefix(path, STRONG_PREFIXES) for path in changed):
         profile = "strong"
-        reason = "cross-boundary, user-facing, persistence, E2E or release-sensitive surface changed"
-    elif all(path in LEAN_FILES or _has_prefix(path, LEAN_PREFIXES) or path.endswith(".md") for path in changed):
+        reason = (
+            "cross-boundary, user-facing, persistence, E2E or release-sensitive surface changed"
+        )
+    elif all(
+        path in LEAN_FILES or _has_prefix(path, LEAN_PREFIXES) or path.endswith(".md")
+        for path in changed
+    ):
         profile = "lean"
         reason = "documentation/governance-only change"
     elif any(_has_prefix(path, SCOPED_PREFIXES) for path in changed):
@@ -155,7 +160,13 @@ def select(paths: Iterable[str], *, promotion: bool = False, force_full: bool = 
                 "tests/e2e/",
             )
         )
-        or path in {"src/performance_lab/ui_api.py", "src/performance_lab/ui_server.py", "src/performance_lab/runner.py", "src/performance_lab/engine.py"}
+        or path
+        in {
+            "src/performance_lab/ui_api.py",
+            "src/performance_lab/ui_server.py",
+            "src/performance_lab/runner.py",
+            "src/performance_lab/engine.py",
+        }
         for path in changed
     )
     browser_affected = frontend_affected or any(
