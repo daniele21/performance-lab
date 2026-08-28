@@ -32,7 +32,9 @@ class _FakeAdapter:
         return None
 
 
-def test_generic_probe_discovers_models_and_adapter_controls(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_generic_probe_discovers_models_and_adapter_controls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         "performance_lab.application.endpoint_discovery.OpenAICompatibleAdapter",
         _FakeAdapter,
