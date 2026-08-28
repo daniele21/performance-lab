@@ -8,7 +8,7 @@ from performance_lab.plugins import AdapterCapabilities, ProbeResult
 
 
 class _FakeAdapter:
-    def __init__(self, profile) -> None:  # noqa: ANN001
+    def __init__(self, profile) -> None:
         self.profile = profile
 
     async def probe(self) -> ProbeResult:
@@ -62,5 +62,5 @@ def test_generic_probe_discovers_models_and_adapter_controls(
 
 
 def test_ui_discovery_rejects_non_loopback_targets() -> None:
-    with pytest.raises(ValidationError, match="loopback|localhost"):
+    with pytest.raises(ValidationError, match=r"loopback|localhost"):
         EndpointConnectionInput(base_url="http://example.com/v1/")
