@@ -14,6 +14,9 @@ GENERATED_PATHS = (
     ROOT / "build",
     ROOT / "frontend" / "dist",
     ROOT / "frontend" / "coverage",
+    ROOT / "frontend" / "test-results",
+    ROOT / "frontend" / "test-results-full-product",
+    ROOT / "frontend" / "playwright-report",
     ROOT / "frontend" / "node_modules" / ".vite",
 )
 

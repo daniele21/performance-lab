@@ -5,14 +5,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
+import sys
 
 CORE_SKILLS = (
     "plan-workstream",
     "structured-change",
     "design-product-experience",
     "validate-change",
+    "preflight-change",
+    "remote-preflight",
     "finalize-workstream",
     "review-reference-quality",
 )
@@ -27,6 +29,7 @@ REQUIRED = (
     ".engineering/baseline.json",
     ".engineering/documentation-policy.json",
     ".engineering/commands.json",
+    ".engineering/e2e.json",
     ".github/pull_request_template.md",
     ".github/workflows/repository-health.yml",
     "docs/README.md",
@@ -36,6 +39,7 @@ REQUIRED = (
     "docs/adr/README.md",
     "docs/workstreams/README.md",
     "scripts/verify_operations.py",
+    "scripts/verify_e2e.py",
     "scripts/verify_product_experience.py",
 )
 
@@ -85,8 +89,8 @@ def main() -> int:
             standard = baseline.get("standard", {})
             if standard.get("source") != "daniele21/repo-template-sw":
                 errors.append("baseline standard.source must identify daniele21/repo-template-sw")
-            if not standard.get("version"):
-                errors.append("baseline standard.version is required")
+            if standard.get("version") != "0.8.0":
+                errors.append("baseline standard.version must be 0.8.0")
             if baseline.get("target_level") not in {"L0", "L1", "L2"}:
                 errors.append("target_level must be L0, L1 or L2")
             profiles = baseline.get("profiles")
@@ -116,9 +120,7 @@ def main() -> int:
             text = path.read_text(encoding="utf-8")
             for marker in PLACEHOLDER_MARKERS:
                 if marker in text:
-                    errors.append(
-                        f"unresolved adopter placeholder {marker} in {path.relative_to(root)}"
-                    )
+                    errors.append(f"unresolved adopter placeholder {marker} in {path.relative_to(root)}")
 
     common_generated = ("node_modules", ".venv", "build", "dist", "__pycache__")
     present = [name for name in common_generated if (root / name).exists()]
@@ -126,10 +128,7 @@ def main() -> int:
         warnings.append("generated/local directories present in worktree: " + ", ".join(present))
 
     if not any((root / name).is_file() for name in ("LICENSE", "LICENSE.md", "LICENSE.txt")):
-        warnings.append(
-            "no project license file detected; select an explicit license "
-            "before public distribution"
-        )
+        warnings.append("no project license file detected; select an explicit license before public distribution")
 
     print("Repository baseline check")
     print(f"root: {root}")
