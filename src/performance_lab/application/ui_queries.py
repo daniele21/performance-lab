@@ -148,7 +148,9 @@ class UIQueryService:
 
     def list_targets(self) -> tuple[TargetSummaryReadModel, ...]:
         targets = (*self.targets, *self._session_targets.values())
-        return tuple(_target_summary(target) for target in sorted(targets, key=lambda x: x.target_id))
+        return tuple(
+            _target_summary(target) for target in sorted(targets, key=lambda x: x.target_id)
+        )
 
     def register_session_connection(
         self,
@@ -158,7 +160,10 @@ class UIQueryService:
         digest = sha256(str(connection.base_url).encode("utf-8")).hexdigest()[:12]
         target_id = f"session-{digest}"
         profile_id = f"session-profile-{digest}"
-        if target_id not in self._session_targets and len(self._session_targets) >= SESSION_CONNECTION_LIMIT:
+        if (
+            target_id not in self._session_targets
+            and len(self._session_targets) >= SESSION_CONNECTION_LIMIT
+        ):
             oldest_target_id = next(iter(self._session_targets))
             oldest_target = self._session_targets.pop(oldest_target_id)
             self._session_endpoint_profiles.pop(oldest_target.endpoint_profile_id, None)
