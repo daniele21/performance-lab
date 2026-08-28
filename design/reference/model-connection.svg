@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <style>
+    .bg{fill:#0B0F14}.side{fill:#070B10;stroke:#24303C}.panel{fill:#111820;stroke:#24303C}.subtle{fill:#151E27;stroke:#24303C}.active{fill:#0D3140;stroke:#155E75}.primary{fill:#00E5FF}.primaryText{fill:#041014}.text{font-family:Arial,sans-serif;fill:#F8FAFC}.muted{font-family:Arial,sans-serif;fill:#94A3B8}.cyan{font-family:Arial,sans-serif;fill:#22D3EE}.green{font-family:Arial,sans-serif;fill:#22C55E}.mono{font-family:monospace;fill:#94A3B8}.h{font-weight:700}.xs{font-size:12px}.s{font-size:14px}.m{font-size:16px}.l{font-size:22px}.xl{font-size:32px}
+  </style>
+  <rect width="1440" height="900" class="bg"/>
+
+  <rect x="0" y="0" width="230" height="900" class="side"/>
+  <text x="28" y="48" class="text h l">◈ Performance Lab</text>
+  <rect x="12" y="118" width="206" height="42" rx="8" class="active"/>
+  <text x="30" y="144" class="cyan h s">Test a model</text>
+  <text x="30" y="94" class="muted s">Overview</text>
+  <text x="30" y="196" class="muted s">Runs</text>
+  <text x="30" y="234" class="muted s">Compare</text>
+  <text x="24" y="298" class="muted h xs">LIBRARY</text>
+  <text x="30" y="332" class="muted s">Test suites</text>
+  <text x="30" y="368" class="muted s">Datasets</text>
+  <text x="30" y="404" class="muted s">Baselines</text>
+  <text x="24" y="468" class="muted h xs">SETTINGS</text>
+  <text x="30" y="502" class="muted s">Endpoints</text>
+  <text x="30" y="538" class="muted s">Devices / targets</text>
+
+  <g id="model-connection" transform="translate(270 46)">
+    <text x="0" y="34" class="text h xl">Test a model</text>
+    <text x="0" y="64" class="muted s">Connect a local inference server, discover its models, then choose what to test.</text>
+
+    <g transform="translate(0 98)">
+      <circle cx="18" cy="18" r="16" fill="#00E5FF"/><text x="18" y="23" text-anchor="middle" class="primaryText h s">1</text>
+      <text x="46" y="23" class="text h s">Model</text>
+      <line x1="110" y1="18" x2="252" y2="18" stroke="#24303C" stroke-width="2"/>
+      <circle cx="278" cy="18" r="16" fill="#151E27" stroke="#24303C"/><text x="278" y="23" text-anchor="middle" class="muted h s">2</text>
+      <text x="306" y="23" class="muted h s">Scenario</text>
+      <line x1="384" y1="18" x2="526" y2="18" stroke="#24303C" stroke-width="2"/>
+      <circle cx="552" cy="18" r="16" fill="#151E27" stroke="#24303C"/><text x="552" y="23" text-anchor="middle" class="muted h s">3</text>
+      <text x="580" y="23" class="muted h s">Test</text>
+      <line x1="624" y1="18" x2="766" y2="18" stroke="#24303C" stroke-width="2"/>
+      <circle cx="792" cy="18" r="16" fill="#151E27" stroke="#24303C"/><text x="792" y="23" text-anchor="middle" class="muted h s">4</text>
+      <text x="820" y="23" class="muted h s">Review</text>
+    </g>
+
+    <text x="0" y="194" class="text h l">Which model are you testing?</text>
+    <text x="0" y="220" class="muted s">Performance Lab owns discovery; the browser never talks directly to the runtime.</text>
+
+    <rect x="0" y="246" width="710" height="54" rx="8" class="panel"/>
+    <text x="16" y="266" class="muted xs">MODEL SOURCE</text>
+    <text x="16" y="288" class="text h s">Connect local server</text>
+    <text x="682" y="280" text-anchor="end" class="cyan s">⌄</text>
+
+    <rect x="0" y="320" width="710" height="216" rx="12" class="panel"/>
+    <text x="18" y="348" class="text h m">Connection</text>
+    <text x="18" y="372" class="muted xs">Only localhost / loopback is accepted in this slice.</text>
+
+    <rect x="18" y="392" width="326" height="54" rx="8" class="subtle"/>
+    <text x="32" y="410" class="muted xs">CONNECTION NAME</text>
+    <text x="32" y="432" class="text s">Local LLM Server</text>
+    <rect x="366" y="392" width="326" height="54" rx="8" class="subtle"/>
+    <text x="380" y="410" class="muted xs">SERVER TYPE</text>
+    <text x="380" y="432" class="text s">Local LLM Server</text>
+
+    <rect x="18" y="460" width="326" height="54" rx="8" class="subtle"/>
+    <text x="32" y="478" class="muted xs">HOST</text>
+    <text x="32" y="500" class="mono s">127.0.0.1</text>
+    <rect x="366" y="460" width="156" height="54" rx="8" class="subtle"/>
+    <text x="380" y="478" class="muted xs">PORT</text>
+    <text x="380" y="500" class="mono s">1235</text>
+    <rect x="536" y="460" width="156" height="54" rx="8" class="primary"/>
+    <text x="614" y="493" text-anchor="middle" class="primaryText h s">Connect &amp; discover</text>
+
+    <text x="18" y="558" class="muted xs">▸ Advanced connection settings</text>
+
+    <rect x="738" y="246" width="402" height="418" rx="12" class="panel"/>
+    <circle cx="766" cy="278" r="8" fill="#22C55E"/>
+    <text x="784" y="284" class="green h m">Connected</text>
+    <text x="756" y="314" class="mono xs">127.0.0.1:1235/v1/</text>
+
+    <text x="756" y="354" class="muted xs">MODEL</text>
+    <rect x="756" y="366" width="366" height="54" rx="8" class="subtle"/>
+    <text x="772" y="398" class="text h s">llama-3.2-3b-q4_k_m</text>
+    <text x="1100" y="398" text-anchor="end" class="cyan s">⌄</text>
+
+    <text x="756" y="454" class="muted xs">DISCOVERED CAPABILITIES</text>
+    <rect x="756" y="466" width="174" height="42" rx="8" class="subtle"/>
+    <text x="770" y="492" class="text xs">Model discovery</text><text x="914" y="492" text-anchor="end" class="green xs">Supported</text>
+    <rect x="948" y="466" width="174" height="42" rx="8" class="subtle"/>
+    <text x="962" y="492" class="text xs">Streaming</text><text x="1106" y="492" text-anchor="end" class="green xs">Supported</text>
+
+    <text x="756" y="544" class="muted xs">REQUEST CONTROLS</text>
+    <text x="756" y="568" class="mono xs">temperature  top_p  seed  max_output_tokens</text>
+    <text x="756" y="598" class="muted xs">Runtime-load settings stay read-only unless the runtime publishes</text>
+    <text x="756" y="616" class="muted xs">a typed mutable configuration contract.</text>
+    <text x="756" y="646" class="cyan xs">▸ Runtime configuration reported by server</text>
+
+    <rect x="0" y="590" width="710" height="74" rx="10" class="subtle"/>
+    <text x="18" y="620" class="text h s">Session connection</text>
+    <text x="18" y="644" class="muted xs">Usable for this run; not persisted when Performance Lab stops.</text>
+
+    <rect x="1000" y="714" width="140" height="46" rx="8" class="primary"/>
+    <text x="1070" y="743" text-anchor="middle" class="primaryText h s">Continue</text>
+  </g>
+</svg>
