@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Literal
 
 import httpx
+from pydantic import HttpUrl
 
 from performance_lab.adapters import OpenAICompatibleAdapter
 from performance_lab.domain import EndpointProfile
@@ -28,10 +30,11 @@ def endpoint_identity(connection: EndpointConnectionInput) -> str:
     return f"{host}{port}{path}"
 
 
-def local_server_root(connection: EndpointConnectionInput) -> str:
+def local_server_root(connection: EndpointConnectionInput) -> HttpUrl:
     """Resolve the first-party server root from an OpenAI-compatible /v1 base URL."""
     value = str(connection.base_url).rstrip("/")
-    return value[:-3] if value.endswith("/v1") else value
+    root = value[:-3] if value.endswith("/v1") else value
+    return HttpUrl(root)
 
 
 async def probe_endpoint_connection(connection: EndpointConnectionInput) -> EndpointProbeReadModel:
@@ -95,7 +98,9 @@ def _capability_evidence(
         ("seed", capabilities.seed),
         ("structured_output", capabilities.structured_output),
     ):
-        state = "supported" if value is True else "unsupported" if value is False else "unknown"
+        state: Literal["supported", "unsupported", "unknown"] = (
+            "supported" if value is True else "unsupported" if value is False else "unknown"
+        )
         values.append(
             CapabilitySupportReadModel(
                 name=name,
