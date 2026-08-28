@@ -13,6 +13,8 @@ from performance_lab.application import (
     BaselineSummaryReadModel,
     ComparisonReadModel,
     DatasetSummaryReadModel,
+    EndpointConnectionInput,
+    EndpointProbeReadModel,
     PolicySummaryReadModel,
     RunDetailReadModel,
     RunPreflightReadModel,
@@ -23,6 +25,7 @@ from performance_lab.application import (
     TargetSummaryReadModel,
     TestedModelReadModel,
     UIQueryService,
+    probe_endpoint_connection,
 )
 from performance_lab.application.run_jobs import (
     FrozenConfigMismatchError,
@@ -66,6 +69,14 @@ def create_ui_app(
     @app.get("/api/v1/health")
     def health() -> dict[str, str]:
         return {"status": "ok", "api_version": "v1"}
+
+    @app.post("/api/v1/endpoint-probes", response_model=EndpointProbeReadModel)
+    async def probe_endpoint(request: EndpointConnectionInput) -> EndpointProbeReadModel:
+        result = await probe_endpoint_connection(request)
+        if not result.healthy:
+            return result
+        target = queries.register_session_connection(request)
+        return result.model_copy(update={"target": target})
 
     @app.get("/api/v1/runs", response_model=list[RunSummaryReadModel])
     def list_runs(
