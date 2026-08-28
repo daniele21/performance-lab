@@ -8,9 +8,10 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from ipaddress import ip_address
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 
 from performance_lab.domain import (
     ComparisonDimension,
@@ -118,6 +119,67 @@ class TargetSummaryReadModel(UIModel):
     endpoint_profile_id: str = Field(min_length=1)
     endpoint_identity: str = Field(min_length=1)
     capabilities: tuple[str, ...] = ()
+
+
+class EndpointConnectionInput(BaseModel):
+    """Ephemeral user-entered local inference connection.
+
+    The browser may request a probe, but the Performance Lab backend owns the network call.
+    The first UI slice is deliberately loopback-only so a local browser cannot turn the
+    product into a general server-side request proxy.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    display_name: str = Field(default="Local model server", min_length=1, max_length=80)
+    base_url: HttpUrl
+    server_type: Literal["openai_compatible", "local_llm_server"] = "local_llm_server"
+    timeout_seconds: float = Field(default=5.0, gt=0, le=120)
+
+    @model_validator(mode="after")
+    def require_loopback_host(self) -> EndpointConnectionInput:
+        host = self.base_url.host
+        if host is None:
+            raise ValueError("base_url must include a host")
+        if host.lower() == "localhost":
+            return self
+        try:
+            address = ip_address(host)
+        except ValueError as exc:
+            raise ValueError("UI endpoint discovery is currently limited to localhost") from exc
+        if not address.is_loopback:
+            raise ValueError("UI endpoint discovery is currently limited to loopback addresses")
+        return self
+
+
+class CapabilitySupportReadModel(UIModel):
+    name: str = Field(min_length=1)
+    state: Literal["supported", "unsupported", "unknown"]
+    source: Literal["declared", "observed", "none"]
+    detail: str | None = None
+
+
+class RuntimeParameterReadModel(UIModel):
+    name: str = Field(min_length=1)
+    scope: Literal["runtime_load"] = "runtime_load"
+    current_value: object | None = None
+    editable: Literal[False] = False
+    provenance: Literal["local_llm_server"] = "local_llm_server"
+
+
+class DiscoveredModelReadModel(UIModel):
+    model_id: str = Field(min_length=1)
+    runtime_parameters: tuple[RuntimeParameterReadModel, ...] = ()
+
+
+class EndpointProbeReadModel(UIModel):
+    healthy: bool
+    endpoint_identity: str = Field(min_length=1)
+    target: TargetSummaryReadModel | None = None
+    models: tuple[DiscoveredModelReadModel, ...] = ()
+    capabilities: tuple[CapabilitySupportReadModel, ...] = ()
+    supported_generation_parameters: tuple[str, ...] = ()
+    warning: str | None = None
 
 
 class SuiteSummaryReadModel(UIModel):
