@@ -115,7 +115,8 @@ async def _probe_local_llm_server_registry(
     connection: EndpointConnectionInput,
 ) -> tuple[dict[str, tuple[RuntimeParameterReadModel, ...]], str | None]:
     """Best-effort first-party enrichment; generic OpenAI discovery stays authoritative."""
-    url = f"{local_server_root(connection)}/api/v1/models/registry"
+    root = str(local_server_root(connection)).rstrip("/")
+    url = f"{root}/api/v1/models/registry"
     try:
         async with httpx.AsyncClient(timeout=connection.timeout_seconds) as client:
             response = await client.get(url)
