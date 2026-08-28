@@ -2,6 +2,8 @@ import type {
   BaselineSummaryReadModel,
   ComparisonReadModel,
   DatasetSummaryReadModel,
+  EndpointConnectionInput,
+  EndpointProbeReadModel,
   PolicySummaryReadModel,
   RunDetailReadModel,
   RunJobSnapshot,
@@ -97,6 +99,14 @@ export function getRun(runId: string, options?: RequestOptions) {
 
 export function listTargets(options?: RequestOptions) {
   return getJson<TargetSummaryReadModel[]>("/api/v1/targets", options);
+}
+
+export function probeEndpoint(connection: EndpointConnectionInput, options?: RequestOptions) {
+  return postJson<EndpointConnectionInput, EndpointProbeReadModel>(
+    "/api/v1/endpoint-probes",
+    connection,
+    options,
+  );
 }
 
 export function listSuites(options?: RequestOptions) {
