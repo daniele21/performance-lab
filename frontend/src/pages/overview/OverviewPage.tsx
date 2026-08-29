@@ -162,12 +162,7 @@ const RUN_COLUMNS: readonly DataColumn<RunSummaryReadModel>[] = [
   },
 ];
 
-export function OverviewView({
-  models,
-  runs,
-  onFindBestSetup,
-  onTestModel,
-}: OverviewViewProps) {
+export function OverviewView({ models, runs, onFindBestSetup, onTestModel }: OverviewViewProps) {
   return (
     <AppShell activePrimary="Overview">
       <div className="overview-page">
