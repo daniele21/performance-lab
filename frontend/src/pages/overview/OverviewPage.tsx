@@ -280,5 +280,7 @@ export function OverviewPage({ onFindBestSetup, onTestModel }: OverviewPageProps
     );
   }
 
-  return <OverviewView {...state.data} onFindBestSetup={onFindBestSetup} onTestModel={onTestModel} />;
+  return (
+    <OverviewView {...state.data} onFindBestSetup={onFindBestSetup} onTestModel={onTestModel} />
+  );
 }
