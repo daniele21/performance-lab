@@ -27,7 +27,12 @@ export function App() {
   }, []);
 
   if (route.kind === "overview") {
-    return <OverviewPage onTestModel={() => navigate("test-a-model")} />;
+    return (
+      <OverviewPage
+        onFindBestSetup={() => navigate("find-best-setup")}
+        onTestModel={() => navigate("test-a-model")}
+      />
+    );
   }
 
   if (route.kind === "best-setup") {
