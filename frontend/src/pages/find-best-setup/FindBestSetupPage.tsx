@@ -59,7 +59,9 @@ export function FindBestSetupPage({ onManualTest }: FindBestSetupPageProps) {
               <span>1</span>
               <div>
                 <strong>Use case</strong>
-                <p>Resolve the relevant benchmark suite, datasets, evaluators and evidence goals.</p>
+                <p>
+                  Resolve the relevant benchmark suite, datasets, evaluators and evidence goals.
+                </p>
               </div>
             </article>
             <article>
@@ -87,8 +89,8 @@ export function FindBestSetupPage({ onManualTest }: FindBestSetupPageProps) {
               <div>
                 <strong>Evidence campaign</strong>
                 <p>
-                  Each candidate configuration produces immutable runs with quality, performance
-                  and resource evidence kept separate.
+                  Each candidate configuration produces immutable runs with quality, performance and
+                  resource evidence kept separate.
                 </p>
               </div>
             </article>
