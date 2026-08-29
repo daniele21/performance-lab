@@ -1,14 +1,13 @@
-import {
-  AppShell,
-  Button,
-  Disclosure,
-  PageHeader,
-  SectionHeader,
-  Status,
-} from "../../components";
+import { AppShell, Button, Disclosure, PageHeader, SectionHeader, Status } from "../../components";
 import "./find-best-setup.css";
 
-const CAMPAIGN_STEPS = ["Use case", "Models", "Configuration search", "Campaign", "Results"] as const;
+const CAMPAIGN_STEPS = [
+  "Use case",
+  "Models",
+  "Configuration search",
+  "Campaign",
+  "Results",
+] as const;
 
 interface FindBestSetupPageProps {
   onManualTest?: () => void;
