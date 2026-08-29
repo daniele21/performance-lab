@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build, smoke, atomically publish and retain bounded local product artifacts."""
+"""Build, validate, atomically publish and retain bounded local product artifacts."""
 
 from __future__ import annotations
 
@@ -36,7 +36,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--validated",
         action="store_true",
-        help="Skip local validation because the caller already gates this job on green CI checks.",
+        help="Skip broad source validation because the caller already gates this exact head.",
+    )
+    parser.add_argument(
+        "--require-full-product-e2e",
+        action="store_true",
+        help=(
+            "Run packaged J1 through real Chromium/API/SQLite plus the deterministic inference "
+            "fixture before publishing the immutable artifact."
+        ),
     )
     parser.add_argument("--build-id", default=None)
     parser.add_argument("--artifact-root", type=Path, default=DEFAULT_ARTIFACT_ROOT)
@@ -200,6 +208,7 @@ def main() -> int:
         "payload_files": files,
         "checksum_algorithm": "sha256",
         "smoke_required_before_publication": True,
+        "full_product_e2e_required_before_publication": args.require_full_product_e2e,
     }
     delta = build_delta_markdown(manifest, previous_manifest)
     (staging / "BUILD_CHANGELOG.md").write_text(delta, encoding="utf-8")
@@ -210,6 +219,8 @@ def main() -> int:
     create_zip(staging, unpublished_zip)
 
     run([sys.executable, "scripts/smoke_release.py", str(unpublished_zip)])
+    if args.require_full_product_e2e:
+        run([sys.executable, "scripts/full_product_e2e.py", str(unpublished_zip)])
 
     checksum = sha256_file(unpublished_zip)
     final_zip = lineage_dir / unpublished_zip.name

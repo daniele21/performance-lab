@@ -1,6 +1,6 @@
 # Frontend contributor contract
 
-Read [`../design/README.md`](../design/README.md), [`../design/ux-contract.json`](../design/ux-contract.json) and the active [`../docs/workstreams/ui-productization.md`](../docs/workstreams/ui-productization.md) before changing product interaction.
+Read [`../design/README.md`](../design/README.md), [`../design/ux-contract.json`](../design/ux-contract.json) and the relevant active UI workstream when one exists before changing product interaction. Read [`../.engineering/e2e.json`](../.engineering/e2e.json) when the change affects a critical journey or assembled browser/product claim.
 
 ## Invariants
 
@@ -10,13 +10,14 @@ Read [`../design/README.md`](../design/README.md), [`../design/ux-contract.json`
 - Keep quality, runtime and resource evidence separate.
 - Foreground `NOT_COMPARABLE`, unavailable and partial evidence instead of repairing or hiding it.
 - Keep advanced benchmark controls and diagnostics progressively disclosed.
-- Reuse canonical semantic components once `UIK-001` establishes them.
+- Reuse canonical semantic components before introducing a new pattern.
 - Preserve keyboard/focus semantics and do not communicate critical state by color alone.
 - Development/preview listeners bind to loopback and run in the foreground.
+- Playwright with mocked `/api` proves browser behavior, not the assembled Python product.
 
 ## Validation
 
-Before considering a frontend change complete, run the applicable native scripts:
+While iterating, use the applicable native scripts:
 
 ```text
 npm --prefix frontend run check
@@ -24,4 +25,6 @@ npm --prefix frontend run test
 npm --prefix frontend run build
 ```
 
-Use the repository-level operations in `.engineering/commands.json` for assembled validation.
+For affected J1-J6 browser behavior, use `npm --prefix frontend run test:e2e` when selected by blast radius. For package/assembled-product J1, the stronger `packaged-product-fixture` path is `python scripts/package_release.py --require-full-product-e2e` (or the Built Product CI job), which exercises the packaged wheel, built frontend, real loopback API/SQLite and Chromium against the deterministic inference fixture.
+
+Use repository-level `.engineering/commands.json`, the validation-profile selector and preflight for assembled validation. Real runtime/model/device claims remain outside browser E2E and require the declared `RUNTIME-1` real-environment evidence.

@@ -10,7 +10,44 @@ permissions:
   contents: read
 
 jobs:
+  scope:
+    name: Select validation profile
+    runs-on: ubuntu-latest
+    outputs:
+      profile: ${{ steps.selector.outputs.profile }}
+      reason: ${{ steps.selector.outputs.reason }}
+      run_python: ${{ steps.selector.outputs.run_python }}
+      run_frontend: ${{ steps.selector.outputs.run_frontend }}
+      run_product_e2e: ${{ steps.selector.outputs.run_product_e2e }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - id: selector
+        name: Resolve blast radius
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            args=(
+              --base "${{ github.event.pull_request.base.sha }}"
+              --head "${{ github.event.pull_request.head.sha }}"
+              --github-output "$GITHUB_OUTPUT"
+            )
+            if [[ "${{ github.base_ref }}" == "main" ]]; then
+              args+=(--promotion)
+            fi
+            python scripts/select_validation_profile.py "${args[@]}"
+          else
+            python scripts/select_validation_profile.py --full --github-output "$GITHUB_OUTPUT"
+          fi
+
   validate:
+    name: Python ${{ matrix.python-version }}
+    needs: scope
+    if: needs.scope.outputs.run_python == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -33,6 +70,8 @@ jobs:
 
   frontend:
     name: Frontend (Node 24)
+    needs: scope
+    if: needs.scope.outputs.run_frontend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,6 +93,8 @@ jobs:
 
   product-e2e:
     name: Product E2E (Python 3.12)
+    needs: scope
+    if: needs.scope.outputs.run_product_e2e == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -76,7 +117,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: product-e2e-failure-log
+          name: product-e2e-failure-log-${{ github.run_id }}-${{ github.run_attempt }}
           path: product-e2e.log
           if-no-files-found: error
           retention-days: 7

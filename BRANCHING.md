@@ -1,7 +1,7 @@
 # Branching and integration policy
 
 Status: active
-Last reviewed: 2026-08-24
+Last reviewed: 2026-08-29
 
 Performance Lab uses a lightweight two-line policy for parallel implementation.
 
@@ -9,16 +9,13 @@ Performance Lab uses a lightweight two-line policy for parallel implementation.
 - `dev` is the canonical integration branch for feature, fix, dependency, documentation and UX work.
 - Ordinary branches start from the latest green `dev` and target `dev`.
 - Use short-lived descriptive prefixes such as `feat/`, `fix/`, `docs/`, `chore/` or `agent/`.
-- Promotion from validated `dev` to `main` is deliberate and should not be confused with merging an ordinary feature branch.
+- Promotion from validated `dev` to `main` is deliberate and is always a `FULL` validation profile.
 
 ## Parallel work
 
 Parallelism is defined by the active bounded workstream(s) under `docs/workstreams/`, not by historical bootstrap task IDs.
 
-Parallel branches are safe when:
-
-- ownership/write boundaries do not conflict; or
-- a shared contract change has an explicit integration point and lands before dependent slices consume it.
+Parallel branches are safe when ownership/write boundaries do not conflict, or when a shared contract change has an explicit integration point and lands before dependent slices consume it.
 
 When a shared domain/application/design contract changes:
 
@@ -34,19 +31,21 @@ Current high-value lanes are listed in [`docs/current-state.md`](docs/current-st
 A branch is merge-ready when:
 
 - applicable Definition of Done / workstream acceptance criteria are satisfied;
-- the relevant `.engineering/commands.json` validation gates pass;
+- material ambiguity, base freshness and complete-diff review pass preflight;
+- `scripts/select_validation_profile.py` selects the narrowest safe `LEAN`/`SCOPED`/`STRONG`/`FULL` profile and every deterministic gate in that profile passes locally or through repository-owned remote automation;
 - repository-health checks pass;
-- Browser Acceptance and/or Built Product pass when the changed scope reaches those boundaries;
-- exact evidence is recorded in the PR without upgrading unexecuted hardware/accessibility/usability claims to PASS;
-- owned processes/listeners/temp state are cleaned for any lifecycle work.
+- browser/product/built-package E2E runs at the `.engineering/e2e.json` fidelity required by the changed claim;
+- exact evidence is recorded without upgrading unexecuted hardware/accessibility/usability claims to PASS;
+- owned processes/listeners/temp state are cleaned for lifecycle work.
 
-`dev` branch protection should require the applicable Repository Validation, Repository Health, Browser Acceptance and Built Product checks once repository settings are configured. The branch currently relies on review/CI convention rather than protected required-status enforcement; enabling protection is repository administration work, not an application-code workaround.
+`dev` branch protection should require applicable Repository Validation, Repository Health, Browser Acceptance and Built Product checks once repository settings are configured. Until then, review/CI convention remains the enforcement mechanism; repository administration is not replaced by application code.
 
 ## Promotion to main
 
 Before `dev` -> `main` promotion:
 
+- force `FULL` validation regardless of changed-path narrowing;
 - reconcile any commits that landed directly on `main` so neither line silently drops product/documentation truth;
-- require the applicable release/build lifecycle evidence;
+- require applicable release/build lifecycle and packaged-product evidence;
 - preserve immutable run/build evidence and source identity where the release claim depends on it;
-- keep representative device/model evidence explicitly pending unless it was actually executed.
+- keep `RUNTIME-1` representative device/model evidence explicitly pending unless it was actually executed.
