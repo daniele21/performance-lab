@@ -28,6 +28,7 @@ interface OverviewData {
 }
 
 interface OverviewViewProps extends OverviewData {
+  onFindBestSetup?: () => void;
   onTestModel?: () => void;
 }
 
@@ -161,7 +162,12 @@ const RUN_COLUMNS: readonly DataColumn<RunSummaryReadModel>[] = [
   },
 ];
 
-export function OverviewView({ models, runs, onTestModel }: OverviewViewProps) {
+export function OverviewView({
+  models,
+  runs,
+  onFindBestSetup,
+  onTestModel,
+}: OverviewViewProps) {
   return (
     <AppShell activePrimary="Overview">
       <div className="overview-page">
@@ -170,19 +176,24 @@ export function OverviewView({ models, runs, onTestModel }: OverviewViewProps) {
           title="Your tested models"
           description="Models are grouped by model, runtime and hardware identity. Quality, performance and resource evidence stay separate so different trade-offs remain visible."
           actions={
-            <Button variant="primary" onClick={onTestModel}>
-              Test a model
-            </Button>
+            <div className="overview-page__actions">
+              <Button variant="quiet" onClick={onTestModel}>
+                Test a model
+              </Button>
+              <Button variant="primary" onClick={onFindBestSetup}>
+                Find best setup
+              </Button>
+            </div>
           }
         />
 
         {models.length === 0 ? (
           <EmptyState
             title="No tested models yet"
-            description="Run an evaluation to create the first immutable evidence record for this device and workload."
+            description="Start from a use case to define the model/configuration decision you want Performance Lab to evaluate."
             action={
-              <Button variant="primary" onClick={onTestModel}>
-                Test a model
+              <Button variant="primary" onClick={onFindBestSetup}>
+                Find best setup
               </Button>
             }
           />
@@ -224,7 +235,12 @@ type LoadState =
   | { status: "ready"; data: OverviewData }
   | { status: "error"; message: string };
 
-export function OverviewPage({ onTestModel }: { onTestModel?: () => void }) {
+interface OverviewPageProps {
+  onFindBestSetup?: () => void;
+  onTestModel?: () => void;
+}
+
+export function OverviewPage({ onFindBestSetup, onTestModel }: OverviewPageProps) {
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
 
@@ -269,5 +285,11 @@ export function OverviewPage({ onTestModel }: { onTestModel?: () => void }) {
     );
   }
 
-  return <OverviewView {...state.data} onTestModel={onTestModel} />;
+  return (
+    <OverviewView
+      {...state.data}
+      onFindBestSetup={onFindBestSetup}
+      onTestModel={onTestModel}
+    />
+  );
 }
