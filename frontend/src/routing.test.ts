@@ -8,6 +8,10 @@ describe("hash routing", () => {
     expect(parseHash("#overview")).toEqual({ kind: "overview" });
   });
 
+  it("routes the use-case-first best setup journey explicitly", () => {
+    expect(parseHash("#find-best-setup")).toEqual({ kind: "best-setup" });
+  });
+
   it("decodes immutable run identities from the Runs route", () => {
     expect(parseHash("#runs/run%2Fone")).toEqual({ kind: "run-detail", runId: "run/one" });
   });
