@@ -13,14 +13,17 @@
       "developers choosing a model/runtime configuration for a workload and device"
     ],
     "primary_jobs": [
-      "test a served model against a representative scenario",
+      "choose a use case and find the best evidence-backed model + quantization + configuration for this device",
+      "manually test one served model/configuration against a representative scenario",
       "understand quality, runtime and resource evidence without conflating the dimensions",
-      "compare compatible evidence and choose a model/configuration for a workload and device",
+      "compare compatible evidence and understand model/configuration trade-offs",
       "detect regressions against an explicit compatible baseline"
     ],
     "primary_surfaces": [
       "Overview",
+      "Find best setup",
       "Test a model",
+      "Campaign / Campaign Results",
       "Live Run",
       "Runs / Run Detail",
       "Compare",
@@ -47,6 +50,7 @@
   "information_architecture": {
     "primary_navigation": [
       "Overview",
+      "Find best setup",
       "Test a model",
       "Runs",
       "Compare"
@@ -64,7 +68,54 @@
         "Advanced"
       ]
     },
-    "primary_user_question": "Which model works best for my workload on this device?"
+    "primary_user_question": "Which model works best for my workload on this device, and with which configuration?",
+    "journey_hierarchy": {
+      "primary": "Find best setup: use case -> models -> configuration search -> campaign -> results",
+      "direct_manual": "Test a model: model -> scenario -> test -> review -> run result"
+    }
+  },
+  "automatic_campaign": {
+    "status": "ux_integrated_engine_pending",
+    "use_case_first": true,
+    "use_case_mapping_owner": "Python application/evaluation contracts",
+    "candidate_identity": [
+      "model artifact",
+      "quantization when known",
+      "runtime/effective serving configuration when known",
+      "generation configuration",
+      "endpoint",
+      "device/hardware identity"
+    ],
+    "same_base_model_different_quantization_is_distinct_candidate": true,
+    "configuration_search": {
+      "request_parameters": "eligible when supported by the adapter/runtime contract",
+      "runtime_load_parameters": "eligible only when the serving runtime exposes an explicit mutable configuration lifecycle",
+      "browser_must_not_guess_parameter_ranges": true,
+      "search_depth_presets": [
+        "quick",
+        "standard",
+        "thorough",
+        "custom"
+      ]
+    },
+    "campaign_model": {
+      "campaign_groups_immutable_runs": true,
+      "run_identity_remains_authoritative": true,
+      "bounded_scheduling_and_cleanup_required": true,
+      "progress_failure_cancellation_recovery_required": true
+    },
+    "result_contract": {
+      "recommend_model_quantization_and_configuration": true,
+      "recommendation_requires_comparable_evidence": true,
+      "decision_policy_explicit_and_versioned": true,
+      "quality_runtime_resources_remain_separate": true,
+      "universal_opaque_score_forbidden": true,
+      "alternatives_when_supported": [
+        "highest quality",
+        "fastest",
+        "lowest resource usage"
+      ]
+    }
   },
   "progressive_disclosure": [
     "essential",
@@ -81,7 +132,9 @@
     "partial-result",
     "not-comparable",
     "not-evaluated",
-    "cancelled"
+    "cancelled",
+    "campaign-partial",
+    "campaign-blocked"
   ],
   "accessibility": {
     "target": "WCAG 2.2 AA",
@@ -160,13 +213,18 @@
   },
   "critical_journeys": [
     {
+      "id": "J0",
+      "name": "Choose use case -> select model candidates -> search configurations -> run campaign -> understand best-fit result",
+      "e2e": "required_when_executable"
+    },
+    {
       "id": "J1",
-      "name": "Connect a model -> test it -> understand the result",
+      "name": "Connect a model -> test it manually -> understand the result",
       "e2e": "required"
     },
     {
       "id": "J2",
-      "name": "Find which tested model is best for my workload",
+      "name": "Find tested-model evidence with workload and device context",
       "e2e": "recommended"
     },
     {
@@ -192,6 +250,8 @@
   ],
   "reference_views": [
     "design/reference/ux-reference-board.svg#overview",
+    "design/reference/find-best-setup.svg",
+    "design/reference/model-connection.svg",
     "design/reference/ux-reference-board.svg#test-a-model",
     "design/reference/ux-reference-board.svg#live-run",
     "design/reference/ux-reference-board.svg#run-detail",
