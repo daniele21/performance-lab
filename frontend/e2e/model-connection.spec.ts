@@ -1,8 +1,8 @@
 import { expect, test, type Route } from "@playwright/test";
 
 const API_IDENTITY = { api_version: "v1", read_model_version: 1 } as const;
-const NOW = "2026-08-28T08:00:00Z";
-const DIGEST = "c".repeat(64);
+const NOW = "2026-08-29T07:00:00Z";
+const DIGEST = "d".repeat(64);
 
 async function json(route: Route, payload: unknown, status = 200) {
   await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(payload) });
@@ -10,23 +10,25 @@ async function json(route: Route, payload: unknown, status = 200) {
 
 const target = {
   ...API_IDENTITY,
-  target_id: "session-local",
-  display_name: "Local LLM Server",
+  target_id: "session-discovered",
+  display_name: "Local model server",
   adapter_type: "openai-compatible",
-  endpoint_profile_id: "session-profile-local",
+  endpoint_profile_id: "session-profile-discovered",
   endpoint_identity: "127.0.0.1:1235/v1/",
   capabilities: ["text_generation"],
 };
 
-const scenario = {
-  ...API_IDENTITY,
-  scenario: "general_capability",
-  title: "General capability",
-  description: "Use the frozen starter suite.",
-  supported: true,
-  blocked_reason: null,
-  suite_id: "general-diagnostic-starter",
-};
+const scenarios = [
+  {
+    ...API_IDENTITY,
+    scenario: "general_capability",
+    title: "General capability",
+    description: "Use the frozen starter suite.",
+    supported: true,
+    blocked_reason: null,
+    suite_id: "general-diagnostic-starter",
+  },
+];
 
 const preflight = {
   ...API_IDENTITY,
@@ -59,8 +61,19 @@ const preflight = {
       task_count: 1,
       task_ids: ["fixture-task"],
     },
-    datasets: [],
-    evaluator_ids: ["fixture@1"],
+    datasets: [
+      {
+        ...API_IDENTITY,
+        dataset_id: "fixture-dataset",
+        dataset_version: "1",
+        source: "browser-fixture",
+        split: "test",
+        sample_count: 1,
+        selection_policy: "frozen",
+        content_sha256: "e".repeat(64),
+      },
+    ],
+    evaluator_ids: ["fixture-evaluator@1"],
     generation: {},
     load_profile: {},
     prompt_template_version: "1",
@@ -82,8 +95,8 @@ function job(state: "running" | "succeeded") {
     model_id: "model-discovered",
     scenario: "general_capability",
     phase: state === "running" ? "evaluating" : "completed",
-    completed_samples: state === "running" ? 1 : 4,
-    total_samples: 4,
+    completed_samples: state === "running" ? 0 : 1,
+    total_samples: 1,
     run_id: state === "succeeded" ? "run-discovered" : null,
     run_status: state === "succeeded" ? "succeeded" : "running",
     error_code: null,
@@ -110,19 +123,19 @@ const runDetail = {
       artifact_digest: null,
       target_id: target.target_id,
       endpoint_identity: target.endpoint_identity,
-      runtime_name: "llama.cpp",
-      runtime_version: "fixture",
-      hardware_device_id: "local-device",
-      hardware_device_class: "desktop",
+      runtime_name: null,
+      runtime_version: null,
+      hardware_device_id: null,
+      hardware_device_class: null,
     },
     metrics: [],
   },
   evidence: {
     ...API_IDENTITY,
-    fingerprint: { fingerprint_id: "fp-discovered", fixture: true },
+    fingerprint: { fingerprint_id: "fp-discovered" },
     dataset_count: 1,
     evaluator_count: 1,
-    sample_count: 4,
+    sample_count: 1,
   },
 };
 
@@ -133,18 +146,19 @@ test("J1 discovery: connect local server, discover model, freeze, run and inspec
 
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
-    const path = new URL(request.url()).pathname;
+    const url = new URL(request.url());
+    const path = url.pathname;
 
     if (path === "/api/v1/targets" && request.method() === "GET") {
       await json(route, []);
       return;
     }
     if (path === "/api/v1/scenarios" && request.method() === "GET") {
-      await json(route, [scenario]);
+      await json(route, scenarios);
       return;
     }
     if (path === "/api/v1/endpoint-probes" && request.method() === "POST") {
-      probeBody = request.postDataJSON() as Record<string, unknown>;
+      probeBody = JSON.parse(request.postData() ?? "{}") as Record<string, unknown>;
       await json(route, {
         ...API_IDENTITY,
         healthy: true,
@@ -158,10 +172,13 @@ test("J1 discovery: connect local server, discover model, freeze, run and inspec
               {
                 ...API_IDENTITY,
                 name: "n_batch",
-                scope: "runtime_load",
                 current_value: 512,
-                editable: false,
-                provenance: "local_llm_server",
+                value_type: null,
+                minimum: null,
+                maximum: null,
+                allowed_values: [],
+                mutable: false,
+                scope: "model_load",
               },
             ],
           },
@@ -185,7 +202,7 @@ test("J1 discovery: connect local server, discover model, freeze, run and inspec
       return;
     }
     if (path === "/api/v1/run-jobs" && request.method() === "POST") {
-      await json(route, job("running"), 202);
+      await json(route, job("running"));
       return;
     }
     if (path === "/api/v1/run-jobs/job-discovered" && request.method() === "GET") {
@@ -214,7 +231,7 @@ test("J1 discovery: connect local server, discover model, freeze, run and inspec
 
   await page.getByRole("button", { name: "Connect & discover" }).click();
   await expect(page.getByText("Connection discovered")).toBeVisible();
-  await expect(page.getByLabel("Model")).toHaveValue("model-discovered");
+  await expect(page.getByLabel("Model", { exact: true })).toHaveValue("model-discovered");
   await expect(page.getByText("n_batch")).toBeVisible();
   expect(probeBody).toMatchObject({
     base_url: "http://127.0.0.1:1235/v1/",
