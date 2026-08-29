@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell, Button, StateSurface } from "./components";
 import "./foundation.css";
 import { ComparePage } from "./pages/compare";
+import { FindBestSetupPage } from "./pages/find-best-setup";
 import { LibraryPage } from "./pages/library";
 import { LiveRunPage } from "./pages/live-run";
 import { OverviewPage } from "./pages/overview";
@@ -27,6 +28,10 @@ export function App() {
 
   if (route.kind === "overview") {
     return <OverviewPage onTestModel={() => navigate("test-a-model")} />;
+  }
+
+  if (route.kind === "best-setup") {
+    return <FindBestSetupPage onManualTest={() => navigate("test-a-model")} />;
   }
 
   if (route.kind === "test-model") {
