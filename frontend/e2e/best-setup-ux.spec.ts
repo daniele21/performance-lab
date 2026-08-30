@@ -209,7 +209,9 @@ test("J0 planning: use case to frozen campaign review is backend-owned and truth
 
   await expect(page.getByText("Reported request parameters")).toBeVisible();
   await expect(page.getByRole("radio", { name: /Quick/ })).toBeDisabled();
-  await expect(page.getByText("will not invent sweep domains", { exact: false }).first()).toBeVisible();
+  await expect(
+    page.getByText("will not invent sweep domains", { exact: false }).first(),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Build benchmark plan" }).click();
 
   await expect(page.getByRole("heading", { name: "Benchmark plan" })).toBeVisible();
