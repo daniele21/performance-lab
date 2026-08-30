@@ -104,14 +104,11 @@ export function RunSamplesSection({ runId }: { runId: string }) {
   }, [attempt, runId]);
 
   return (
-    <section className="evidence-drilldown__section" aria-labelledby="run-samples-heading">
+    <section className="evidence-drilldown__section">
       <SectionHeader
         title="Samples"
         description="Each row is one immutable benchmark-case attempt contributing to this run."
       />
-      <span id="run-samples-heading" className="sr-only">
-        Run samples
-      </span>
       {state.status === "loading" ? (
         <div className="evidence-drilldown__notice" role="status">
           <p>Loading sample evidence…</p>
