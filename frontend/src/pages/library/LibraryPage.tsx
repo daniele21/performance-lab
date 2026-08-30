@@ -25,11 +25,7 @@ import {
 import "../secondary.css";
 
 export type LibrarySection =
-  | "benchmarks"
-  | "datasets"
-  | "evaluators"
-  | "baselines"
-  | "regression-policies";
+  "benchmarks" | "datasets" | "evaluators" | "baselines" | "regression-policies";
 
 interface LibraryData {
   benchmarks: SuiteSummaryReadModel[];
