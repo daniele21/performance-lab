@@ -68,6 +68,8 @@ def build_local_ui_app(
         endpoint_profiles=(config.endpoint,),
         suites=(bundle.suite,),
         dataset_snapshots=tuple(dataset.snapshot for dataset in bundle.datasets.values()),
+        inspectable_datasets=tuple(bundle.datasets.values()),
+        evaluators=tuple(bundle.evaluators.values()),
         starter_run_template=config,
     )
     run_jobs = RunJobManager(recovered_runs=store.list_working())
