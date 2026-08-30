@@ -104,7 +104,8 @@ class UIQueryService(LibraryUIQueryService):
             return None, (f"Benchmark task definition is unavailable: {sample.task_id}",)
         if not task.case_content_available:
             return None, (
-                "Benchmark case content is unavailable under the current dataset inspection policy.",
+                "Benchmark case content is unavailable under the current dataset "
+                "inspection policy.",
             )
 
         matches = tuple(
