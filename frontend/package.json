@@ -10,7 +10,7 @@
   "packageManager": "npm@11.17.0",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write . && git diff --exit-code",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc -b --pretty false",
     "check": "npm run format:check && npm run lint && npm run typecheck",
