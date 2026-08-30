@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import performanceLabMark from "../assets/brand/mark.svg";
 import { PRIMARY_NAVIGATION, SECONDARY_NAVIGATION } from "../navigation";
 
 type SecondaryItem = (typeof SECONDARY_NAVIGATION)[keyof typeof SECONDARY_NAVIGATION][number];
@@ -19,9 +20,7 @@ export function AppShell({ activePrimary, activeSecondary, children }: AppShellP
     <div className="app-shell">
       <aside className="app-shell__sidebar">
         <a className="app-shell__brand" href="#overview" aria-label="Performance Lab home">
-          <span className="app-shell__mark" aria-hidden="true">
-            ◈
-          </span>
+          <img className="app-shell__mark" src={performanceLabMark} alt="" aria-hidden="true" />
           <span>Performance Lab</span>
         </a>
 
