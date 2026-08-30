@@ -22,7 +22,8 @@ from .ui_models import (
     DatasetSummaryReadModel,
     EvaluatorDefinitionReadModel,
 )
-from .ui_queries import CompletedRunReader, UIQueryService as CoreUIQueryService
+from .ui_queries import CompletedRunReader
+from .ui_queries import UIQueryService as CoreUIQueryService
 
 
 class UIQueryService(CoreUIQueryService):
