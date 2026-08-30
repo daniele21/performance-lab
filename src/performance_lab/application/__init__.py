@@ -1,7 +1,16 @@
 """Browser-facing application query projections."""
 
 from .endpoint_discovery import probe_endpoint_connection
-from .library_queries import UIQueryService
+from .evidence_models import (
+    EvidenceContentReadModel,
+    EvidenceContentState,
+    ExplanationState,
+    SampleEvidenceDetailReadModel,
+    SampleMeasurementReadModel,
+    SampleScoreReadModel,
+    SampleSummaryReadModel,
+)
+from .evidence_queries import UIQueryService
 from .ui_models import (
     UI_READ_MODEL_VERSION,
     BaselineSummaryReadModel,
@@ -53,6 +62,9 @@ __all__ = [
     "EndpointProbeReadModel",
     "EvaluatorDefinitionReadModel",
     "EvidenceAvailability",
+    "EvidenceContentReadModel",
+    "EvidenceContentState",
+    "ExplanationState",
     "FrozenExecutionPreviewReadModel",
     "IdentitySummary",
     "MetricDimension",
@@ -65,6 +77,10 @@ __all__ = [
     "RunPreflightRequest",
     "RunSummaryReadModel",
     "RuntimeParameterReadModel",
+    "SampleEvidenceDetailReadModel",
+    "SampleMeasurementReadModel",
+    "SampleScoreReadModel",
+    "SampleSummaryReadModel",
     "ScenarioKind",
     "ScenarioSummaryReadModel",
     "SuiteSummaryReadModel",
