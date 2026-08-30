@@ -145,7 +145,10 @@ class CampaignPlanPreviewReadModel(UIModel):
     estimate: CampaignEstimateReadModel | None = None
     execution_available: Literal[False] = False
     execution_blocked_reason: str = Field(
-        default="Campaign execution is not implemented yet; this preview only freezes the intended plan.",
+        default=(
+            "Campaign execution is not implemented yet; "
+            "this preview only freezes the intended plan."
+        ),
         min_length=1,
     )
 
