@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { getRun } from "../../api";
 import type { MetricReadModel, RunDetailReadModel } from "../../api";
@@ -74,6 +74,12 @@ function Metrics({
 export function RunDetailView({ run, onCompare }: RunDetailViewProps) {
   const { summary, evidence } = run;
   const identity = summary.identity;
+  const evidenceRef = useRef<HTMLElement>(null);
+
+  const inspectEvidence = () => {
+    evidenceRef.current?.scrollIntoView({ block: "start" });
+    evidenceRef.current?.focus();
+  };
 
   return (
     <AppShell activePrimary="Runs">
@@ -85,7 +91,16 @@ export function RunDetailView({ run, onCompare }: RunDetailViewProps) {
           eyebrow={`${summary.suite_id} · v${summary.suite_version}`}
           title={identity.model_id}
           description={`${identity.hardware_device_id ?? identity.hardware_device_class ?? identity.target_id} · ${identity.runtime_name ?? "Runtime unknown"} · Completed ${formatTimestamp(summary.completed_at)}`}
-          actions={<Button onClick={() => onCompare?.(summary.run_id)}>Compare</Button>}
+          actions={
+            <div className="run-detail__actions">
+              <Button variant="primary" onClick={inspectEvidence}>
+                Inspect evidence
+              </Button>
+              <Button variant="secondary" onClick={() => onCompare?.(summary.run_id)}>
+                Compare
+              </Button>
+            </div>
+          }
         />
 
         <div className="run-detail__status-row">
@@ -112,7 +127,12 @@ export function RunDetailView({ run, onCompare }: RunDetailViewProps) {
           metrics={summary.metrics}
         />
 
-        <section className="run-detail__evidence">
+        <section
+          className="run-detail__evidence"
+          ref={evidenceRef}
+          tabIndex={-1}
+          aria-label="Run evidence and reproducibility"
+        >
           <SectionHeader
             title="Evidence & reproducibility"
             description="The immutable execution identity behind the result."
