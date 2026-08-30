@@ -40,7 +40,7 @@ describe("Performance Lab API client", () => {
   });
 
   it("uses canonical benchmark and evaluator Library endpoints", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
+    const fetchMock = vi.fn().mockImplementation(async () =>
       new Response("[]", {
         status: 200,
         headers: { "Content-Type": "application/json" },
