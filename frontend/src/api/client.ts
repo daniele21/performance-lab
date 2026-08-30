@@ -4,6 +4,7 @@ import type {
   DatasetSummaryReadModel,
   EndpointConnectionInput,
   EndpointProbeReadModel,
+  EvaluatorDefinitionReadModel,
   PolicySummaryReadModel,
   RunDetailReadModel,
   RunJobSnapshot,
@@ -113,8 +114,16 @@ export function listSuites(options?: RequestOptions) {
   return getJson<SuiteSummaryReadModel[]>("/api/v1/suites", options);
 }
 
+export function listBenchmarks(options?: RequestOptions) {
+  return getJson<SuiteSummaryReadModel[]>("/api/v1/benchmarks", options);
+}
+
 export function listDatasets(options?: RequestOptions) {
   return getJson<DatasetSummaryReadModel[]>("/api/v1/datasets", options);
+}
+
+export function listEvaluators(options?: RequestOptions) {
+  return getJson<EvaluatorDefinitionReadModel[]>("/api/v1/evaluators", options);
 }
 
 export function listBaselines(options?: RequestOptions) {
