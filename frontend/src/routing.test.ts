@@ -16,12 +16,30 @@ describe("hash routing", () => {
     expect(parseHash("#runs/run%2Fone")).toEqual({ kind: "run-detail", runId: "run/one" });
   });
 
+  it("routes one immutable sample attempt under its run", () => {
+    expect(parseHash("#runs/run%2Fone/samples/task%2Fone/sample%2Fone/2")).toEqual({
+      kind: "sample-evidence",
+      runId: "run/one",
+      taskId: "task/one",
+      sampleId: "sample/one",
+      attempt: 2,
+    });
+  });
+
   it("keeps server-owned job identity in a refresh-safe Live Run route", () => {
     expect(parseHash("#live-run/job%2Fone")).toEqual({ kind: "live-run", jobId: "job/one" });
   });
 
   it("preserves compare context without implementing comparison semantics in routing", () => {
     expect(parseHash("#compare?run=run-1")).toEqual({ kind: "compare", runId: "run-1" });
+  });
+
+  it("routes benchmark definition identity without mixing result context", () => {
+    expect(parseHash("#benchmarks/suite%2Fone/1.0")).toEqual({
+      kind: "benchmark-detail",
+      suiteId: "suite/one",
+      suiteVersion: "1.0",
+    });
   });
 
   it("routes canonical secondary destinations to canonical page owners", () => {
@@ -67,6 +85,10 @@ describe("hash routing", () => {
     expect(parseHash("#live-run/%E0%A4%A")).toEqual({
       kind: "not-found",
       path: "live-run/%E0%A4%A",
+    });
+    expect(parseHash("#runs/run-1/samples/task/sample/0")).toEqual({
+      kind: "not-found",
+      path: "runs/run-1/samples/task/sample/0",
     });
   });
 });
