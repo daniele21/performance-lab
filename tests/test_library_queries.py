@@ -1,10 +1,14 @@
 from performance_lab.application import UIQueryService
-from performance_lab.datasets import MaterializedDataset, build_general_starter_suite
+from performance_lab.datasets import (
+    MaterializedDataset,
+    StarterSuiteBundle,
+    build_general_starter_suite,
+)
 from performance_lab.domain import DatasetSnapshot
 from performance_lab.storage import SQLiteRunStore
 
 
-def _queries(tmp_path, *, inspectable: bool = True) -> tuple[UIQueryService, object]:
+def _queries(tmp_path, *, inspectable: bool = True) -> tuple[UIQueryService, StarterSuiteBundle]:
     bundle = build_general_starter_suite()
     queries = UIQueryService(
         SQLiteRunStore(tmp_path / "runs.sqlite3"),
@@ -37,7 +41,7 @@ def test_benchmark_detail_projects_exact_definition_cases_and_evaluator_rules(tm
     assert numeric.case_content_available is True
     assert numeric.evaluator.deterministic is True
     assert numeric.evaluator.configuration["absolute_tolerance"] == 1e-9
-    assert "weight" not in numeric.evaluator.model_fields
+    assert "weight" not in numeric.evaluator.model_dump(mode="python")
 
     structured_cases = [
         case for case in detail.cases if case.dataset_id == "starter-structured"
