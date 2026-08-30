@@ -67,19 +67,27 @@ test("canonical desktop IA preserves staged navigation", async ({ page }) => {
 
   await benchmarks.click();
   await expect(page).toHaveURL(/#benchmarks$/);
-  await expect(page.getByRole("heading", { name: "Test suites" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Test suites", exact: true, level: 1 }),
+  ).toBeVisible();
   await expect(benchmarks).toHaveAttribute("aria-current", "page");
 
   await modelConnections.click();
   await expect(page).toHaveURL(/#model-connections$/);
-  await expect(page.getByRole("heading", { name: "Endpoints" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Endpoints", exact: true, level: 1 }),
+  ).toBeVisible();
   await expect(modelConnections).toHaveAttribute("aria-current", "page");
 
   await page.goto("/#test-suites");
-  await expect(page.getByRole("heading", { name: "Test suites" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Test suites", exact: true, level: 1 }),
+  ).toBeVisible();
   await expect(benchmarks).toHaveAttribute("aria-current", "page");
 
   await page.goto("/#endpoints");
-  await expect(page.getByRole("heading", { name: "Endpoints" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Endpoints", exact: true, level: 1 }),
+  ).toBeVisible();
   await expect(modelConnections).toHaveAttribute("aria-current", "page");
 });
