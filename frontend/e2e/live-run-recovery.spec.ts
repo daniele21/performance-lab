@@ -24,7 +24,9 @@ async function fulfillJson(route: Route, payload: unknown, status = 200) {
   await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(payload) });
 }
 
-test("Live Run can reconnect after a transient initial read failure", async ({ page }) => {
+test("Live Run recovers server-owned state after a transient initial read failure", async ({
+  page,
+}) => {
   let readAttempts = 0;
 
   await page.route("**/api/v1/run-jobs/job-reconnect**", async (route) => {
