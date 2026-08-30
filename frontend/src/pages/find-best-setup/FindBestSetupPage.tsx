@@ -41,7 +41,8 @@ function unknown(value: string | null) {
 }
 
 export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewProps) {
-  const firstTarget = context.targets.find((item) => item.candidates.length > 0) ?? context.targets[0];
+  const firstTarget =
+    context.targets.find((item) => item.candidates.length > 0) ?? context.targets[0];
   const [step, setStep] = useState(0);
   const [useCaseId, setUseCaseId] = useState(context.use_cases[0]?.use_case_id ?? "");
   const [targetId, setTargetId] = useState(firstTarget?.target.target_id ?? "");
@@ -171,7 +172,11 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
               />
               <div className="best-setup-choice-grid">
                 {context.use_cases.map((item) => (
-                  <label className="best-setup-choice" data-selected={item.use_case_id === useCaseId} key={item.use_case_id}>
+                  <label
+                    className="best-setup-choice"
+                    data-selected={item.use_case_id === useCaseId}
+                    key={item.use_case_id}
+                  >
                     <input
                       type="radio"
                       name="use-case"
@@ -186,7 +191,10 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
                       <strong>{item.title}</strong>
                       <small>{item.description}</small>
                       <small>
-                        {item.source === "workload_pack" ? "Versioned workload pack" : "Starter diagnostic"} · {item.suite_id}
+                        {item.source === "workload_pack"
+                          ? "Versioned workload pack"
+                          : "Starter diagnostic"}{" "}
+                        · {item.suite_id}
                       </small>
                     </span>
                   </label>
@@ -218,14 +226,20 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
               </label>
               {target ? (
                 <div className="best-setup-target-context">
-                  <span>Device: {target.hardware_device_id ?? target.hardware_device_class ?? "Unknown"}</span>
+                  <span>
+                    Device: {target.hardware_device_id ?? target.hardware_device_class ?? "Unknown"}
+                  </span>
                   <span>Endpoint: {target.target.endpoint_identity}</span>
                 </div>
               ) : null}
               {target?.candidates.length ? (
                 <div className="best-setup-choice-grid">
                   {target.candidates.map((candidate) => (
-                    <label className="best-setup-choice" data-selected={candidateIds.includes(candidate.candidate_id)} key={candidate.candidate_id}>
+                    <label
+                      className="best-setup-choice"
+                      data-selected={candidateIds.includes(candidate.candidate_id)}
+                      key={candidate.candidate_id}
+                    >
                       <input
                         type="checkbox"
                         checked={candidateIds.includes(candidate.candidate_id)}
@@ -235,7 +249,8 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
                         <strong>{candidate.model_id}</strong>
                         <small>Quantization: {unknown(candidate.quantization)}</small>
                         <small>
-                          Revision: {unknown(candidate.revision)} · Runtime: {unknown(candidate.runtime_name)}
+                          Revision: {unknown(candidate.revision)} · Runtime:{" "}
+                          {unknown(candidate.runtime_name)}
                         </small>
                       </span>
                     </label>
@@ -304,7 +319,10 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
                     : "No request-level parameter capability list was reported for this target."}
                 </p>
                 <p>
-                  Bounded search ranges: {target.bounded_generation_parameter_ranges.length ? target.bounded_generation_parameter_ranges.join(", ") : "None reported"}
+                  Bounded search ranges:{" "}
+                  {target.bounded_generation_parameter_ranges.length
+                    ? target.bounded_generation_parameter_ranges.join(", ")
+                    : "None reported"}
                 </p>
               </div>
               {previewState === "error" && previewError ? (
@@ -347,7 +365,9 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
                 <article>
                   <span>Datasets</span>
                   <strong>{preview.benchmark_plan.datasets.length}</strong>
-                  <small>{preview.benchmark_plan.datasets.map((item) => item.dataset_id).join(", ")}</small>
+                  <small>
+                    {preview.benchmark_plan.datasets.map((item) => item.dataset_id).join(", ")}
+                  </small>
                 </article>
                 <article>
                   <span>Evaluators</span>
@@ -383,7 +403,9 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
                 <article>
                   <span>Candidates</span>
                   <strong>{preview.estimate.candidate_count}</strong>
-                  <small>{preview.candidates.map((candidate) => candidate.model_id).join(", ")}</small>
+                  <small>
+                    {preview.candidates.map((candidate) => candidate.model_id).join(", ")}
+                  </small>
                 </article>
                 <article>
                   <span>Configurations / candidate</span>
@@ -436,7 +458,8 @@ export function FindBestSetupPage({ onManualTest }: FindBestSetupPageProps) {
         if (controller.signal.aborted) return;
         setState({
           status: "error",
-          message: error instanceof Error ? error.message : "Campaign planning could not be loaded.",
+          message:
+            error instanceof Error ? error.message : "Campaign planning could not be loaded.",
         });
       });
     return () => controller.abort();
