@@ -32,11 +32,15 @@ class UseCaseReadModel(UIModel):
 
 
 class CandidateModelReadModel(UIModel):
+    candidate_id: str = Field(min_length=1)
     target_id: str = Field(min_length=1)
     model_id: str = Field(min_length=1)
     revision: str | None = None
     artifact_digest: str | None = None
     quantization: str | None = None
+    runtime_name: str | None = None
+    runtime_version: str | None = None
+    runtime_config_digest: str | None = None
     source: Literal["configured", "discovered"]
 
 
@@ -58,7 +62,11 @@ class ConfigurationSearchOptionReadModel(UIModel):
 
 class CampaignTargetPlanningReadModel(UIModel):
     target: TargetSummaryReadModel
+    hardware_device_id: str | None = None
+    hardware_device_class: str | None = None
     candidates: tuple[CandidateModelReadModel, ...] = ()
+    supported_generation_parameters: tuple[str, ...] = ()
+    bounded_generation_parameter_ranges: tuple[str, ...] = ()
     configuration_search_options: tuple[ConfigurationSearchOptionReadModel, ...] = ()
 
 
@@ -72,19 +80,19 @@ class CampaignPlanPreviewRequest(BaseModel):
 
     use_case_id: str = Field(min_length=1)
     target_id: str = Field(min_length=1)
-    candidate_model_ids: tuple[str, ...]
+    candidate_ids: tuple[str, ...]
     configuration_strategy: CampaignSearchStrategy = CampaignSearchStrategy.FIXED
 
     @model_validator(mode="after")
     def validate_candidates(self) -> CampaignPlanPreviewRequest:
-        if not self.candidate_model_ids:
-            raise ValueError("at least one candidate model is required")
-        if len(self.candidate_model_ids) > 32:
-            raise ValueError("candidate model count cannot exceed 32")
-        if len(self.candidate_model_ids) != len(set(self.candidate_model_ids)):
-            raise ValueError("candidate model ids must be unique")
-        if any(not model_id for model_id in self.candidate_model_ids):
-            raise ValueError("candidate model ids cannot be empty")
+        if not self.candidate_ids:
+            raise ValueError("at least one candidate is required")
+        if len(self.candidate_ids) > 32:
+            raise ValueError("candidate count cannot exceed 32")
+        if len(self.candidate_ids) != len(set(self.candidate_ids)):
+            raise ValueError("candidate ids must be unique")
+        if any(not candidate_id for candidate_id in self.candidate_ids):
+            raise ValueError("candidate ids cannot be empty")
         return self
 
 
@@ -150,7 +158,7 @@ class CampaignPlanPreviewReadModel(UIModel):
             )
         ) and bool(self.candidates)
         if self.can_plan and (self.issues or not complete):
-            raise ValueError("executable planning previews require a complete frozen plan")
+            raise ValueError("plannable previews require a complete frozen plan")
         if not self.can_plan and not self.issues:
             raise ValueError("blocked planning previews require at least one issue")
         return self
