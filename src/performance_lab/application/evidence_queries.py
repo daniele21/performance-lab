@@ -48,14 +48,11 @@ class UIQueryService(LibraryUIQueryService):
         )
         if sample is None:
             raise LookupError(
-                "sample evidence not found: "
-                f"{run_id}/{task_id}/{sample_id}/attempt-{attempt}"
+                f"sample evidence not found: {run_id}/{task_id}/{sample_id}/attempt-{attempt}"
             )
 
         benchmark_case, definition_issues = self._benchmark_case_for(run, sample)
-        evaluators = {
-            (item.evaluator_id, item.version): item for item in self.list_evaluators()
-        }
+        evaluators = {(item.evaluator_id, item.version): item for item in self.list_evaluators()}
         scores = tuple(
             _score_projection(
                 score,
