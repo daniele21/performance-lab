@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from fastapi.testclient import TestClient
 
 from performance_lab.application import (
     EvidenceContentState,
@@ -28,6 +29,7 @@ from performance_lab.domain import (
 )
 from performance_lab.evaluation import ExactMatchEvaluator
 from performance_lab.storage import SQLiteRunStore
+from performance_lab.ui_api import create_ui_app
 
 
 def _evidence_fixture(tmp_path, *, inspectable: bool = True) -> UIQueryService:
@@ -203,3 +205,44 @@ def test_sample_lookup_requires_exact_attempt_identity(tmp_path) -> None:
 
     with pytest.raises(LookupError, match="completed run not found"):
         queries.list_run_samples("missing")
+
+
+def test_sample_evidence_api_exposes_attempt_specific_read_models(tmp_path) -> None:
+    client = TestClient(create_ui_app(_evidence_fixture(tmp_path)))
+
+    listing = client.get("/api/v1/runs/run-1/samples")
+    assert listing.status_code == 200
+    assert [(item["sample_id"], item["attempt"]) for item in listing.json()] == [
+        ("sample-1", 1),
+        ("sample-1", 2),
+    ]
+
+    detail = client.get("/api/v1/runs/run-1/samples/qa/sample-1/2")
+    assert detail.status_code == 200
+    payload = detail.json()
+    assert payload["sample"]["attempt"] == 2
+    assert payload["benchmark_case"]["expected"] == "Answer"
+    assert payload["prompt"] == {
+        "api_version": "v1",
+        "read_model_version": 1,
+        "state": "not_retained",
+        "content": None,
+        "reason": "content_not_retained",
+    }
+    assert payload["response"]["state"] == "not_retained"
+    assert payload["scores"][0]["explanation_state"] == "unavailable"
+
+
+def test_sample_evidence_api_keeps_missing_and_invalid_attempts_explicit(tmp_path) -> None:
+    client = TestClient(create_ui_app(_evidence_fixture(tmp_path)))
+
+    missing = client.get("/api/v1/runs/run-1/samples/qa/sample-1/3")
+    assert missing.status_code == 404
+    assert missing.json() == {"detail": "sample evidence not found"}
+
+    invalid = client.get("/api/v1/runs/run-1/samples/qa/sample-1/0")
+    assert invalid.status_code == 422
+
+    missing_run = client.get("/api/v1/runs/missing/samples")
+    assert missing_run.status_code == 404
+    assert missing_run.json() == {"detail": "completed run not found"}
