@@ -223,13 +223,9 @@
         "browser-built-mocked-api"
       ],
       "minimum_automated_fidelity": "host_or_fake",
-      "residual_gaps": [
-        "benchmark-detail application/API read model",
-        "test-case definition projection",
-        "dataset/evaluator definition links"
-      ],
+      "residual_gaps": [],
       "real_environment_confirmation": "not_required",
-      "automation_gap_reason": "The UX contract is defined; Benchmark Detail and its server-owned read models are not implemented yet."
+      "automation_gap_reason": null
     },
     {
       "id": "J8",
@@ -242,13 +238,9 @@
         "packaged-product-fixture"
       ],
       "minimum_automated_fidelity": "representative_virtual",
-      "residual_gaps": [
-        "sample-level Run Detail read model",
-        "retained prompt/response and evaluator-rationale projections",
-        "aggregate-safe versus evidence-rich content states"
-      ],
+      "residual_gaps": [],
       "real_environment_confirmation": "not_required",
-      "automation_gap_reason": "The evidence drill-down UX is defined; sample-level read models and retained-content projections are not implemented yet."
+      "automation_gap_reason": null
     },
     {
       "id": "J9",

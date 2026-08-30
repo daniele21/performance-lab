@@ -38,8 +38,8 @@ The implementation must converge on `design/ux-contract.json`, `design/brand-kit
 | UXUI-03 | Manual journey convergence: connect/discover -> scenario -> configure -> frozen review -> Live Run -> Run Detail | test-model/live-run/run-detail pages and direct API consumers | UXUI-01, UXUI-02 | yes, separate from Library contracts | DONE |
 | UXUI-04A | Library/read-model contracts for Models, Benchmarks, Datasets, Evaluators, Evidence | Python application read models/queries/API + contract tests | UXUI-00 | yes, with UXUI-01 | DONE |
 | UXUI-04B | Library + Settings UI convergence | library/settings pages and API client types | UXUI-01, UXUI-02, UXUI-04A | yes, separate from manual journey | DONE |
-| UXUI-05 | Benchmark/sample evidence drill-down | benchmark detail, run samples, sample evidence projections/pages | UXUI-04A | yes, after shared routing/page ownership is clear | ACTIVE |
-| UXUI-06 | Find best setup planning: use case -> candidates -> config search -> benchmark plan -> estimate | campaign planning domain/application/API + page flow | UXUI-04A, UXUI-05 contracts as needed | no | BLOCKED |
+| UXUI-05 | Benchmark/sample evidence drill-down | benchmark detail, run samples, sample evidence projections/pages | UXUI-04A | yes, after shared routing/page ownership is clear | DONE |
+| UXUI-06 | Find best setup planning: use case -> candidates -> config search -> benchmark plan -> estimate | campaign planning domain/application/API + page flow | UXUI-04A, UXUI-05 contracts as needed | no | READY |
 | UXUI-07 | Campaign lifecycle + results/recommendation | campaign persistence/orchestration/read models; live/results UI | UXUI-06 | no | BLOCKED |
 | UXUI-08 | Same-case cross-candidate comparison | comparison application read models + case comparison UI | UXUI-05, UXUI-07 | yes, after stable integration contracts | BLOCKED |
 | UXUI-09 | Product hardening | complete states, accessibility, compact/standard/wide, visual review | UXUI-03..08 | yes by surface with one integration owner | BLOCKED |
@@ -51,22 +51,22 @@ Parallel work must keep explicit write ownership. Shared API/read-model changes 
 
 ## Current executable slice
 
-### UXUI-05 — benchmark/sample evidence drill-down
+### UXUI-06 — Find best setup planning
 
-Integrated backend boundary:
+Owning boundary:
 
-- inspectable Benchmark Detail and evaluator metadata are backend-owned;
-- `Run -> Samples -> Sample Evidence` read models preserve `task_id + sample_id + attempt` identity;
-- benchmark definition content remains separate from execution evidence;
-- prompt/output project typed `Content not retained` under the current aggregate-safe persistence contract;
-- absent evaluator rationale projects `Evaluation explanation unavailable` instead of browser-generated text.
+- make use case the first decision and keep model + quantization as candidate identity;
+- introduce backend-owned use-case/benchmark relevance and campaign-plan read models before adding browser ranking logic;
+- expose candidate selection, configuration-search strategy, benchmark plan and campaign review/estimate as progressive-disclosure steps;
+- permit request-level parameter search only when support/ranges are declared by the runtime contract;
+- keep runtime/model-load parameters observational unless an explicit mutable runtime lifecycle exists;
+- do not start campaign execution or recommendation work in this slice.
 
-Remaining frontend boundary:
+Acceptance direction:
 
-- consume Benchmark Detail in a dedicated definition surface;
-- add Run Samples and Sample Evidence Detail pages using the integrated read models;
-- update J7/J8 executable journey truth as each drill-down becomes real;
-- keep campaign/cross-candidate comparison ownership out of this slice.
+- J0 advances from a truthfully blocked shell to an executable planning flow while remaining blocked at campaign execution until UXUI-07;
+- browser UI consumes server-owned planning data and does not guess benchmark relevance, parameter ranges or candidate comparability;
+- the final review freezes the intended candidate/configuration/benchmark plan before execution ownership passes to UXUI-07.
 
 ## Integrated evidence
 
@@ -92,13 +92,17 @@ Integrated through PR #72. Python exposes Run Samples and Sample Evidence read m
 
 ### UXUI-03 — DONE
 
-Integrated through PR #74. The existing frozen manual evaluation flow is preserved; Live Run now offers explicit reconnect recovery after transient initial read failure without launching a duplicate job, and Run Detail makes immutable evidence inspection the primary action while Compare remains secondary. The final merge-ref is validated against the already-integrated UXUI-04B baseline.
+Integrated through PR #75. The existing frozen manual evaluation flow is preserved; Live Run now offers explicit reconnect recovery after transient initial read failure without launching a duplicate job, and Run Detail makes immutable evidence inspection the primary action while Compare remains secondary. The final merge-ref is validated against the already-integrated UXUI-04B baseline.
+
+### UXUI-05 — DONE
+
+Integrated through PR #76. Benchmark Library now drills into a dedicated definition surface with authored cases, expected output and evaluator rules without mixing execution results. Run Detail exposes contributing samples and drills into one immutable `task_id + sample_id + attempt` Sample Evidence surface with model + quantization + fingerprint identity, evaluator-owned score/rule evidence, measurement provenance and explicit `Content not retained` / `Evaluation explanation unavailable` states. J7 passes in the built-browser mocked-API environment; J8 passes both built-browser mocked-API and packaged-product `representative_virtual` evidence with the real loopback API and SQLite persistence. Campaign and cross-candidate comparison ownership remain outside this slice.
 
 ## Integration strategy
 
-1. UXUI-01/02/03 and UXUI-04A/04B are integrated shared/product-page foundations.
-2. UXUI-05 is the active drill-down owner and consumes the already-integrated Benchmark/Sample Evidence backend contracts.
-3. UXUI-06/07 remain sequential because campaign planning, lifecycle and recommendation share one new bounded product contract.
+1. UXUI-01/02/03, UXUI-04A/04B and UXUI-05 are integrated shared/product-page foundations.
+2. UXUI-06 is the next owner and introduces backend-owned Find best setup planning before campaign execution exists.
+3. UXUI-07 follows sequentially because campaign lifecycle and recommendation share the campaign planning contract.
 4. UXUI-08 follows stable sample/campaign contracts; UXUI-09/10 harden and prove the complete experience.
 
 Avoid stacked branches that silently depend on an unmerged red base. Ordinary UX/UI branches start from current green `dev` and target `dev`; if `dev` moves, readiness is re-established on the regenerated merge-ref.

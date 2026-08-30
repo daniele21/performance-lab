@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { AppShell, Button, StateSurface } from "./components";
 import "./foundation.css";
+import { BenchmarkDetailPage } from "./pages/benchmark-detail";
 import { ComparePage } from "./pages/compare";
 import { FindBestSetupPage } from "./pages/find-best-setup";
 import { LibraryPage } from "./pages/library";
@@ -9,6 +10,7 @@ import { LiveRunPage } from "./pages/live-run";
 import { OverviewPage } from "./pages/overview";
 import { RunDetailPage } from "./pages/run-detail";
 import { RunsPage } from "./pages/runs";
+import { SampleEvidencePage } from "./pages/sample-evidence";
 import { SettingsPage } from "./pages/settings";
 import { TestModelPage } from "./pages/test-model";
 import { navigate, parseHash, type AppRoute } from "./routing";
@@ -65,6 +67,21 @@ export function App() {
         onCompare={(runId) => navigate(`compare?run=${encodeURIComponent(runId)}`)}
       />
     );
+  }
+
+  if (route.kind === "sample-evidence") {
+    return (
+      <SampleEvidencePage
+        runId={route.runId}
+        taskId={route.taskId}
+        sampleId={route.sampleId}
+        attempt={route.attempt}
+      />
+    );
+  }
+
+  if (route.kind === "benchmark-detail") {
+    return <BenchmarkDetailPage suiteId={route.suiteId} suiteVersion={route.suiteVersion} />;
   }
 
   if (route.kind === "library") return <LibraryPage section={route.section} />;

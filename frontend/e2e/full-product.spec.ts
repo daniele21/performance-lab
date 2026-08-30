@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("J1: packaged product completes and persists a real evaluation workflow", async ({ page }) => {
+test("J1/J8: packaged product completes, persists and drills into sample evidence", async ({
+  page,
+}) => {
   await page.goto("/#test-a-model");
   await expect(page.getByRole("heading", { name: "Test a model" })).toBeVisible();
 
@@ -23,4 +25,14 @@ test("J1: packaged product completes and persists a real evaluation workflow", a
   await page.reload();
   await expect(page).toHaveURL(persistedResultUrl);
   await expect(page.getByRole("heading", { name: "fixture-good" })).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: "Samples" })).toBeVisible();
+  const sampleEvidenceLink = page.getByRole("link", { name: "Inspect sample evidence" }).first();
+  await expect(sampleEvidenceLink).toBeVisible();
+  await sampleEvidenceLink.click();
+
+  await expect(page).toHaveURL(/#runs\/[^/]+\/samples\//);
+  await expect(page.getByRole("heading", { name: "Execution content" })).toBeVisible();
+  await expect(page.getByText("Content not retained").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Evaluator evidence" })).toBeVisible();
 });

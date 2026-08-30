@@ -10,7 +10,7 @@ Short operational ledger only. Durable behavior belongs in architecture/ADR/desi
 
 ## Current phase
 
-The benchmark/evidence core, use-case-first UX/discovery baseline, design-system/brand convergence, canonical desktop IA, Library/Settings convergence, manual evaluation recovery and backend sample-evidence read models are integrated on `dev`. Product UX/UI convergence now concentrates on Benchmark Detail, Run Samples and Sample Evidence frontend drill-down before campaign planning can begin. Representative-hardware evidence and the evidence-gated Local LLM Server evaluation cutover remain separate active work.
+The benchmark/evidence core, use-case-first UX/discovery baseline, design-system/brand convergence, canonical desktop IA, Library/Settings convergence, manual evaluation recovery and benchmark/sample evidence drill-down are integrated on `dev`. Product UX/UI convergence now advances to Find best setup planning: use case -> candidate models -> configuration search -> benchmark plan -> campaign review/estimate. Representative-hardware evidence and the evidence-gated Local LLM Server evaluation cutover remain separate active work.
 
 Primary product question:
 
@@ -18,7 +18,7 @@ Primary product question:
 
 ## Integrated baseline
 
-`dev` contains Overview, Find best setup's truthfully blocked campaign shell, Test a model with loopback model discovery and frozen Review, Live Run with server-owned cancel/reconnect recovery, Runs/Run Detail with evidence-first action hierarchy, Compare, canonical Library/Settings navigation, backend Benchmark/Evaluator definitions, Run -> Samples -> Sample Evidence projections, browser J0-J6 acceptance, deterministic Python Product E2E and the built-product artifact/smoke lifecycle. The repository adopts `repo-template-sw` 0.8.0 at L2 with Python, TypeScript and product-ui profiles.
+`dev` contains Overview, Find best setup's truthfully blocked campaign shell, Test a model with loopback model discovery and frozen Review, Live Run with server-owned cancel/reconnect recovery, Runs/Run Detail with evidence-first action hierarchy, Compare, canonical Library/Settings navigation, Benchmark Detail with inspectable authored cases/evaluator rules, and Run -> Samples -> Sample Evidence drill-down with explicit retention/explanation states. Browser J0-J8 acceptance is executable; packaged-product evidence covers J1 and J8 through the installed wheel, built frontend, real loopback API, real SQLite and deterministic external inference fixture. The repository adopts `repo-template-sw` 0.8.0 at L2 with Python, TypeScript and product-ui profiles.
 
 Hosted CI/fixtures do not prove representative hardware/runtime behavior; `RUNTIME-1` remains real-environment evidence.
 
@@ -26,7 +26,7 @@ Hosted CI/fixtures do not prove representative hardware/runtime behavior; `RUNTI
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
-| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | ACTIVE | UXUI-05 frontend Benchmark Detail / Run Samples / Sample Evidence makes J7-J8 executable, then campaign planning can start |
+| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | ACTIVE | UXUI-06 makes Find best setup planning executable without starting campaign execution; UXUI-07 then owns campaign lifecycle/recommendation |
 | [Representative device evidence](workstreams/representative-device-evidence.md) | READY | first real LLS/model/device run with retained fingerprint/bundle |
 | [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 EVIDENCE BLOCKED / MIG-003 BLOCKED | retain EV-3 + real PL replacement run, then remove redundant evaluation paths and smoke |
 
@@ -34,9 +34,9 @@ Hosted CI/fixtures do not prove representative hardware/runtime behavior; `RUNTI
 
 `design/ux-contract.json` and `design/brand-kit.json` own durable experience truth. Approved desktop targets live under `design/reference/visual-targets/desktop-standard/` and are design intent, not pixel-regression goldens.
 
-The integrated baseline includes use-case-first `Find best setup`, loopback model discovery, canonical shell/IA, converged Library/Settings, manual Run recovery, backend Benchmark/Evaluator registries and Run -> Samples -> Sample Evidence projections. The automatic campaign remains intentionally blocked until backend-owned use-case planning, configuration search, campaign lifecycle and compatibility-aware recommendation contracts exist.
+The integrated baseline includes use-case-first `Find best setup`, loopback model discovery, canonical shell/IA, converged Library/Settings, manual Run recovery, inspectable Benchmark Detail, and Run -> Samples -> Sample Evidence with immutable attempt identity and truthful aggregate-safe content states. The automatic campaign remains intentionally blocked until backend-owned use-case planning, configuration search, campaign lifecycle and compatibility-aware recommendation contracts exist.
 
-UXUI-05 now owns the remaining benchmark/sample frontend drill-down. Campaign planning/lifecycle/recommendation remains sequential because it shares one new product contract.
+UXUI-06 now owns Find best setup planning. Campaign lifecycle/recommendation remains sequential because it shares one new product contract; same-case cross-candidate comparison remains downstream of campaign execution.
 
 ## Evaluation migration
 
@@ -51,8 +51,8 @@ MIG-003 still requires post-convergence EV-3 evidence, a real PL run against LLS
 
 ## Evidence still required
 
-- J7-J9 evidence as benchmark/sample/campaign contracts become executable;
-- UXUI-05 frontend drill-down and later campaign/product-hardening evidence;
+- J9 evidence after campaign execution and same-case cross-candidate comparison become executable;
+- UXUI-06 campaign planning, UXUI-07 lifecycle/recommendation, UXUI-08 same-case comparison and UXUI-09/10 hardening/acceptance evidence;
 - representative resident-model identity/resource/telemetry/repeated-load evidence;
 - LLS EV-3, real PL replacement run and post-disable cross-repository smoke;
 - human acceptance where release claims depend on usability.

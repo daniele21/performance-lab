@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getRun, listBenchmarks, listEvaluators, listRuns } from "./client";
+import {
+  getBenchmark,
+  getRun,
+  getSampleEvidence,
+  listBenchmarks,
+  listEvaluators,
+  listRuns,
+  listRunSamples,
+} from "./client";
 import type { ApiError } from "./client";
 
 afterEach(() => {
@@ -54,6 +62,26 @@ describe("Performance Lab API client", () => {
     expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
       "/api/v1/benchmarks",
       "/api/v1/evaluators",
+    ]);
+  });
+
+  it("uses canonical benchmark and sample drilldown endpoints with encoded identities", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => {
+      return new Response("{}", {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getBenchmark("suite/one", "1.0");
+    await listRunSamples("run/one");
+    await getSampleEvidence("run/one", "task/one", "sample/one", 2);
+
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      "/api/v1/benchmarks/suite%2Fone/1.0",
+      "/api/v1/runs/run%2Fone/samples",
+      "/api/v1/runs/run%2Fone/samples/task%2Fone/sample%2Fone/2",
     ]);
   });
 
