@@ -39,8 +39,8 @@ The implementation must converge on `design/ux-contract.json`, `design/brand-kit
 | UXUI-04A | Library/read-model contracts for Models, Benchmarks, Datasets, Evaluators, Evidence | Python application read models/queries/API + contract tests | UXUI-00 | yes, with UXUI-01 | DONE |
 | UXUI-04B | Library + Settings UI convergence | library/settings pages and API client types | UXUI-01, UXUI-02, UXUI-04A | yes, separate from manual journey | DONE |
 | UXUI-05 | Benchmark/sample evidence drill-down | benchmark detail, run samples, sample evidence projections/pages | UXUI-04A | yes, after shared routing/page ownership is clear | DONE |
-| UXUI-06 | Find best setup planning: use case -> candidates -> config search -> benchmark plan -> estimate | campaign planning domain/application/API + page flow | UXUI-04A, UXUI-05 contracts as needed | no | READY |
-| UXUI-07 | Campaign lifecycle + results/recommendation | campaign persistence/orchestration/read models; live/results UI | UXUI-06 | no | BLOCKED |
+| UXUI-06 | Find best setup planning: use case -> candidates -> config search -> benchmark plan -> estimate | campaign planning domain/application/API + page flow | UXUI-04A, UXUI-05 contracts as needed | no | DONE |
+| UXUI-07 | Campaign lifecycle + results/recommendation | campaign persistence/orchestration/read models; live/results UI | UXUI-06 | no | READY |
 | UXUI-08 | Same-case cross-candidate comparison | comparison application read models + case comparison UI | UXUI-05, UXUI-07 | yes, after stable integration contracts | BLOCKED |
 | UXUI-09 | Product hardening | complete states, accessibility, compact/standard/wide, visual review | UXUI-03..08 | yes by surface with one integration owner | BLOCKED |
 | UXUI-10 | Built-product acceptance and browser goldens | J0-J9, packaged-product evidence, accepted browser screenshots | UXUI-09 | no | BLOCKED |
@@ -51,22 +51,24 @@ Parallel work must keep explicit write ownership. Shared API/read-model changes 
 
 ## Current executable slice
 
-### UXUI-06 — Find best setup planning
+### UXUI-07 — Campaign lifecycle + results/recommendation
 
 Owning boundary:
 
-- make use case the first decision and keep model + quantization as candidate identity;
-- introduce backend-owned use-case/benchmark relevance and campaign-plan read models before adding browser ranking logic;
-- expose candidate selection, configuration-search strategy, benchmark plan and campaign review/estimate as progressive-disclosure steps;
-- permit request-level parameter search only when support/ranges are declared by the runtime contract;
-- keep runtime/model-load parameters observational unless an explicit mutable runtime lifecycle exists;
-- do not start campaign execution or recommendation work in this slice.
+- consume the deterministic frozen plan produced by UXUI-06 rather than rebuilding use-case, candidate or benchmark semantics in the browser;
+- persist and orchestrate a bounded Campaign that groups immutable Runs without replacing Run identity;
+- expose explicit queued/running/completed/failed/cancelled lifecycle, cancellation, recovery and resource ownership;
+- produce campaign results only from compatible retained evidence and an explicit versioned decision policy;
+- keep quality, runtime performance and resource evidence separate and never collapse them into a universal opaque score;
+- preserve external ownership of model loading/runtime lifecycle and do not invent mutable runtime configuration where the serving runtime does not expose it.
 
 Acceptance direction:
 
-- J0 advances from a truthfully blocked shell to an executable planning flow while remaining blocked at campaign execution until UXUI-07;
-- browser UI consumes server-owned planning data and does not guess benchmark relevance, parameter ranges or candidate comparability;
-- the final review freezes the intended candidate/configuration/benchmark plan before execution ownership passes to UXUI-07.
+- `Start evaluation campaign` becomes executable only for the exact server-revalidated frozen plan/digest;
+- progress and recovery remain server-owned and reconnectable without duplicating campaign/run ownership;
+- each campaign matrix entry resolves to one model candidate + frozen configuration + immutable Run;
+- results make compatibility and decision-policy identity visible before any best-fit recommendation or alternative ranking;
+- J9 remains blocked until UXUI-08 adds same-case cross-candidate comparison on top of stable campaign results.
 
 ## Integrated evidence
 
@@ -98,12 +100,15 @@ Integrated through PR #75. The existing frozen manual evaluation flow is preserv
 
 Integrated through PR #76. Benchmark Library now drills into a dedicated definition surface with authored cases, expected output and evaluator rules without mixing execution results. Run Detail exposes contributing samples and drills into one immutable `task_id + sample_id + attempt` Sample Evidence surface with model + quantization + fingerprint identity, evaluator-owned score/rule evidence, measurement provenance and explicit `Content not retained` / `Evaluation explanation unavailable` states. J7 passes in the built-browser mocked-API environment; J8 passes both built-browser mocked-API and packaged-product `representative_virtual` evidence with the real loopback API and SQLite persistence. Campaign and cross-candidate comparison ownership remain outside this slice.
 
+### UXUI-06 — DONE
+
+Integrated through PR #77. Find best setup now consumes backend-owned versioned use cases, target-scoped candidate inventory and runtime-reported parameter capabilities; maps General capability to the starter suite and practical use cases to versioned workload packs; keeps sweep strategies unavailable when no bounded ranges are reported; and freezes a deterministic campaign-plan digest containing candidate, benchmark, dataset/evaluator and estimate identity. The browser walks `Use case -> Candidate models -> Configuration search -> Benchmark plan -> Campaign review / estimate`, while campaign execution and recommendation remain explicitly disabled for UXUI-07. J0 passes in both the built-browser mocked-API environment and the packaged-product `representative_virtual` environment with the installed wheel, real loopback API and deterministic external inference fixture. Repository Health, Repository Validation, Browser Acceptance and Built Product pass on the final exact head.
+
 ## Integration strategy
 
-1. UXUI-01/02/03, UXUI-04A/04B and UXUI-05 are integrated shared/product-page foundations.
-2. UXUI-06 is the next owner and introduces backend-owned Find best setup planning before campaign execution exists.
-3. UXUI-07 follows sequentially because campaign lifecycle and recommendation share the campaign planning contract.
-4. UXUI-08 follows stable sample/campaign contracts; UXUI-09/10 harden and prove the complete experience.
+1. UXUI-01/02/03, UXUI-04A/04B, UXUI-05 and UXUI-06 are integrated shared/product-page foundations.
+2. UXUI-07 is the next owner and makes the frozen campaign plan executable before recommendation is exposed.
+3. UXUI-08 follows stable sample/campaign contracts; UXUI-09/10 harden and prove the complete experience.
 
 Avoid stacked branches that silently depend on an unmerged red base. Ordinary UX/UI branches start from current green `dev` and target `dev`; if `dev` moves, readiness is re-established on the regenerated merge-ref.
 
