@@ -85,6 +85,43 @@ export interface TargetSummaryReadModel extends UIModelIdentity {
   capabilities: string[];
 }
 
+export interface EndpointConnectionInput {
+  display_name: string;
+  base_url: string;
+  server_type: "openai_compatible" | "local_llm_server";
+  timeout_seconds: number;
+}
+
+export interface CapabilitySupportReadModel extends UIModelIdentity {
+  name: string;
+  state: "supported" | "unsupported" | "unknown";
+  source: "declared" | "observed" | "none";
+  detail: string | null;
+}
+
+export interface RuntimeParameterReadModel extends UIModelIdentity {
+  name: string;
+  scope: "runtime_load";
+  current_value: unknown;
+  editable: false;
+  provenance: "local_llm_server";
+}
+
+export interface DiscoveredModelReadModel extends UIModelIdentity {
+  model_id: string;
+  runtime_parameters: RuntimeParameterReadModel[];
+}
+
+export interface EndpointProbeReadModel extends UIModelIdentity {
+  healthy: boolean;
+  endpoint_identity: string;
+  target: TargetSummaryReadModel | null;
+  models: DiscoveredModelReadModel[];
+  capabilities: CapabilitySupportReadModel[];
+  supported_generation_parameters: string[];
+  warning: string | null;
+}
+
 export interface DatasetSummaryReadModel extends UIModelIdentity {
   dataset_id: string;
   dataset_version: string;

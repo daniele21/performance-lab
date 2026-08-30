@@ -3,6 +3,12 @@
   gap: var(--space-12);
 }
 
+.overview-page__actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
 .overview-page__section {
   display: grid;
   gap: var(--space-4);
@@ -37,5 +43,12 @@
   .overview-page .data-table th:nth-child(4),
   .overview-page .data-table td:nth-child(4) {
     display: none;
+  }
+}
+
+@media (max-width: 54rem) {
+  .overview-page__actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

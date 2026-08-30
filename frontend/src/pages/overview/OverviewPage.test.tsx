@@ -52,10 +52,11 @@ describe("OverviewView", () => {
     expect(markup).not.toContain("Recommended model");
   });
 
-  it("renders a task-oriented empty state when no evidence exists", () => {
+  it("makes the use-case-first decision path the primary empty-state action", () => {
     const markup = renderToStaticMarkup(<OverviewView models={[]} runs={[]} />);
 
     expect(markup).toContain("No tested models yet");
+    expect(markup).toContain("Find best setup");
     expect(markup).toContain("Test a model");
   });
 });

@@ -13,18 +13,32 @@
       "developers choosing a model/runtime configuration for a workload and device"
     ],
     "primary_jobs": [
-      "test a served model against a representative scenario",
-      "understand quality, runtime and resource evidence without conflating the dimensions",
-      "compare compatible evidence and choose a model/configuration for a workload and device",
-      "detect regressions against an explicit compatible baseline"
+      "choose a use case and find the best evidence-backed model + quantization + configuration for this device",
+      "manually test one served model/configuration against a representative scenario",
+      "understand what each benchmark contains before trusting its aggregate result",
+      "trace aggregate benchmark results down to the individual samples and evaluator evidence that produced them",
+      "compare the same benchmark case across model + quantization + configuration candidates",
+      "inspect available model candidates, datasets, evaluators and retained evidence without confusing those library objects with the primary decision workflow",
+      "understand quality, runtime performance and resource evidence without conflating the dimensions",
+      "compare compatible evidence and detect regressions against an explicit compatible baseline"
     ],
     "primary_surfaces": [
       "Overview",
+      "Find best setup",
       "Test a model",
+      "Campaign / Campaign Results",
       "Live Run",
       "Runs / Run Detail",
       "Compare",
-      "Library / Settings"
+      "Library / Models",
+      "Library / Benchmarks",
+      "Library / Datasets",
+      "Library / Evaluators",
+      "Library / Evidence",
+      "Benchmark Detail",
+      "Sample Evidence Detail",
+      "Case Comparison Across Candidates",
+      "Settings"
     ]
   },
   "decision_model": {
@@ -42,29 +56,525 @@
     "clear_primary_action_hierarchy": true,
     "platform_appropriate": true,
     "bounded_information_density": true,
-    "actionable_error_recovery": true
+    "actionable_error_recovery": true,
+    "aggregate_results_traceable_to_retained_sample_evidence": true,
+    "runtime_ownership_stays_external": true,
+    "comparability_before_ranking_or_deltas": true,
+    "unknown_unavailable_and_not_comparable_never_render_as_zero": true
   },
   "information_architecture": {
     "primary_navigation": [
       "Overview",
+      "Find best setup",
       "Test a model",
       "Runs",
       "Compare"
     ],
     "secondary_navigation": {
       "Library": [
-        "Test suites",
+        "Models",
+        "Benchmarks",
         "Datasets",
+        "Evaluators",
+        "Evidence",
         "Baselines",
         "Regression policies"
       ],
       "Settings": [
-        "Endpoints",
+        "Model connections",
         "Devices / targets",
+        "Evidence retention",
+        "Accessibility",
         "Advanced"
       ]
     },
-    "primary_user_question": "Which model works best for my workload on this device?"
+    "navigation_rules": {
+      "primary_navigation_is_always_visually_dominant": true,
+      "library_items_must_not_compete_with_primary_task_navigation": true,
+      "settings_is_visually_separated_from_task_navigation": true,
+      "technical_library_objects_are_reachable_without_becoming_required_steps_in_normal_use": true
+    },
+    "primary_user_question": "Which model works best for my workload on this device, and with which configuration?",
+    "journey_hierarchy": {
+      "primary": "Find best setup: use case -> candidate models -> configuration search -> benchmark plan -> campaign -> results",
+      "direct_manual": "Test a model: target/model -> scenario -> test configuration -> review -> live run -> immutable run result",
+      "benchmark_first": "Library -> Benchmarks -> Benchmark Detail -> benchmark case",
+      "run_first": "Runs -> Run Detail -> Samples -> Sample Evidence Detail",
+      "campaign_first": "Find best setup -> Campaign Results -> benchmark case -> Case Comparison Across Candidates",
+      "library_inspection": "Library -> Models / Benchmarks / Datasets / Evaluators / Evidence -> object detail"
+    },
+    "evidence_drilldown": {
+      "aggregate_to_sample": "aggregate metric -> contributing benchmark cases -> individual sample outcome -> evaluator evidence",
+      "benchmark_definition": "benchmark -> test cases -> prompt/input/context -> expected output -> evaluator rules",
+      "cross_candidate": "same benchmark case -> candidate model + quantization + configuration -> response/outcome/metrics"
+    }
+  },
+  "action_hierarchy": {
+    "overview": {
+      "primary": "Find best setup",
+      "secondary": "Test a model",
+      "contextual": [
+        "Open recent run",
+        "Open comparison",
+        "Browse library"
+      ]
+    },
+    "find_best_setup": {
+      "primary": "Continue / Start evaluation campaign when executable",
+      "secondary": [
+        "Adjust candidates",
+        "Customize benchmark plan"
+      ],
+      "destructive": [
+        "Cancel campaign when running"
+      ]
+    },
+    "test_a_model": {
+      "primary": "Continue / Run test",
+      "secondary": [
+        "Connect local server",
+        "Use configured target",
+        "Adjust advanced configuration"
+      ]
+    },
+    "run_detail": {
+      "primary": "Inspect evidence",
+      "secondary": [
+        "Compare this run",
+        "Export evidence when supported"
+      ]
+    }
+  },
+  "progressive_disclosure_model": {
+    "essential": [
+      "current user decision",
+      "model + quantization identity",
+      "use case / benchmark identity",
+      "main quality, performance and resource evidence",
+      "typed status and next action"
+    ],
+    "contextual": [
+      "dataset/evaluator identity",
+      "configuration summary",
+      "sample-level result summary",
+      "compatibility explanation"
+    ],
+    "advanced": [
+      "generation parameters",
+      "runtime configuration reported by the server",
+      "benchmark protocol details",
+      "retention and provenance details"
+    ],
+    "expert_diagnostics": [
+      "raw fingerprints",
+      "raw evidence payloads",
+      "adapter/runtime diagnostics",
+      "logs only when retained and safe to expose"
+    ]
+  },
+  "surface_contracts": {
+    "overview": {
+      "goal": "Answer what has been tested, what evidence is available, and what the user should do next.",
+      "primary_action": "Find best setup",
+      "must_show": [
+        "recent or relevant immutable evidence",
+        "device/workload context where needed to interpret evidence",
+        "separate quality, performance and resource summaries when trustworthy"
+      ],
+      "must_not_show": [
+        "a universal opaque score",
+        "a cross-cohort winner without explicit compatibility and decision policy",
+        "fake zeroes for unavailable evidence"
+      ]
+    },
+    "find_best_setup": {
+      "goal": "Choose the best model + quantization + configuration for one selected use case on this device.",
+      "steps": [
+        "Use case",
+        "Candidate models",
+        "Configuration search",
+        "Benchmark plan",
+        "Campaign review / estimate",
+        "Campaign",
+        "Results"
+      ],
+      "rules": [
+        "use case determines benchmark, dataset and evaluator relevance",
+        "same base model with different quantization is a distinct candidate",
+        "quantization is candidate identity, not a sweep parameter",
+        "request-level parameters may be searched only when declared supported",
+        "runtime/model-load parameters may be searched only when the serving runtime exposes an explicit mutable lifecycle",
+        "the browser must never invent parameter ranges or capabilities",
+        "campaign results require comparable evidence and an explicit versioned decision policy"
+      ]
+    },
+    "test_a_model": {
+      "goal": "Run one controlled evaluation of one served model candidate and one frozen configuration.",
+      "steps": [
+        "Choose or connect target",
+        "Discover/select model",
+        "Choose scenario / benchmark",
+        "Configure test",
+        "Review frozen configuration",
+        "Run",
+        "Open immutable Run Detail"
+      ],
+      "rules": [
+        "backend owns endpoint discovery; browser never calls inference runtime directly",
+        "model ID should come from discovery when supported",
+        "connection details are progressively disclosed",
+        "advanced generation/runtime controls do not dominate the common path",
+        "runtime-load configuration is observational unless the runtime explicitly supports mutation"
+      ]
+    },
+    "campaign": {
+      "goal": "Show bounded progress across model/configuration candidates without replacing run identity.",
+      "rules": [
+        "campaign groups immutable runs",
+        "each matrix row maps to one model + quantization + frozen configuration run",
+        "queued/running/completed/failed/cancelled states are explicit",
+        "cancellation and failure recovery preserve resource ownership and partial evidence truthfully"
+      ]
+    },
+    "campaign_results": {
+      "goal": "Recommend the best fit for the selected use case and explain the trade-off from comparable evidence.",
+      "rules": [
+        "recommend model + quantization + configuration, never model family alone",
+        "quality, performance and resources remain separate dimensions",
+        "no universal opaque score",
+        "decision policy and compatibility are visible before recommendation",
+        "support alternatives such as highest quality, fastest and lowest resource usage only when evidence supports them",
+        "allow drill-down to the benchmark cases that materially differentiate candidates"
+      ]
+    },
+    "benchmark_detail": {
+      "goal": "Explain what a benchmark measures before showing how any model performed on it.",
+      "sections": [
+        "Overview",
+        "Test cases",
+        "Datasets",
+        "Evaluators"
+      ],
+      "rules": [
+        "benchmark definition and benchmark execution evidence are distinct",
+        "do not show a model/run score in the benchmark-definition view unless the user explicitly enters a results context",
+        "test case detail may show prompt/input, expected output and evaluator rules when disclosure is permitted",
+        "evaluator weights shown here belong to this benchmark/suite context, not globally to the evaluator"
+      ]
+    },
+    "run_detail": {
+      "goal": "Inspect one immutable run produced by one model candidate and one frozen configuration.",
+      "sections": [
+        "Overview",
+        "Samples",
+        "Configuration",
+        "Evidence"
+      ],
+      "rules": [
+        "a Run Detail never mixes multiple model candidates or configurations",
+        "cross-candidate comparison is a separate surface/action",
+        "aggregate results remain traceable to contributing samples when retained evidence permits it"
+      ]
+    },
+    "sample_evidence_detail": {
+      "goal": "Understand exactly what happened for one benchmark case in one run.",
+      "must_show_when_available": [
+        "sample and benchmark identity",
+        "model + quantization + frozen configuration identity",
+        "prompt/input/context",
+        "expected output or gold label",
+        "actual model response",
+        "typed execution outcome",
+        "evaluator score breakdown",
+        "evaluator-owned rationale/rule evidence",
+        "latency and token evidence with provenance",
+        "expected-vs-actual diff when meaningful"
+      ],
+      "rules": [
+        "frontend never invents a reason for a score",
+        "if evaluator rationale is absent show Evaluation explanation unavailable",
+        "if content was not retained show Content not retained rather than an empty content panel"
+      ]
+    },
+    "case_comparison_across_candidates": {
+      "goal": "Compare the same benchmark case across compatible candidate runs.",
+      "rules": [
+        "same benchmark case and compatible benchmark/evaluator protocol are required",
+        "candidate identity includes model, quantization and configuration",
+        "show response/output only when retained",
+        "show sample-level resource data only when attribution is trustworthy",
+        "do not infer a winner from non-comparable evidence"
+      ]
+    },
+    "models": {
+      "goal": "Inspect model candidates discoverable from connected runtimes and their evidence-relevant identity.",
+      "default_fields": [
+        "model identifier / display name",
+        "base family when known",
+        "quantization when known",
+        "context/capabilities when reported",
+        "source endpoint",
+        "availability/residency state when trustworthy",
+        "last tested evidence context"
+      ],
+      "rules": [
+        "same base model with different quantization appears as a separate candidate",
+        "Performance Lab does not imply ownership of model loading",
+        "connected/offline primarily describes the endpoint/runtime; model status uses available/resident/unknown semantics when supported",
+        "Not comparable is never a model status",
+        "capabilities and parameter ranges are reported/discovered, never guessed by the UI"
+      ]
+    },
+    "datasets": {
+      "goal": "Inspect dataset definitions and versioned snapshots used by benchmarks and run evidence.",
+      "default_fields": [
+        "dataset identity",
+        "version/snapshot identity",
+        "task/use case",
+        "split",
+        "sample count",
+        "source/license when known",
+        "usage by benchmark suites"
+      ],
+      "rules": [
+        "mutable catalog metadata and immutable run-used snapshots are visually and semantically distinct",
+        "a run-referenced dataset snapshot remains versioned and immutable",
+        "retention UI must not imply silent deletion of evidence required to interpret retained runs",
+        "sample preview is allowed only where source/license/privacy policy permits it"
+      ]
+    },
+    "evaluators": {
+      "goal": "Inspect evaluator definitions, scoring semantics and evidence requirements.",
+      "default_fields": [
+        "evaluator identity/version",
+        "type",
+        "metric/output schema",
+        "scope",
+        "evidence requirements",
+        "determinism/explanation capability when known",
+        "benchmark usages"
+      ],
+      "rules": [
+        "an evaluator has no universal global weight",
+        "weights are shown only in the benchmark/suite or decision-policy context that owns them",
+        "LLM-as-judge identity/model/version belongs to evaluator provenance",
+        "rationale availability is explicit"
+      ]
+    },
+    "evidence_library": {
+      "goal": "Audit retained evidence and provenance across runs/campaigns without bypassing privacy/retention semantics.",
+      "rules": [
+        "aggregate-safe mode does not expose prompt/output content unless explicitly retained by contract",
+        "evidence-rich mode may expose retained prompt/output with clear sensitivity and retention context",
+        "Content not retained is a first-class state",
+        "credentials and authorization material are never evidence",
+        "artifact provenance links back to run/campaign, benchmark case, evaluator and source build/environment"
+      ]
+    },
+    "compare": {
+      "goal": "Compare evidence only after compatibility has been established.",
+      "rules": [
+        "compatibility reasons appear before deltas",
+        "no delta, ranking or regression verdict is shown for incompatible dimensions",
+        "quality, performance and resources remain separate"
+      ]
+    },
+    "settings": {
+      "goal": "Configure Performance Lab-owned preferences and connections without turning settings into the primary workflow.",
+      "sections": [
+        "Model connections",
+        "Devices / targets",
+        "Evidence retention",
+        "Accessibility",
+        "Advanced"
+      ],
+      "rules": [
+        "do not surface speculative settings for features the product does not own",
+        "model connections configure endpoint discovery and credentials safely",
+        "runtime/model-load settings remain external unless an explicit mutable runtime contract is adopted",
+        "evidence retention settings explain consequences for future sample drill-down",
+        "secrets are never shown after storage and never exported into evidence"
+      ]
+    }
+  },
+  "automatic_campaign": {
+    "status": "ux_integrated_engine_pending",
+    "use_case_first": true,
+    "use_case_mapping_owner": "Python application/evaluation contracts",
+    "candidate_identity": [
+      "model artifact",
+      "quantization when known",
+      "runtime/effective serving configuration when known",
+      "generation configuration",
+      "endpoint",
+      "device/hardware identity"
+    ],
+    "same_base_model_different_quantization_is_distinct_candidate": true,
+    "configuration_search": {
+      "request_parameters": "eligible when supported by the adapter/runtime contract",
+      "runtime_load_parameters": "eligible only when the serving runtime exposes an explicit mutable configuration lifecycle",
+      "quantization": "not a sweep parameter; distinct quantizations are distinct model candidates",
+      "browser_must_not_guess_parameter_ranges": true,
+      "search_depth_presets": [
+        "quick",
+        "standard",
+        "thorough",
+        "custom"
+      ]
+    },
+    "campaign_model": {
+      "campaign_groups_immutable_runs": true,
+      "run_identity_remains_authoritative": true,
+      "bounded_scheduling_and_cleanup_required": true,
+      "progress_failure_cancellation_recovery_required": true
+    },
+    "result_contract": {
+      "recommend_model_quantization_and_configuration": true,
+      "recommendation_requires_comparable_evidence": true,
+      "decision_policy_explicit_and_versioned": true,
+      "quality_runtime_resources_remain_separate": true,
+      "universal_opaque_score_forbidden": true,
+      "sample_level_drilldown_when_evidence_retained": true,
+      "same_case_comparison_across_candidates_when_comparable": true,
+      "alternatives_when_supported": [
+        "highest quality",
+        "fastest",
+        "lowest resource usage"
+      ]
+    }
+  },
+  "evidence_inspection": {
+    "goal": "Every aggregate result must be traceable, when retained evidence permits it, to the benchmark cases that produced it and to evaluator-owned evidence explaining each sample outcome.",
+    "benchmark_detail": {
+      "entry_points": [
+        "Library / Benchmarks",
+        "Find best setup benchmark plan"
+      ],
+      "default_information": [
+        "suite identity and version",
+        "benchmark purpose",
+        "task/sample count",
+        "dataset identities",
+        "evaluator identities and versions",
+        "quality metrics produced"
+      ],
+      "tabs_or_sections": [
+        "Overview",
+        "Test cases",
+        "Datasets",
+        "Evaluators"
+      ],
+      "test_case_preview": [
+        "case id",
+        "prompt/input summary",
+        "expected-output summary",
+        "evaluator",
+        "difficulty/category when canonically available"
+      ],
+      "case_detail": [
+        "rendered prompt or canonical input when disclosure is permitted",
+        "input/context/artifact reference when applicable",
+        "expected output or gold label",
+        "evaluation rules and evaluator identity",
+        "normalization/scoring semantics relevant to interpretation"
+      ]
+    },
+    "run_sample_inspection": {
+      "run_detail_sections": [
+        "Overview",
+        "Samples",
+        "Configuration",
+        "Evidence"
+      ],
+      "sample_table_default_fields": [
+        "case id",
+        "typed sample status",
+        "quality/evaluator outcome",
+        "latency",
+        "token counts when trustworthy",
+        "notes or typed failure reason"
+      ],
+      "filters": [
+        "all",
+        "incorrect or failed",
+        "partial",
+        "correct",
+        "execution errors",
+        "slowest"
+      ],
+      "sample_detail": [
+        "sample and benchmark identity",
+        "model + quantization + configuration identity",
+        "prompt/input/context when retained",
+        "expected output or gold label when available",
+        "actual model response when retained",
+        "typed execution outcome",
+        "evaluator score breakdown",
+        "evaluator-owned rationale or rule evidence when available",
+        "latency and token evidence with provenance",
+        "expected-vs-actual diff when meaningful"
+      ],
+      "frontend_must_not_invent_explanations": true,
+      "missing_evaluator_rationale_state": "evaluation explanation unavailable"
+    },
+    "cross_candidate_case_comparison": {
+      "entry_points": [
+        "Campaign Results",
+        "Sample Evidence Detail"
+      ],
+      "comparison_key": "same benchmark case identity under compatible benchmark/evaluator protocol",
+      "candidate_fields": [
+        "model identity",
+        "quantization",
+        "configuration summary",
+        "response when retained",
+        "sample outcome",
+        "quality/evaluator scores",
+        "latency",
+        "token evidence",
+        "resource evidence only when sample-level attribution is trustworthy"
+      ],
+      "recommendation_reasoning": "must derive from explicit comparable evidence and the versioned decision policy; no post-hoc frontend explanation"
+    },
+    "retention_and_privacy": {
+      "default_mode": "aggregate-safe",
+      "modes": {
+        "aggregate-safe": {
+          "prompt_and_output_content": "not retained unless the evaluator contract requires it",
+          "ui_state_when_content_missing": "content not retained",
+          "sample_metrics_and_typed_outcomes": "may remain available when stored as aggregate-safe evidence"
+        },
+        "evidence-rich": {
+          "prompt_and_output_content": "may be retained explicitly for debugging",
+          "sensitivity": "potentially sensitive",
+          "retention_delete_behavior_required": true
+        }
+      },
+      "ui_must_not_render_empty_content_as_if_available": true,
+      "credentials_and_authorization_material_never_evidence": true
+    },
+    "progressive_disclosure": {
+      "essential": "sample outcome, main evaluator result, key latency/performance facts",
+      "contextual": "expected vs actual, per-field/per-rule evaluator breakdown",
+      "advanced": "full prompt/context, complete response, benchmark/evaluator provenance",
+      "expert_diagnostics": "raw artifacts/logs only when explicitly retained and safe to expose"
+    }
+  },
+  "data_visualization": {
+    "principles": [
+      "visualizations answer a concrete comparison, trend, distribution or progress question",
+      "quality, performance and resources use distinct semantic encodings",
+      "unknown/unavailable/not-comparable are not plotted as zero",
+      "confidence or uncertainty is shown when available and material",
+      "recommendation emphasis never substitutes for explicit decision-policy evidence",
+      "tables are preferred over decorative charts when exact comparison is the primary task"
+    ],
+    "prohibited": [
+      "opaque universal model score",
+      "trophy/medal gamification for scientific evidence",
+      "color-only winner/failure meaning",
+      "charts based on fabricated or unavailable metrics"
+    ]
   },
   "progressive_disclosure": [
     "essential",
@@ -81,7 +591,15 @@
     "partial-result",
     "not-comparable",
     "not-evaluated",
-    "cancelled"
+    "cancelled",
+    "campaign-partial",
+    "campaign-blocked",
+    "content-not-retained",
+    "evaluator-explanation-unavailable",
+    "sample-model-error",
+    "sample-adapter-error",
+    "sample-timeout",
+    "sample-evaluator-error"
   ],
   "accessibility": {
     "target": "WCAG 2.2 AA",
@@ -90,7 +608,10 @@
     "assistive_semantics": true,
     "text_scaling_when_applicable": true,
     "no_color_only_critical_meaning": true,
-    "reduced_motion_when_applicable": true
+    "reduced_motion_when_applicable": true,
+    "sample_status_and_diff_semantics_not_color_only": true,
+    "data_tables_have_semantic_headers_and_keyboard_reachable_actions": true,
+    "icons_with_interaction_have_accessible_names": true
   },
   "adaptive_layout": {
     "applicable": true,
@@ -98,7 +619,12 @@
       "desktop-compact: 1024-1279px",
       "desktop-standard: 1280-1599px",
       "desktop-wide: >=1600px"
-    ]
+    ],
+    "rules": {
+      "desktop_compact": "preserve primary content; collapse or condense secondary navigation and move optional detail panes below/into an explicit detail surface",
+      "desktop_standard": "persistent task navigation with one primary content region and optional contextual detail pane",
+      "desktop_wide": "use additional space for useful side-by-side evidence inspection, never to add decorative density"
+    }
   },
   "design_system": {
     "component_source": "frontend/src/components and frontend/src/design",
@@ -160,13 +686,18 @@
   },
   "critical_journeys": [
     {
+      "id": "J0",
+      "name": "Choose use case -> select model candidates -> search configurations -> run campaign -> understand best-fit result",
+      "e2e": "required_when_executable"
+    },
+    {
       "id": "J1",
-      "name": "Connect a model -> test it -> understand the result",
+      "name": "Connect a model -> test it manually -> understand the result",
       "e2e": "required"
     },
     {
       "id": "J2",
-      "name": "Find which tested model is best for my workload",
+      "name": "Find tested-model evidence with workload and device context",
       "e2e": "recommended"
     },
     {
@@ -188,21 +719,48 @@
       "id": "J6",
       "name": "Cancel a run -> resources release -> next run succeeds",
       "e2e": "required"
+    },
+    {
+      "id": "J7",
+      "name": "Inspect a benchmark -> understand its cases, expected outputs and evaluator rules",
+      "e2e": "required_when_executable"
+    },
+    {
+      "id": "J8",
+      "name": "Open one immutable run -> inspect contributing samples -> understand one sample outcome from evaluator evidence",
+      "e2e": "required_when_executable"
+    },
+    {
+      "id": "J9",
+      "name": "Open a campaign result -> inspect one benchmark case across compatible candidates -> understand response and metric trade-offs",
+      "e2e": "required_when_executable"
     }
   ],
   "reference_views": [
     "design/reference/ux-reference-board.svg#overview",
+    "design/reference/find-best-setup.svg",
+    "design/reference/model-connection.svg",
     "design/reference/ux-reference-board.svg#test-a-model",
     "design/reference/ux-reference-board.svg#live-run",
     "design/reference/ux-reference-board.svg#run-detail",
     "design/reference/ux-reference-board.svg#compare",
     "design/reference/ux-reference-board.svg#recovery"
   ],
+  "visual_target_policy": {
+    "status": "pending_final_ux_aligned_targets",
+    "approved_target_root": "design/reference/visual-targets/",
+    "target_role": "design intent reference, not pixel-regression golden",
+    "standard_desktop_reference_viewport": "1536x960",
+    "implementation_golden_rule": "visual-regression goldens are captured from an approved real implementation after semantic, accessibility and journey validation; generated mockups are never used as pixel-diff truth"
+  },
   "validation": {
     "accessibility_automation": "planned with browser UI: Playwright + accessibility assertions",
-    "visual_regression": "planned for stable high-value reference surfaces after implementation",
+    "visual_regression": "use stable high-value implementation screenshots only after the corresponding design target is approved",
     "manual_accessibility": "keyboard/focus/contrast review at compact, standard and wide desktop sizes",
-    "usability_evidence": "representative-user review before reference-grade UI claim"
+    "usability_evidence": "representative-user review before reference-grade UI claim",
+    "sample_traceability": "when implemented, verify aggregate -> sample -> evaluator-evidence navigation and aggregate-safe/content-not-retained states",
+    "cross_candidate_case_comparison": "when implemented, verify same-case identity and comparability before candidate-level response/metric comparison",
+    "surface_semantics": "verify Run Detail contains one run identity, Benchmark Detail contains definition not execution outcome, evaluator weights are contextual, and model status never substitutes for evidence comparability"
   },
   "evidence": {
     "bounded_ci_retention": true,

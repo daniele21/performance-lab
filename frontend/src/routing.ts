@@ -1,5 +1,6 @@
 export type AppRoute =
   | { kind: "overview" }
+  | { kind: "best-setup" }
   | { kind: "runs" }
   | { kind: "run-detail"; runId: string }
   | { kind: "test-model" }
@@ -15,6 +16,7 @@ export type AppRoute =
 export function parseHash(hash: string): AppRoute {
   const raw = hash.startsWith("#") ? hash.slice(1) : hash;
   if (!raw || raw === "overview") return { kind: "overview" };
+  if (raw === "find-best-setup") return { kind: "best-setup" };
   if (raw === "runs") return { kind: "runs" };
   if (raw === "test-a-model") return { kind: "test-model" };
 

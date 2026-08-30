@@ -13,8 +13,10 @@ export function Field({ label, description, error, id, ...props }: FieldProps) {
   const describedBy = [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
-    <label className="field" htmlFor={inputId}>
-      <span className="field__label">{label}</span>
+    <div className="field">
+      <label className="field__label" htmlFor={inputId}>
+        {label}
+      </label>
       {description ? (
         <span className="field__description" id={descriptionId}>
           {description}
@@ -32,7 +34,7 @@ export function Field({ label, description, error, id, ...props }: FieldProps) {
           {error}
         </span>
       ) : null}
-    </label>
+    </div>
   );
 }
 
@@ -46,8 +48,10 @@ export function Select({ label, description, children, id, ...props }: SelectPro
   const selectId = id ?? `select-${label.toLowerCase().replaceAll(" ", "-")}`;
   const descriptionId = description ? `${selectId}-description` : undefined;
   return (
-    <label className="field" htmlFor={selectId}>
-      <span className="field__label">{label}</span>
+    <div className="field">
+      <label className="field__label" htmlFor={selectId}>
+        {label}
+      </label>
       {description ? (
         <span className="field__description" id={descriptionId}>
           {description}
@@ -56,6 +60,6 @@ export function Select({ label, description, children, id, ...props }: SelectPro
       <select className="field__control" id={selectId} aria-describedby={descriptionId} {...props}>
         {children}
       </select>
-    </label>
+    </div>
   );
 }

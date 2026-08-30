@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1380" viewBox="0 0 1920 1380">
+  <style>
+    .bg{fill:#05080d}.frame{fill:#0B0F14;stroke:#24303C;stroke-width:1}.panel{fill:#111820;stroke:#24303C;stroke-width:1}.sub{fill:#151E27;stroke:#24303C;stroke-width:1}.active{fill:#0d3140;stroke:#00E5FF;stroke-width:1.5}.primary{fill:#4c1d95;stroke:#7B5CFF;stroke-width:1}.success{fill:#12301d;stroke:#22C55E;stroke-width:1}.warn{fill:#30230f;stroke:#F59E0B;stroke-width:1}.text{fill:#F8FAFC;font:600 18px Arial,sans-serif}.title{fill:#F8FAFC;font:700 28px Arial,sans-serif}.h2{fill:#F8FAFC;font:700 21px Arial,sans-serif}.small{fill:#94A3B8;font:14px Arial,sans-serif}.tiny{fill:#94A3B8;font:12px Arial,sans-serif}.cyan{fill:#00E5FF;font:600 13px Arial,sans-serif}.purple{fill:#c4b5fd;font:600 13px Arial,sans-serif}.green{fill:#86efac;font:600 13px Arial,sans-serif}.amber{fill:#fcd34d;font:600 13px Arial,sans-serif}.mono{fill:#94A3B8;font:12px monospace}.line{stroke:#24303C;stroke-width:1}.bar{fill:#24303C}.barq{fill:#22D3EE}.barp{fill:#8B5CF6}.barr{fill:#38BDF8}
+  </style>
+  <rect class="bg" x="0" y="0" width="1920" height="1380"/>
+  <text class="title" x="48" y="52">Performance Lab · Find best setup · desktop UX reference</text>
+  <text class="small" x="48" y="78">Use case → model candidates → configuration search → campaign → evidence-backed best fit</text>
+
+  <!-- 1 use case -->
+  <g transform="translate(40,110)">
+    <rect class="frame" x="0" y="0" width="590" height="560" rx="14"/>
+    <text class="cyan" x="24" y="32">1 · USE CASE</text><text class="h2" x="24" y="67">What are you optimizing for?</text>
+    <text class="small" x="24" y="92">The use case owns benchmark relevance, not the model.</text>
+    <rect class="active" x="24" y="120" width="542" height="96" rx="12"/>
+    <text class="text" x="44" y="153">Structured document extraction</text>
+    <text class="small" x="44" y="178">Schema adherence · field correctness · hallucination risk</text>
+    <text class="tiny" x="44" y="199">Benchmark pack: workload-structured-document-extraction</text>
+    <rect class="panel" x="24" y="230" width="264" height="92" rx="12"/><text class="text" x="42" y="262">General capability</text><text class="small" x="42" y="286">Balanced diagnostics</text>
+    <rect class="panel" x="302" y="230" width="264" height="92" rx="12"/><text class="text" x="320" y="262">Custom workload</text><text class="small" x="320" y="286">Versioned user dataset</text>
+    <text class="small" x="24" y="356">Evaluation plan</text>
+    <rect class="sub" x="24" y="370" width="542" height="112" rx="10"/>
+    <text class="small" x="44" y="402">Quality</text><text class="green" x="190" y="402">JSON validity · field accuracy</text>
+    <text class="small" x="44" y="432">Performance</text><text class="purple" x="190" y="432">TTFT · latency · output throughput</text>
+    <text class="small" x="44" y="462">Resources</text><text class="cyan" x="190" y="462">Memory · CPU/GPU when available</text>
+    <rect class="primary" x="380" y="504" width="186" height="36" rx="8"/><text class="text" x="407" y="529">Choose models →</text>
+  </g>
+
+  <!-- 2 models -->
+  <g transform="translate(665,110)">
+    <rect class="frame" x="0" y="0" width="590" height="560" rx="14"/>
+    <text class="cyan" x="24" y="32">2 · MODELS</text><text class="h2" x="24" y="67">Select candidate model artifacts</text>
+    <text class="small" x="24" y="92">Same base LLM + different quantization = different candidate.</text>
+    <rect class="active" x="24" y="120" width="542" height="82" rx="10"/><text class="text" x="44" y="150">Qwen 3 8B · Q4_K_M</text><text class="small" x="44" y="176">Local LLM Server · llama.cpp · 5.2 GB</text><text class="green" x="490" y="150">Selected</text>
+    <rect class="active" x="24" y="214" width="542" height="82" rx="10"/><text class="text" x="44" y="244">Qwen 3 8B · Q5_K_M</text><text class="small" x="44" y="270">Local LLM Server · llama.cpp · 6.4 GB</text><text class="green" x="490" y="244">Selected</text>
+    <rect class="active" x="24" y="308" width="542" height="82" rx="10"/><text class="text" x="44" y="338">Llama 3.2 8B · Q4_K_M</text><text class="small" x="44" y="364">Local LLM Server · llama.cpp · 5.0 GB</text><text class="green" x="490" y="338">Selected</text>
+    <rect class="panel" x="24" y="402" width="542" height="58" rx="10"/><text class="text" x="44" y="438">Gemma 3 4B · Q8_0</text><text class="small" x="454" y="438">Not selected</text>
+    <text class="small" x="24" y="494">3 candidates · quantization preserved in evidence identity</text>
+    <rect class="primary" x="350" y="504" width="216" height="36" rx="8"/><text class="text" x="378" y="529">Configure search →</text>
+  </g>
+
+  <!-- 3 config search -->
+  <g transform="translate(1290,110)">
+    <rect class="frame" x="0" y="0" width="590" height="560" rx="14"/>
+    <text class="cyan" x="24" y="32">3 · CONFIGURATION SEARCH</text><text class="h2" x="24" y="67">How deeply should we search?</text>
+    <rect class="active" x="24" y="110" width="168" height="74" rx="10"/><text class="text" x="47" y="140">Standard</text><text class="small" x="47" y="164">~8 configs/model</text>
+    <rect class="panel" x="204" y="110" width="168" height="74" rx="10"/><text class="text" x="237" y="140">Quick</text><text class="small" x="237" y="164">~3 configs/model</text>
+    <rect class="panel" x="384" y="110" width="182" height="74" rx="10"/><text class="text" x="410" y="140">Thorough</text><text class="small" x="410" y="164">~20 configs/model</text>
+    <text class="small" x="24" y="218">Request-level search space</text>
+    <rect class="sub" x="24" y="232" width="542" height="124" rx="10"/>
+    <text class="small" x="44" y="264">temperature</text><text class="mono" x="250" y="264">0.0 · 0.2 · 0.7</text>
+    <text class="small" x="44" y="294">top_p</text><text class="mono" x="250" y="294">0.8 · 0.9 · 0.95</text>
+    <text class="small" x="44" y="324">max_output_tokens</text><text class="mono" x="250" y="324">256 · 512 · 1024</text>
+    <text class="small" x="24" y="390">Runtime-load settings</text><text class="amber" x="200" y="390">Contract required</text>
+    <text class="tiny" x="24" y="416">n_batch · n_ubatch · context · GPU layers participate only when</text><text class="tiny" x="24" y="436">the serving runtime exposes an explicit mutable lifecycle.</text>
+    <rect class="warn" x="24" y="466" width="542" height="54" rx="10"/><text class="amber" x="44" y="498">24 candidate configurations · review before execution</text>
+  </g>
+
+  <!-- 4 campaign -->
+  <g transform="translate(40,705)">
+    <rect class="frame" x="0" y="0" width="910" height="625" rx="14"/>
+    <text class="cyan" x="24" y="32">4 · CAMPAIGN</text><text class="h2" x="24" y="67">Structured document extraction</text><text class="small" x="24" y="92">11 / 24 configurations completed · each cell is an immutable run</text>
+    <rect class="bar" x="24" y="112" width="862" height="8" rx="4"/><rect class="barq" x="24" y="112" width="395" height="8" rx="4"/>
+    <text class="small" x="24" y="158">Candidate</text><text class="small" x="290" y="158">C1</text><text class="small" x="380" y="158">C2</text><text class="small" x="470" y="158">C3</text><text class="small" x="560" y="158">C4</text><text class="small" x="650" y="158">C5</text><text class="small" x="740" y="158">C6</text>
+    <line class="line" x1="24" y1="172" x2="886" y2="172"/>
+    <text class="text" x="24" y="208">Qwen 8B · Q4</text>
+    <text class="green" x="286" y="208">84%</text><text class="green" x="376" y="208">86%</text><text class="cyan" x="466" y="208">RUN</text><text class="small" x="556" y="208">queued</text><text class="small" x="646" y="208">queued</text><text class="small" x="736" y="208">queued</text>
+    <text class="text" x="24" y="258">Qwen 8B · Q5</text><text class="green" x="286" y="258">88%</text><text class="green" x="376" y="258">87%</text><text class="green" x="466" y="258">88%</text><text class="small" x="556" y="258">queued</text><text class="small" x="646" y="258">queued</text><text class="small" x="736" y="258">queued</text>
+    <text class="text" x="24" y="308">Llama 8B · Q4</text><text class="green" x="286" y="308">81%</text><text class="green" x="376" y="308">82%</text><text class="green" x="466" y="308">80%</text><text class="green" x="556" y="308">83%</text><text class="small" x="646" y="308">queued</text><text class="small" x="736" y="308">queued</text>
+    <line class="line" x1="24" y1="334" x2="886" y2="334"/>
+    <text class="small" x="24" y="370">Live evidence leaders</text>
+    <rect class="sub" x="24" y="386" width="264" height="102" rx="10"/><text class="small" x="42" y="416">Highest quality</text><text class="text" x="42" y="446">Qwen Q5 · C3</text><text class="green" x="42" y="472">88% field accuracy</text>
+    <rect class="sub" x="300" y="386" width="264" height="102" rx="10"/><text class="small" x="318" y="416">Fastest</text><text class="text" x="318" y="446">Qwen Q4 · C1</text><text class="purple" x="318" y="472">31 tok/s</text>
+    <rect class="sub" x="576" y="386" width="310" height="102" rx="10"/><text class="small" x="594" y="416">Lowest memory</text><text class="text" x="594" y="446">Llama Q4 · C2</text><text class="cyan" x="594" y="472">4.9 GB peak</text>
+    <rect class="panel" x="24" y="510" width="862" height="76" rx="10"/><text class="small" x="44" y="540">Campaign controls</text><text class="text" x="44" y="568">Pause · Cancel remaining · Inspect run evidence</text>
+  </g>
+
+  <!-- 5 result -->
+  <g transform="translate(985,705)">
+    <rect class="frame" x="0" y="0" width="895" height="625" rx="14"/>
+    <text class="cyan" x="24" y="32">5 · RESULTS</text><text class="h2" x="24" y="67">Best setup for structured document extraction</text>
+    <rect class="success" x="24" y="104" width="847" height="128" rx="12"/>
+    <text class="small" x="44" y="136">RECOMMENDED</text><text class="title" x="44" y="174">Qwen 3 8B · Q4_K_M · Config C7</text><text class="green" x="44" y="205">Best evidence-backed balance for this use case and device</text>
+    <text class="small" x="24" y="268">Quality</text><rect class="bar" x="110" y="256" width="210" height="12" rx="6"/><rect class="barq" x="110" y="256" width="185" height="12" rx="6"/><text class="text" x="338" y="269">88%</text>
+    <text class="small" x="24" y="308">Speed</text><rect class="bar" x="110" y="296" width="210" height="12" rx="6"/><rect class="barp" x="110" y="296" width="162" height="12" rx="6"/><text class="text" x="338" y="309">31 tok/s</text>
+    <text class="small" x="24" y="348">Memory</text><rect class="bar" x="110" y="336" width="210" height="12" rx="6"/><rect class="barr" x="110" y="336" width="130" height="12" rx="6"/><text class="text" x="338" y="349">5.4 GB</text>
+    <rect class="sub" x="420" y="256" width="451" height="106" rx="10"/><text class="small" x="440" y="286">Why this setup</text><text class="text" x="440" y="316">+2.1 pp quality vs fastest alternative</text><text class="text" x="440" y="344">−1.2 GB vs highest-quality Q5 alternative</text>
+    <text class="small" x="24" y="402">Configuration</text>
+    <rect class="sub" x="24" y="416" width="410" height="142" rx="10"/>
+    <text class="mono" x="44" y="446">temperature       0.2</text><text class="mono" x="44" y="472">top_p             0.90</text><text class="mono" x="44" y="498">max_output_tokens 512</text><text class="mono" x="44" y="524">n_batch            512*</text><text class="tiny" x="44" y="546">*only when runtime configuration contract supports it</text>
+    <rect class="panel" x="450" y="416" width="421" height="142" rx="10"/>
+    <text class="small" x="470" y="446">Alternatives</text><text class="text" x="470" y="478">Highest quality · Qwen Q5 · C3</text><text class="text" x="470" y="508">Fastest · Qwen Q4 · C1</text><text class="text" x="470" y="538">Lowest memory · Llama Q4 · C2</text>
+    <text class="tiny" x="24" y="595">Recommendation only exists when evidence compatibility and decision policy are explicit.</text>
+  </g>
+</svg>
