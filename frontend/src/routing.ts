@@ -8,9 +8,9 @@ export type AppRoute =
   | { kind: "compare"; runId?: string }
   | {
       kind: "library";
-      section: "test-suites" | "datasets" | "evaluators" | "baselines" | "regression-policies";
+      section: "benchmarks" | "datasets" | "evaluators" | "baselines" | "regression-policies";
     }
-  | { kind: "settings"; section: "endpoints" | "devices-targets" | "advanced" }
+  | { kind: "settings"; section: "model-connections" | "devices-targets" | "advanced" }
   | { kind: "not-found"; path: string };
 
 export function parseHash(hash: string): AppRoute {
@@ -48,7 +48,7 @@ export function parseHash(hash: string): AppRoute {
   }
 
   if (raw === "benchmarks" || raw === "test-suites") {
-    return { kind: "library", section: "test-suites" };
+    return { kind: "library", section: "benchmarks" };
   }
   if (
     raw === "datasets" ||
@@ -60,7 +60,7 @@ export function parseHash(hash: string): AppRoute {
   }
 
   if (raw === "model-connections" || raw === "endpoints") {
-    return { kind: "settings", section: "endpoints" };
+    return { kind: "settings", section: "model-connections" };
   }
   if (raw === "devices-targets" || raw === "advanced") {
     return { kind: "settings", section: raw };
