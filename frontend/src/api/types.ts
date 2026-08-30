@@ -6,26 +6,12 @@ export interface UIModelIdentity {
   read_model_version: ReadModelVersion;
 }
 
-export type EvidenceAvailability =
-  | "available"
-  | "unknown"
-  | "unavailable"
-  | "not_evaluated";
+export type EvidenceAvailability = "available" | "unknown" | "unavailable" | "not_evaluated";
 export type MetricDimension = "quality" | "performance" | "resources";
 export type RunStatus = "planned" | "running" | "succeeded" | "failed" | "cancelled";
-export type ScenarioKind =
-  | "general_capability"
-  | "my_workload"
-  | "performance"
-  | "regression";
+export type ScenarioKind = "general_capability" | "my_workload" | "performance" | "regression";
 export type RunJobState =
-  | "starting"
-  | "running"
-  | "cancelling"
-  | "succeeded"
-  | "failed"
-  | "cancelled"
-  | "interrupted";
+  "starting" | "running" | "cancelling" | "succeeded" | "failed" | "cancelled" | "interrupted";
 
 export interface MetricReadModel extends UIModelIdentity {
   metric_id: string;
