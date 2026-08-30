@@ -43,9 +43,7 @@ def test_benchmark_detail_projects_exact_definition_cases_and_evaluator_rules(tm
     assert numeric.evaluator.configuration["absolute_tolerance"] == 1e-9
     assert "weight" not in numeric.evaluator.model_dump(mode="python")
 
-    structured_cases = [
-        case for case in detail.cases if case.dataset_id == "starter-structured"
-    ]
+    structured_cases = [case for case in detail.cases if case.dataset_id == "starter-structured"]
     assert len(structured_cases) == 6
     assert {case.task_id for case in structured_cases} == {
         "structured_json_adherence",
