@@ -1,5 +1,6 @@
 """Capability evaluation primitives and optional judge-based evaluation."""
 
+from .descriptors import EvaluatorDescriptor, describe_evaluator
 from .deterministic import (
     ClassificationAccuracyEvaluator,
     EvaluationError,
@@ -26,6 +27,7 @@ from .judge import (
 __all__ = [
     "ClassificationAccuracyEvaluator",
     "EvaluationError",
+    "EvaluatorDescriptor",
     "ExactMatchEvaluator",
     "FieldExtractionEvaluator",
     "JSONParseEvaluator",
@@ -41,5 +43,6 @@ __all__ = [
     "RegexValidityEvaluator",
     "SetPRFEvaluator",
     "aggregate_scores",
+    "describe_evaluator",
     "normalize_text",
 ]
