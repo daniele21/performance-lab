@@ -94,7 +94,9 @@ def describe_evaluator(evaluator: Evaluator) -> EvaluatorDescriptor:
         evaluator_type = "deterministic"
         deterministic = True
         explanation_supported = False
-        rule_summary = "Scores 1 when the full actual string matches the configured regular expression."
+        rule_summary = (
+            "Scores 1 when the full actual string matches the configured regular expression."
+        )
         configuration = {"pattern": evaluator.pattern.pattern}
     elif isinstance(evaluator, JSONParseEvaluator):
         evaluator_type = "deterministic"
