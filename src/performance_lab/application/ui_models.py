@@ -211,6 +211,48 @@ class DatasetSummaryReadModel(UIModel):
         )
 
 
+class EvaluatorDefinitionReadModel(UIModel):
+    evaluator_id: str = Field(min_length=1)
+    version: str = Field(min_length=1)
+    evaluator_type: str = Field(min_length=1)
+    deterministic: bool | None = None
+    explanation_supported: bool | None = None
+    rule_summary: str | None = None
+    configuration: dict[str, object] = Field(default_factory=dict)
+
+
+class BenchmarkTaskReadModel(UIModel):
+    task_id: str = Field(min_length=1)
+    dataset_snapshot_id: str = Field(min_length=1)
+    dataset: DatasetSummaryReadModel | None = None
+    evaluator: EvaluatorDefinitionReadModel
+    metric_names: tuple[str, ...]
+    sample_limit: int | None = Field(default=None, gt=0)
+    case_count: int | None = Field(default=None, ge=0)
+    case_content_available: bool = False
+
+
+class BenchmarkCaseReadModel(UIModel):
+    case_id: str = Field(min_length=1)
+    task_id: str = Field(min_length=1)
+    sample_id: str = Field(min_length=1)
+    dataset_id: str = Field(min_length=1)
+    dataset_version: str = Field(min_length=1)
+    input: object
+    expected: object
+    evaluator_id: str = Field(min_length=1)
+    evaluator_version: str = Field(min_length=1)
+    metric_names: tuple[str, ...]
+
+
+class BenchmarkDetailReadModel(UIModel):
+    summary: SuiteSummaryReadModel
+    generation: GenerationConfig
+    tasks: tuple[BenchmarkTaskReadModel, ...]
+    cases: tuple[BenchmarkCaseReadModel, ...]
+    definition_issues: tuple[str, ...] = ()
+
+
 class ScenarioSummaryReadModel(UIModel):
     scenario: ScenarioKind
     title: str = Field(min_length=1)
