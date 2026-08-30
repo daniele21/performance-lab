@@ -65,7 +65,17 @@ const SECTION_DESCRIPTION: Record<LibrarySection, string> = {
 };
 
 const BENCHMARK_COLUMNS: readonly DataColumn<SuiteSummaryReadModel>[] = [
-  { id: "benchmark", header: "Benchmark", render: (item) => item.suite_id },
+  {
+    id: "benchmark",
+    header: "Benchmark",
+    render: (item) => (
+      <a
+        href={`#benchmarks/${encodeURIComponent(item.suite_id)}/${encodeURIComponent(item.suite_version)}`}
+      >
+        {item.suite_id}
+      </a>
+    ),
+  },
   { id: "version", header: "Version", render: (item) => item.suite_version },
   { id: "tasks", header: "Tasks", render: (item) => String(item.task_count) },
   { id: "task-ids", header: "Task IDs", render: (item) => item.task_ids.join(", ") },
