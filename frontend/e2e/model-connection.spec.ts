@@ -215,7 +215,14 @@ test("J1 discovery: connect local server, discover model, freeze, run and inspec
   await page.getByRole("button", { name: "Connect & discover" }).click();
   await expect(page.getByText("Connection discovered")).toBeVisible();
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("model-discovered");
-  await expect(page.getByText("n_batch")).toBeVisible();
+
+  const runtimeConfig = page.getByRole("group", {
+    name: "Runtime configuration reported by Local LLM Server",
+  });
+  await expect(runtimeConfig.getByText("n_batch")).toBeHidden();
+  await runtimeConfig.getByText("Runtime configuration reported by Local LLM Server").click();
+  await expect(runtimeConfig.getByText("n_batch")).toBeVisible();
+
   expect(probeBody).toMatchObject({
     base_url: "http://127.0.0.1:1235/v1/",
     server_type: "local_llm_server",
