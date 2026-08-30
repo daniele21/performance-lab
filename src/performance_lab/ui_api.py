@@ -11,10 +11,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from performance_lab.application import (
     BaselineSummaryReadModel,
+    BenchmarkDetailReadModel,
     ComparisonReadModel,
     DatasetSummaryReadModel,
     EndpointConnectionInput,
     EndpointProbeReadModel,
+    EvaluatorDefinitionReadModel,
     PolicySummaryReadModel,
     RunDetailReadModel,
     RunPreflightReadModel,
@@ -104,9 +106,27 @@ def create_ui_app(
     def list_suites() -> tuple[SuiteSummaryReadModel, ...]:
         return queries.list_suites()
 
+    @app.get("/api/v1/benchmarks", response_model=list[SuiteSummaryReadModel])
+    def list_benchmarks() -> tuple[SuiteSummaryReadModel, ...]:
+        return queries.list_suites()
+
+    @app.get(
+        "/api/v1/benchmarks/{suite_id}/{suite_version}",
+        response_model=BenchmarkDetailReadModel,
+    )
+    def get_benchmark(suite_id: str, suite_version: str) -> BenchmarkDetailReadModel:
+        try:
+            return queries.get_benchmark(suite_id, suite_version)
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail="benchmark definition not found") from exc
+
     @app.get("/api/v1/datasets", response_model=list[DatasetSummaryReadModel])
     def list_datasets() -> tuple[DatasetSummaryReadModel, ...]:
         return queries.list_datasets()
+
+    @app.get("/api/v1/evaluators", response_model=list[EvaluatorDefinitionReadModel])
+    def list_evaluators() -> tuple[EvaluatorDefinitionReadModel, ...]:
+        return queries.list_evaluators()
 
     @app.get("/api/v1/scenarios", response_model=list[ScenarioSummaryReadModel])
     def list_scenarios() -> tuple[ScenarioSummaryReadModel, ...]:
