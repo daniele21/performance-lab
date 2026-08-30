@@ -21,7 +21,7 @@ class UIQueryService(LibraryUIQueryService):
     """Canonical UI queries plus immutable sample-evidence drill-down."""
 
     def list_run_samples(self, run_id: str) -> tuple[SampleSummaryReadModel, ...]:
-        run = self.store.get_completed(run_id)
+        run = self.store.get_completed(run_id, required=False)
         if run is None:
             raise LookupError(f"completed run not found: {run_id}")
         return tuple(_sample_summary(run_id, sample) for sample in run.samples)
@@ -33,7 +33,7 @@ class UIQueryService(LibraryUIQueryService):
         sample_id: str,
         attempt: int,
     ) -> SampleEvidenceDetailReadModel:
-        run = self.store.get_completed(run_id)
+        run = self.store.get_completed(run_id, required=False)
         if run is None:
             raise LookupError(f"completed run not found: {run_id}")
         sample = next(
