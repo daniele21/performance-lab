@@ -59,6 +59,29 @@
   background: var(--color-surface-subtle);
 }
 
+.app-navigation__link--disabled {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+  cursor: not-allowed;
+  color: var(--color-evidence-unavailable);
+}
+
+.app-navigation__link--disabled:hover {
+  color: var(--color-evidence-unavailable);
+  background: transparent;
+}
+
+.app-navigation__availability {
+  flex: 0 0 auto;
+  color: var(--color-evidence-unknown);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .app-shell__secondary {
   display: grid;
   gap: var(--space-6);

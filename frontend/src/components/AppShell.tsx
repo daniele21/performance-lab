@@ -1,13 +1,15 @@
 import type { ReactNode } from "react";
 
 import performanceLabMark from "../assets/brand/mark.svg";
-import { PRIMARY_NAVIGATION, SECONDARY_NAVIGATION } from "../navigation";
-
-type SecondaryItem = (typeof SECONDARY_NAVIGATION)[keyof typeof SECONDARY_NAVIGATION][number];
+import {
+  PRIMARY_NAVIGATION,
+  SECONDARY_NAVIGATION,
+  isSecondaryNavigationActive,
+} from "../navigation";
 
 interface AppShellProps {
   activePrimary?: (typeof PRIMARY_NAVIGATION)[number];
-  activeSecondary?: SecondaryItem;
+  activeSecondary?: string;
   children: ReactNode;
 }
 
@@ -46,18 +48,35 @@ export function AppShell({ activePrimary, activeSecondary, children }: AppShellP
             <nav key={group} aria-label={group}>
               <p className="app-navigation__group">{group}</p>
               <ul className="app-navigation app-navigation--secondary">
-                {items.map((item) => (
-                  <li key={item}>
-                    <a
-                      className="app-navigation__link"
-                      data-current={item === activeSecondary ? "true" : undefined}
-                      href={`#${slug(item)}`}
-                      aria-current={item === activeSecondary ? "page" : undefined}
-                    >
-                      {item}
-                    </a>
-                  </li>
-                ))}
+                {items.map((item) => {
+                  const active = isSecondaryNavigationActive(item, activeSecondary);
+                  return (
+                    <li key={item.label}>
+                      {item.href === null ? (
+                        <span
+                          className="app-navigation__link app-navigation__link--disabled"
+                          data-disabled="true"
+                          aria-disabled="true"
+                          title={item.disabledReason}
+                        >
+                          <span>{item.label}</span>
+                          <span className="app-navigation__availability" aria-hidden="true">
+                            Pending
+                          </span>
+                        </span>
+                      ) : (
+                        <a
+                          className="app-navigation__link"
+                          data-current={active ? "true" : undefined}
+                          href={item.href}
+                          aria-current={active ? "page" : undefined}
+                        >
+                          {item.label}
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
           ))}
