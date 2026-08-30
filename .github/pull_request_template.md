@@ -18,6 +18,21 @@
 
 <!-- Canonical command intents affected; listener/process/temp cleanup; build identity / manifest / checksum / build delta / retention when applicable. Otherwise N/A. -->
 
+## Documentation impact
+
+<!-- Classify each as UPDATED or N/A; give a short reason when impact was plausible but N/A. README identity = purpose/audience/outcome/positioning. README usage = prerequisites/setup/run/configuration/public CLI/API/UI/examples. -->
+
+- README_IDENTITY: `UPDATED|N/A`
+- README_USAGE: `UPDATED|N/A`
+- FEATURE_DOCS: `UPDATED|N/A`
+- ARCHITECTURE: `UPDATED|N/A`
+- ADR: `UPDATED|N/A`
+- SECURITY_DATA: `UPDATED|N/A`
+- OPERATIONS: `UPDATED|N/A`
+- PRODUCT_EXPERIENCE: `UPDATED|N/A`
+- CURRENT_STATE: `UPDATED|N/A`
+- DOCS_CURRENT_WITH_IMPLEMENTATION: `PASS|FAIL`
+
 ## Pre-publication readiness
 
 <!-- Exact HEAD and target/base revision; material ambiguity, base freshness and full-diff review. State READY_FOR_CI, READY_FOR_REMOTE_PREFLIGHT, AUTOMATED_PREFLIGHT_CONFIRMED or blocked reason truthfully. -->
@@ -52,4 +67,4 @@
 
 ## Documentation / design lifecycle
 
-<!-- Canonical docs/design/E2E contracts updated, or why none are required. Finalize/delete completed workstreams by default. -->
+<!-- Note completed workstream finalization/deletion when applicable. Generated evidence is not default durable documentation. -->
