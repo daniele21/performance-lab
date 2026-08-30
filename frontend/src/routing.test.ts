@@ -24,16 +24,34 @@ describe("hash routing", () => {
     expect(parseHash("#compare?run=run-1")).toEqual({ kind: "compare", runId: "run-1" });
   });
 
-  it("routes Library and Settings as secondary product surfaces", () => {
+  it("routes canonical secondary aliases onto existing page owners during convergence", () => {
+    expect(parseHash("#benchmarks")).toEqual({ kind: "library", section: "test-suites" });
+    expect(parseHash("#model-connections")).toEqual({
+      kind: "settings",
+      section: "endpoints",
+    });
     expect(parseHash("#datasets")).toEqual({ kind: "library", section: "datasets" });
+    expect(parseHash("#devices-targets")).toEqual({
+      kind: "settings",
+      section: "devices-targets",
+    });
+  });
+
+  it("preserves legacy secondary deep links until their pages converge", () => {
+    expect(parseHash("#test-suites")).toEqual({ kind: "library", section: "test-suites" });
+    expect(parseHash("#endpoints")).toEqual({ kind: "settings", section: "endpoints" });
     expect(parseHash("#regression-policies")).toEqual({
       kind: "library",
       section: "regression-policies",
     });
-    expect(parseHash("#endpoints")).toEqual({ kind: "settings", section: "endpoints" });
-    expect(parseHash("#devices-targets")).toEqual({
-      kind: "settings",
-      section: "devices-targets",
+  });
+
+  it("keeps unavailable canonical surfaces explicit instead of routing them to wrong owners", () => {
+    expect(parseHash("#models")).toEqual({ kind: "not-found", path: "models" });
+    expect(parseHash("#evaluators")).toEqual({ kind: "not-found", path: "evaluators" });
+    expect(parseHash("#evidence-retention")).toEqual({
+      kind: "not-found",
+      path: "evidence-retention",
     });
   });
 
