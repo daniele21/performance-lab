@@ -220,7 +220,10 @@ test("J1 discovery: connect local server, discover model, freeze, run and inspec
     name: "Runtime configuration reported by Local LLM Server",
   });
   await expect(runtimeConfig.getByText("n_batch")).toBeHidden();
-  await runtimeConfig.getByText("Runtime configuration reported by Local LLM Server").click();
+  await page
+    .locator("summary")
+    .filter({ hasText: "Runtime configuration reported by Local LLM Server" })
+    .click();
   await expect(runtimeConfig.getByText("n_batch")).toBeVisible();
 
   expect(probeBody).toMatchObject({
