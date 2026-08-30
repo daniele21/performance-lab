@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getRun, listRuns } from "./client";
+import { getRun, listBenchmarks, listEvaluators, listRuns } from "./client";
 import type { ApiError } from "./client";
 
 afterEach(() => {
@@ -37,6 +37,24 @@ describe("Performance Lab API client", () => {
     await listRuns({ offset: 25, limit: 25 });
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/v1/runs?offset=25&limit=25");
+  });
+
+  it("uses canonical benchmark and evaluator Library endpoints", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("[]", {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await listBenchmarks();
+    await listEvaluators();
+
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      "/api/v1/benchmarks",
+      "/api/v1/evaluators",
+    ]);
   });
 
   it("turns typed API failures into an actionable ApiError", async () => {
