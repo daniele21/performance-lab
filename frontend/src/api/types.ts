@@ -11,7 +11,13 @@ export type MetricDimension = "quality" | "performance" | "resources";
 export type RunStatus = "planned" | "running" | "succeeded" | "failed" | "cancelled";
 export type ScenarioKind = "general_capability" | "my_workload" | "performance" | "regression";
 export type RunJobState =
-  "starting" | "running" | "cancelling" | "succeeded" | "failed" | "cancelled" | "interrupted";
+  | "starting"
+  | "running"
+  | "cancelling"
+  | "succeeded"
+  | "failed"
+  | "cancelled"
+  | "interrupted";
 
 export interface MetricReadModel extends UIModelIdentity {
   metric_id: string;
@@ -137,6 +143,16 @@ export interface SuiteSummaryReadModel extends UIModelIdentity {
   suite_version: string;
   task_count: number;
   task_ids: string[];
+}
+
+export interface EvaluatorDefinitionReadModel extends UIModelIdentity {
+  evaluator_id: string;
+  version: string;
+  evaluator_type: string;
+  deterministic: boolean | null;
+  explanation_supported: boolean | null;
+  rule_summary: string | null;
+  configuration: Record<string, unknown>;
 }
 
 export interface BaselineSummaryReadModel extends UIModelIdentity {
