@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import json
 from hashlib import sha256
+from typing import Literal
 
-from performance_lab.datasets import WorkloadPackBundle
-from performance_lab.domain import DatasetSnapshot, EvaluationSuite
+from performance_lab.datasets import MaterializedDataset, WorkloadPackBundle
+from performance_lab.domain import DatasetSnapshot, EndpointProfile, EvaluationSuite, Target
+from performance_lab.plugins import Evaluator
+from performance_lab.regression import BaselineBinding, RegressionPolicy
+from performance_lab.run_config import StarterRunConfig
 
 from .evidence_queries import UIQueryService as EvidenceUIQueryService
 from .planning_models import (
@@ -30,7 +34,7 @@ from .ui_models import (
     SuiteSummaryReadModel,
     TargetSummaryReadModel,
 )
-from .ui_queries import STARTER_SUITE_ID
+from .ui_queries import STARTER_SUITE_ID, CompletedRunReader
 
 GENERAL_USE_CASE_ID = "general-capability"
 GENERAL_USE_CASE_VERSION = "1"
@@ -43,8 +47,33 @@ _NO_BOUNDED_RANGE_REASON = (
 class UIQueryService(EvidenceUIQueryService):
     """Canonical UI queries plus bounded, frozen campaign planning."""
 
-    def __init__(self, *args: object, workload_packs: tuple[WorkloadPackBundle, ...] = (), **kwargs: object) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        store: CompletedRunReader,
+        *,
+        targets: tuple[Target, ...] = (),
+        endpoint_profiles: tuple[EndpointProfile, ...] = (),
+        suites: tuple[EvaluationSuite, ...] = (),
+        dataset_snapshots: tuple[DatasetSnapshot, ...] = (),
+        baselines: tuple[BaselineBinding, ...] = (),
+        policies: tuple[RegressionPolicy, ...] = (),
+        starter_run_template: StarterRunConfig | None = None,
+        inspectable_datasets: tuple[MaterializedDataset, ...] = (),
+        evaluators: tuple[Evaluator, ...] = (),
+        workload_packs: tuple[WorkloadPackBundle, ...] = (),
+    ) -> None:
+        super().__init__(
+            store,
+            targets=targets,
+            endpoint_profiles=endpoint_profiles,
+            suites=suites,
+            dataset_snapshots=dataset_snapshots,
+            baselines=baselines,
+            policies=policies,
+            starter_run_template=starter_run_template,
+            inspectable_datasets=inspectable_datasets,
+            evaluators=evaluators,
+        )
         self._workload_packs = _unique_workload_packs(workload_packs)
         self._session_discovered_models: dict[str, tuple[DiscoveredModelReadModel, ...]] = {}
         self._session_generation_parameters: dict[str, tuple[str, ...]] = {}
@@ -108,7 +137,9 @@ class UIQueryService(EvidenceUIQueryService):
                 CampaignTargetPlanningReadModel(
                     target=target,
                     hardware_device_id=(
-                        hardware.device_id if target.target_id == configured_target_id and hardware else None
+                        hardware.device_id
+                        if target.target_id == configured_target_id and hardware
+                        else None
                     ),
                     hardware_device_class=(
                         hardware.device_class
@@ -147,7 +178,9 @@ class UIQueryService(EvidenceUIQueryService):
 
         candidates_by_id = {item.candidate_id: item for item in target_context.candidates}
         missing_candidates = [
-            candidate_id for candidate_id in request.candidate_ids if candidate_id not in candidates_by_id
+            candidate_id
+            for candidate_id in request.candidate_ids
+            if candidate_id not in candidates_by_id
         ]
         if missing_candidates:
             return _blocked(
@@ -209,7 +242,9 @@ class UIQueryService(EvidenceUIQueryService):
         )
         benchmark_plan = BenchmarkPlanReadModel(
             suite=_suite_summary(suite),
-            datasets=tuple(DatasetSummaryReadModel.from_snapshot(item) for item in selected_snapshots),
+            datasets=tuple(
+                DatasetSummaryReadModel.from_snapshot(item) for item in selected_snapshots
+            ),
             evaluator_ids=tuple(evaluator_ids),
             case_count_per_run=case_count,
         )
@@ -286,7 +321,8 @@ class UIQueryService(EvidenceUIQueryService):
             suite = next(
                 item
                 for item in self.suites
-                if item.suite_id == use_case.suite_id and item.suite_version == use_case.suite_version
+                if item.suite_id == use_case.suite_id
+                and item.suite_version == use_case.suite_version
             )
             return suite, self.dataset_snapshots
         bundle = self._workload_packs[use_case.use_case_id]
@@ -309,7 +345,7 @@ def _candidate(
     target_id: str,
     model_id: str,
     *,
-    source: str,
+    source: Literal["configured", "discovered"],
 ) -> CandidateModelReadModel:
     payload = json.dumps(
         {"target_id": target_id, "model_id": model_id},
@@ -321,7 +357,7 @@ def _candidate(
         candidate_id=candidate_id,
         target_id=target_id,
         model_id=model_id,
-        source=source,  # type: ignore[arg-type]
+        source=source,
     )
 
 
@@ -385,5 +421,10 @@ def _plan_digest(
         "benchmark": benchmark.model_dump(mode="json"),
         "estimate": estimate.model_dump(mode="json"),
     }
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    canonical = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
     return sha256(canonical.encode("utf-8")).hexdigest()
