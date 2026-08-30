@@ -4,9 +4,18 @@ Status: active
 Document type: documentation-governance
 Owner: repository
 Canonical scope: documentation.routing
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-30
 
 Performance Lab uses progressive disclosure: start from the single canonical owner of the question, then follow focused references. Do not duplicate behavioral truth across status, workstreams, architecture, design and operational docs.
+
+## README ownership
+
+Treat the root README as two semantic owners:
+
+- **Identity** — what Performance Lab is, why it exists, primary audience/outcome and stable positioning. Update only when those claims materially change; do not rewrite them merely because implementation, commands, configuration or a feature changes.
+- **Usage** — prerequisites, setup/run, public configuration, CLI/API/UI workflow and copy-paste examples. Update in the same change whenever existing instructions would otherwise become incomplete, wrong, removed, newly mandatory or misleading.
+
+A change may therefore correctly report `README_IDENTITY: N/A` and `README_USAGE: UPDATED`.
 
 ## Start here
 
@@ -36,6 +45,8 @@ For **product UI / UX** also read:
 
 | Question | Source |
 | --- | --- |
+| What is the project/why/for whom? | README identity sections |
+| How should a person set up, configure, run or use it? | README usage summary plus `getting-started.md`, `run-config-reference.md`, `cli-reference.md` |
 | What is integrated and what happens next? | [`current-state.md`](current-state.md) |
 | Which active implementation plan coordinates remaining work? | [`workstreams/README.md`](workstreams/README.md) |
 | What are the durable architecture boundaries? | [`architecture.md`](architecture.md) |
@@ -51,6 +62,14 @@ For **product UI / UX** also read:
 | What is required before DONE? | [`definition-of-done.md`](definition-of-done.md) |
 | Where are durable architecture decisions? | [`adr/README.md`](adr/README.md) |
 | Where should durable feature behavior live when extra docs are needed? | [`features/README.md`](features/README.md) |
+
+## Documentation impact contract
+
+Code and durable documentation ship together. Assess impact from the observable result, not filenames. Before publication classify `README_IDENTITY`, `README_USAGE`, `FEATURE_DOCS`, `ARCHITECTURE`, `ADR`, `SECURITY_DATA`, `OPERATIONS`, `PRODUCT_EXPERIENCE` and `CURRENT_STATE` as `UPDATED` or `N/A`; give a short reason when impact was plausible but `N/A`.
+
+Readiness requires `DOCS_CURRENT_WITH_IMPLEMENTATION: PASS`. Existing feature docs update in the same change when the shipped behavior they describe changes. Create a new feature doc only when durable non-obvious behavior is not sufficiently discoverable from code, public contracts, tests, architecture or the focused operational references.
+
+Preserve stronger local owners: CLI/config/evidence semantics belong in their focused references; README usage should expose a reliable shortest-success path and link rather than duplicate exhaustive contracts.
 
 ## Documentation lifecycle
 
