@@ -47,16 +47,17 @@ export function parseHash(hash: string): AppRoute {
     return { kind: "compare", runId };
   }
 
-  if (
-    raw === "test-suites" ||
-    raw === "datasets" ||
-    raw === "baselines" ||
-    raw === "regression-policies"
-  ) {
+  if (raw === "benchmarks" || raw === "test-suites") {
+    return { kind: "library", section: "test-suites" };
+  }
+  if (raw === "datasets" || raw === "baselines" || raw === "regression-policies") {
     return { kind: "library", section: raw };
   }
 
-  if (raw === "endpoints" || raw === "devices-targets" || raw === "advanced") {
+  if (raw === "model-connections" || raw === "endpoints") {
+    return { kind: "settings", section: "endpoints" };
+  }
+  if (raw === "devices-targets" || raw === "advanced") {
     return { kind: "settings", section: raw };
   }
 
