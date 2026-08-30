@@ -203,10 +203,11 @@ class UIQueryService(EvidenceUIQueryService):
             None,
         )
         if option is None or not option.available:
+            blocked_reason = option.blocked_reason if option is not None else None
             return _blocked(
                 "configuration_strategy_unavailable",
                 "configuration_strategy",
-                option.blocked_reason if option is not None else "Search strategy is unavailable.",
+                blocked_reason or "Search strategy is unavailable.",
             )
 
         suite, snapshots = self._benchmark_source(use_case)
