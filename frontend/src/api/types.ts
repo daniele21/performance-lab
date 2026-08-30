@@ -7,8 +7,11 @@ export interface UIModelIdentity {
 }
 
 export type EvidenceAvailability = "available" | "unknown" | "unavailable" | "not_evaluated";
+export type EvidenceContentState = "retained" | "not_retained" | "unavailable";
+export type ExplanationState = "available" | "unavailable";
 export type MetricDimension = "quality" | "performance" | "resources";
 export type RunStatus = "planned" | "running" | "succeeded" | "failed" | "cancelled";
+export type SampleStatus = "succeeded" | "failed" | "cancelled";
 export type ScenarioKind = "general_capability" | "my_workload" | "performance" | "regression";
 export type RunJobState =
   "starting" | "running" | "cancelling" | "succeeded" | "failed" | "cancelled" | "interrupted";
@@ -149,6 +152,38 @@ export interface EvaluatorDefinitionReadModel extends UIModelIdentity {
   configuration: Record<string, unknown>;
 }
 
+export interface BenchmarkTaskReadModel extends UIModelIdentity {
+  task_id: string;
+  dataset_snapshot_id: string;
+  dataset: DatasetSummaryReadModel | null;
+  evaluator: EvaluatorDefinitionReadModel;
+  metric_names: string[];
+  sample_limit: number | null;
+  case_count: number | null;
+  case_content_available: boolean;
+}
+
+export interface BenchmarkCaseReadModel extends UIModelIdentity {
+  case_id: string;
+  task_id: string;
+  sample_id: string;
+  dataset_id: string;
+  dataset_version: string;
+  input: unknown;
+  expected: unknown;
+  evaluator_id: string;
+  evaluator_version: string;
+  metric_names: string[];
+}
+
+export interface BenchmarkDetailReadModel extends UIModelIdentity {
+  summary: SuiteSummaryReadModel;
+  generation: Record<string, unknown>;
+  tasks: BenchmarkTaskReadModel[];
+  cases: BenchmarkCaseReadModel[];
+  definition_issues: string[];
+}
+
 export interface BaselineSummaryReadModel extends UIModelIdentity {
   baseline_id: string;
   run_id: string;
@@ -243,6 +278,70 @@ export interface RunJobSnapshot {
   run_status: RunStatus | null;
   error_code: string | null;
   error_message: string | null;
+}
+
+export interface SampleErrorInfo {
+  code: string;
+  category: string;
+  retryable: boolean;
+}
+
+export interface SampleSummaryReadModel extends UIModelIdentity {
+  run_id: string;
+  task_id: string;
+  sample_id: string;
+  attempt: number;
+  status: SampleStatus;
+  started_at: string;
+  completed_at: string;
+  elapsed_ms: number;
+  elapsed_provenance: "sample_execution_timestamps";
+  input_tokens: number | null;
+  output_tokens: number | null;
+  score_count: number;
+  measurement_count: number;
+  error: SampleErrorInfo | null;
+}
+
+export interface EvidenceContentReadModel extends UIModelIdentity {
+  state: EvidenceContentState;
+  content: unknown | null;
+  reason: string | null;
+}
+
+export interface SampleScoreReadModel extends UIModelIdentity {
+  metric: string;
+  value: number;
+  evaluator_id: string;
+  evaluator_version: string;
+  higher_is_better: boolean;
+  numerator: number | null;
+  denominator: number | null;
+  evaluator_rule_summary: string | null;
+  explanation_state: ExplanationState;
+  explanation: string | null;
+}
+
+export interface SampleMeasurementReadModel extends UIModelIdentity {
+  name: string;
+  value: number;
+  unit: string;
+  scope: "sample" | "run";
+  provenance: "client" | "host" | "runtime";
+  protocol_version: string;
+  observed_at: string | null;
+}
+
+export interface SampleEvidenceDetailReadModel extends UIModelIdentity {
+  run: RunSummaryReadModel;
+  fingerprint: ExecutionFingerprint;
+  sample: SampleSummaryReadModel;
+  benchmark_case: BenchmarkCaseReadModel | null;
+  prompt: EvidenceContentReadModel;
+  response: EvidenceContentReadModel;
+  scores: SampleScoreReadModel[];
+  measurements: SampleMeasurementReadModel[];
+  definition_issues: string[];
 }
 
 export interface CompatibilityReasonReadModel extends UIModelIdentity {
