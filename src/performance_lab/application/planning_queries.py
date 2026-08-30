@@ -17,9 +17,9 @@ from .planning_models import (
     BenchmarkPlanReadModel,
     CampaignEstimateReadModel,
     CampaignPlanIssueReadModel,
+    CampaignPlanningContextReadModel,
     CampaignPlanPreviewReadModel,
     CampaignPlanPreviewRequest,
-    CampaignPlanningContextReadModel,
     CampaignSearchStrategy,
     CampaignTargetPlanningReadModel,
     CandidateModelReadModel,
@@ -261,7 +261,8 @@ class UIQueryService(EvidenceUIQueryService):
             estimated_request_count=planned_run_count * case_count,
             estimated_duration_seconds=None,
             duration_reason=(
-                "Duration unavailable: no evidence-backed timing model exists for this target and plan."
+                "Duration unavailable: no evidence-backed timing model exists "
+                "for this target and plan."
             ),
         )
         digest = _plan_digest(
