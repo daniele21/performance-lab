@@ -1,5 +1,6 @@
 import type {
   BaselineSummaryReadModel,
+  BenchmarkDetailReadModel,
   ComparisonReadModel,
   DatasetSummaryReadModel,
   EndpointConnectionInput,
@@ -12,6 +13,8 @@ import type {
   RunPreflightReadModel,
   RunPreflightRequest,
   RunSummaryReadModel,
+  SampleEvidenceDetailReadModel,
+  SampleSummaryReadModel,
   ScenarioSummaryReadModel,
   SuiteSummaryReadModel,
   TargetSummaryReadModel,
@@ -98,6 +101,27 @@ export function getRun(runId: string, options?: RequestOptions) {
   return getJson<RunDetailReadModel>(`/api/v1/runs/${encodeURIComponent(runId)}`, options);
 }
 
+export function listRunSamples(runId: string, options?: RequestOptions) {
+  return getJson<SampleSummaryReadModel[]>(
+    `/api/v1/runs/${encodeURIComponent(runId)}/samples`,
+    options,
+  );
+}
+
+export function getSampleEvidence(
+  runId: string,
+  taskId: string,
+  sampleId: string,
+  attempt: number,
+  options?: RequestOptions,
+) {
+  const segments = [runId, taskId, sampleId].map(encodeURIComponent);
+  return getJson<SampleEvidenceDetailReadModel>(
+    `/api/v1/runs/${segments[0]}/samples/${segments[1]}/${segments[2]}/${attempt}`,
+    options,
+  );
+}
+
 export function listTargets(options?: RequestOptions) {
   return getJson<TargetSummaryReadModel[]>("/api/v1/targets", options);
 }
@@ -116,6 +140,13 @@ export function listSuites(options?: RequestOptions) {
 
 export function listBenchmarks(options?: RequestOptions) {
   return getJson<SuiteSummaryReadModel[]>("/api/v1/benchmarks", options);
+}
+
+export function getBenchmark(suiteId: string, suiteVersion: string, options?: RequestOptions) {
+  return getJson<BenchmarkDetailReadModel>(
+    `/api/v1/benchmarks/${encodeURIComponent(suiteId)}/${encodeURIComponent(suiteVersion)}`,
+    options,
+  );
 }
 
 export function listDatasets(options?: RequestOptions) {
