@@ -20,7 +20,13 @@ function renderValue(value: unknown) {
   return JSON.stringify(value, null, 2);
 }
 
-function CaseCard({ benchmark, item }: { benchmark: BenchmarkDetailReadModel; item: BenchmarkCaseReadModel }) {
+function CaseCard({
+  benchmark,
+  item,
+}: {
+  benchmark: BenchmarkDetailReadModel;
+  item: BenchmarkCaseReadModel;
+}) {
   const task = benchmark.tasks.find((candidate) => candidate.task_id === item.task_id);
   const evaluator = task?.evaluator;
 
@@ -181,7 +187,9 @@ export function BenchmarkDetailView({ benchmark }: { benchmark: BenchmarkDetailR
         </section>
 
         <Disclosure summary="Show generation configuration">
-          <pre className="evidence-drilldown__pre">{JSON.stringify(benchmark.generation, null, 2)}</pre>
+          <pre className="evidence-drilldown__pre">
+            {JSON.stringify(benchmark.generation, null, 2)}
+          </pre>
         </Disclosure>
       </div>
     </AppShell>
@@ -193,7 +201,13 @@ type LoadState =
   | { status: "ready"; benchmark: BenchmarkDetailReadModel }
   | { status: "error"; message: string };
 
-export function BenchmarkDetailPage({ suiteId, suiteVersion }: { suiteId: string; suiteVersion: string }) {
+export function BenchmarkDetailPage({
+  suiteId,
+  suiteVersion,
+}: {
+  suiteId: string;
+  suiteVersion: string;
+}) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<LoadState>({ status: "loading" });
 
@@ -206,7 +220,8 @@ export function BenchmarkDetailPage({ suiteId, suiteVersion }: { suiteId: string
         if (controller.signal.aborted) return;
         setState({
           status: "error",
-          message: error instanceof Error ? error.message : "Benchmark definition could not be loaded.",
+          message:
+            error instanceof Error ? error.message : "Benchmark definition could not be loaded.",
         });
       });
     return () => controller.abort();
