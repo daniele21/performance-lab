@@ -144,11 +144,7 @@ export function LibraryView({ section, data }: LibraryViewProps) {
   return (
     <AppShell activeSecondary={label}>
       <div className="secondary-page">
-        <PageHeader
-          eyebrow="Library"
-          title={label}
-          description={SECTION_DESCRIPTION[section]}
-        />
+        <PageHeader eyebrow="Library" title={label} description={SECTION_DESCRIPTION[section]} />
 
         {section === "benchmarks" &&
           (data.benchmarks.length ? (
