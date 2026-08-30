@@ -3,6 +3,7 @@ export {
   cancelRunJob,
   compareRuns,
   getBenchmark,
+  getCampaignPlanning,
   getRun,
   getRunJob,
   getSampleEvidence,
@@ -19,9 +20,24 @@ export {
   listTargets,
   listTestedModels,
   preflightRun,
+  previewCampaignPlan,
   probeEndpoint,
   subscribeRunJob,
 } from "./client";
+export type {
+  BenchmarkPlanReadModel,
+  CampaignEstimateReadModel,
+  CampaignPlanIssueReadModel,
+  CampaignPlanPreviewReadModel,
+  CampaignPlanPreviewRequest,
+  CampaignPlanningContextReadModel,
+  CampaignSearchStrategy,
+  CampaignTargetPlanningReadModel,
+  CandidateModelReadModel,
+  ConfigurationSearchOptionReadModel,
+  ConfigurationSearchPlanReadModel,
+  UseCaseReadModel,
+} from "./planning-types";
 export type {
   BaselineSummaryReadModel,
   BenchmarkCaseReadModel,
