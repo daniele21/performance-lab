@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from performance_lab.domain import Run, SampleExecution
+from performance_lab.domain import Run, SampleExecution, Score
 
 from .evidence_models import (
     EvidenceContentReadModel,
@@ -57,7 +57,10 @@ class UIQueryService(LibraryUIQueryService):
             (item.evaluator_id, item.version): item for item in self.list_evaluators()
         }
         scores = tuple(
-            _score_projection(score, evaluators.get((score.evaluator.evaluator_id, score.evaluator.version)))
+            _score_projection(
+                score,
+                evaluators.get((score.evaluator.evaluator_id, score.evaluator.version)),
+            )
             for score in sample.scores
         )
         measurements = tuple(
@@ -97,15 +100,11 @@ class UIQueryService(LibraryUIQueryService):
         try:
             benchmark = self.get_benchmark(run.suite.suite_id, run.suite.suite_version)
         except LookupError:
-            return None, (
-                "Benchmark definition is not registered for this retained run.",
-            )
+            return None, ("Benchmark definition is not registered for this retained run.",)
 
         task = next((item for item in benchmark.tasks if item.task_id == sample.task_id), None)
         if task is None:
-            return None, (
-                f"Benchmark task definition is unavailable: {sample.task_id}",
-            )
+            return None, (f"Benchmark task definition is unavailable: {sample.task_id}",)
         if not task.case_content_available:
             return None, (
                 "Benchmark case content is unavailable under the current dataset inspection policy.",
@@ -122,9 +121,7 @@ class UIQueryService(LibraryUIQueryService):
             return None, (
                 "Benchmark case definition is unavailable for this retained sample identity.",
             )
-        return None, (
-            "Benchmark case identity is ambiguous for this retained sample.",
-        )
+        return None, ("Benchmark case identity is ambiguous for this retained sample.",)
 
 
 def _sample_summary(run_id: str, sample: SampleExecution) -> SampleSummaryReadModel:
@@ -147,13 +144,9 @@ def _sample_summary(run_id: str, sample: SampleExecution) -> SampleSummaryReadMo
 
 
 def _score_projection(
-    score: object,
+    score: Score,
     evaluator: EvaluatorDefinitionReadModel | None,
 ) -> SampleScoreReadModel:
-    from performance_lab.domain import Score
-
-    if not isinstance(score, Score):
-        raise TypeError("sample score projection requires Score")
     return SampleScoreReadModel(
         metric=score.metric,
         value=score.value,
