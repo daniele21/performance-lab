@@ -59,10 +59,7 @@ export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailRea
   return (
     <AppShell activePrimary="Runs">
       <div className="evidence-drilldown">
-        <a
-          className="evidence-drilldown__back"
-          href={`#runs/${encodeURIComponent(run.run_id)}`}
-        >
+        <a className="evidence-drilldown__back" href={`#runs/${encodeURIComponent(run.run_id)}`}>
           ← Back to run samples
         </a>
         <PageHeader
@@ -200,7 +197,8 @@ export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailRea
                     </dd>
                     <dt>Provenance</dt>
                     <dd>
-                      {measurement.provenance} · {measurement.scope} · {measurement.protocol_version}
+                      {measurement.provenance} · {measurement.scope} ·{" "}
+                      {measurement.protocol_version}
                     </dd>
                   </dl>
                 </div>
@@ -235,7 +233,9 @@ export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailRea
               </dl>
             </div>
           </div>
-          <pre className="evidence-drilldown__pre">{JSON.stringify(detail.fingerprint, null, 2)}</pre>
+          <pre className="evidence-drilldown__pre">
+            {JSON.stringify(detail.fingerprint, null, 2)}
+          </pre>
         </Disclosure>
       </div>
     </AppShell>
