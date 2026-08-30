@@ -32,11 +32,11 @@ The implementation must converge on `design/ux-contract.json`, `design/brand-kit
 
 | ID | Work | Owns/writes | Depends on | Parallel | State |
 | --- | --- | --- | --- | --- | --- |
-| UXUI-00 | Stabilize and merge the UX/discovery baseline, including Browser Acceptance | PR #65; shared form semantics; current UX contracts/targets | — | no | ACTIVE |
-| UXUI-01 | Design-system + brand convergence | `frontend/src/design/`, shared visual primitives/assets | UXUI-00 | yes, with UXUI-03A/04A after integration | BLOCKED |
+| UXUI-00 | Stabilize and merge the UX/discovery baseline | baseline UX contracts/targets; model discovery; shared form semantics | — | no | DONE |
+| UXUI-01 | Design-system + brand convergence | `frontend/src/design/`, shared visual primitives/assets | UXUI-00 | yes, with UXUI-04A | ACTIVE |
 | UXUI-02 | App shell + canonical IA/adaptive desktop navigation | `AppShell`, navigation/routing, shell CSS/tests | UXUI-01 | no | BLOCKED |
 | UXUI-03 | Manual journey convergence: connect/discover -> scenario -> configure -> frozen review -> Live Run -> Run Detail | test-model/live-run/run-detail pages and direct API consumers | UXUI-01, UXUI-02 | yes, separate from Library contracts | BLOCKED |
-| UXUI-04A | Library/read-model contracts for Models, Benchmarks, Datasets, Evaluators, Evidence | Python application read models/queries/API + contract tests | UXUI-00 | yes | BLOCKED |
+| UXUI-04A | Library/read-model contracts for Models, Benchmarks, Datasets, Evaluators, Evidence | Python application read models/queries/API + contract tests | UXUI-00 | yes, with UXUI-01 | ACTIVE |
 | UXUI-04B | Library + Settings UI convergence | library/settings pages and API client types | UXUI-01, UXUI-02, UXUI-04A | yes, separate from manual journey | BLOCKED |
 | UXUI-05 | Benchmark/sample evidence drill-down | benchmark detail, run samples, sample evidence projections/pages | UXUI-04A | yes, with UXUI-03/04B where write boundaries do not overlap | BLOCKED |
 | UXUI-06 | Find best setup planning: use case -> candidates -> config search -> benchmark plan -> estimate | campaign planning domain/application/API + page flow | UXUI-04A, UXUI-05 contracts as needed | no | BLOCKED |
@@ -49,33 +49,51 @@ Allowed states: `READY`, `ACTIVE`, `BLOCKED`, `DONE`.
 
 Parallel work must keep explicit write ownership. Shared API/read-model changes integrate before dependent frontend slices; shared design primitives have one owner at a time.
 
-## Current executable slice
+## Current executable slices
 
-`UXUI-00`
+### UXUI-01 — design-system + brand convergence
 
 Acceptance:
 
-- PR #65 exact head passes Repository Health, Repository Validation, Browser Acceptance and Built Product.
-- Form labels expose concise accessible names while descriptions are linked through `aria-describedby`.
-- Approved desktop visual targets remain organized and mapped by `manifest.json`.
-- PR #65 can be merged to `dev` without weakening a legitimate browser assertion.
+- canonical product name is `Performance Lab`; brand assets contain no stale `AI Performance Lab` lockup;
+- canonical tagline is `Measure. Compare. Decide.`;
+- the built sidebar uses the real compact mark rather than a placeholder glyph;
+- desktop compact `1024-1279`, standard `1280-1599` and wide `>=1600` breakpoints match the product contract;
+- page typography/density behaves like an application, not a landing page;
+- semantic colors, metric dimensions, status colors and reduced-motion behavior stay token-owned.
 
 Validation:
 
 - `npm --prefix frontend run check`
 - `npm --prefix frontend run test`
-- `npm --prefix frontend run test:e2e`
-- repository remote preflight on exact head
+- `npm --prefix frontend run build`
+- browser acceptance if shell behavior changes materially
+
+### UXUI-04A — Library/read-model contracts
+
+Acceptance for the first slice:
+
+- Benchmark Detail is projected by Python from canonical `EvaluationSuite`, materialized dataset and evaluator ownership;
+- benchmark definition stays separate from run/result evidence;
+- cases expose exact retained authored input/expected values where the dataset contract permits it;
+- evaluator identity/version, metrics and evaluation rule metadata come from Python-owned evaluation semantics, not TypeScript guesses;
+- missing benchmark/case IDs are typed as not found at the API boundary;
+- no global evaluator weight is introduced.
+
+Validation:
+
+- focused application/API contract tests;
+- repository `check` / `test` profile selected from blast radius;
+- J7 remains residual until the frontend Benchmark Detail journey is integrated.
 
 ## Integration strategy
 
-After UXUI-00 lands on green `dev`, parallelize only slices with independent ownership:
-
-1. UXUI-01 owns shared visual primitives/tokens.
-2. UXUI-04A owns new Python application/read-model contracts and tests and may progress in parallel with UXUI-01.
-3. Once UXUI-01/02 establish the shell/components, UXUI-03 and UXUI-04B may progress in parallel because they own different page trees.
-4. UXUI-05 may progress alongside page convergence once its backend contracts have a single canonical owner.
-5. UXUI-06/07 remain sequential because campaign planning, lifecycle and recommendation share one new bounded product contract.
+1. UXUI-01 and UXUI-04A run independently from the same integrated `dev` baseline.
+2. UXUI-01 integrates before UXUI-02 because shell/navigation consumes the canonical shared visual system.
+3. UXUI-04A integrates before Library/Settings consumers and sample-evidence pages.
+4. Once UXUI-01/02 establish the shell/components, UXUI-03 and UXUI-04B may progress in parallel because they own different page trees.
+5. UXUI-05 may progress alongside page convergence once its backend contracts have a single canonical owner.
+6. UXUI-06/07 remain sequential because campaign planning, lifecycle and recommendation share one new bounded product contract.
 
 Avoid stacked branches that silently depend on an unmerged red base. Ordinary UX/UI branches start from current green `dev` and target `dev`.
 
