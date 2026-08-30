@@ -1,4 +1,8 @@
-"""Run/sample evidence projections for browser-facing drill-down surfaces."""
+"""Run/sample evidence projections for browser-facing drill-down surfaces.
+
+Execution content availability is explicit: read models describe retained evidence without
+reconstructing prompt/response payloads that the persisted run does not own.
+"""
 
 from __future__ import annotations
 
