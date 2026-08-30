@@ -10,7 +10,21 @@ from .evidence_models import (
     SampleScoreReadModel,
     SampleSummaryReadModel,
 )
-from .evidence_queries import UIQueryService
+from .planning_models import (
+    BenchmarkPlanReadModel,
+    CampaignEstimateReadModel,
+    CampaignPlanIssueReadModel,
+    CampaignPlanningContextReadModel,
+    CampaignPlanPreviewReadModel,
+    CampaignPlanPreviewRequest,
+    CampaignSearchStrategy,
+    CampaignTargetPlanningReadModel,
+    CandidateModelReadModel,
+    ConfigurationSearchOptionReadModel,
+    ConfigurationSearchPlanReadModel,
+    UseCaseReadModel,
+)
+from .planning_queries import UIQueryService
 from .ui_models import (
     UI_READ_MODEL_VERSION,
     BaselineSummaryReadModel,
@@ -51,10 +65,21 @@ __all__ = [
     "BaselineSummaryReadModel",
     "BenchmarkCaseReadModel",
     "BenchmarkDetailReadModel",
+    "BenchmarkPlanReadModel",
     "BenchmarkTaskReadModel",
+    "CampaignEstimateReadModel",
+    "CampaignPlanIssueReadModel",
+    "CampaignPlanPreviewReadModel",
+    "CampaignPlanPreviewRequest",
+    "CampaignPlanningContextReadModel",
+    "CampaignSearchStrategy",
+    "CampaignTargetPlanningReadModel",
+    "CandidateModelReadModel",
     "CapabilitySupportReadModel",
     "ComparisonReadModel",
     "CompatibilityReasonReadModel",
+    "ConfigurationSearchOptionReadModel",
+    "ConfigurationSearchPlanReadModel",
     "DatasetSummaryReadModel",
     "DimensionComparisonReadModel",
     "DiscoveredModelReadModel",
@@ -87,5 +112,6 @@ __all__ = [
     "TargetSummaryReadModel",
     "TestedModelReadModel",
     "UIQueryService",
+    "UseCaseReadModel",
     "probe_endpoint_connection",
 ]

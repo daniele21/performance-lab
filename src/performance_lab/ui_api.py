@@ -12,6 +12,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from performance_lab.application import (
     BaselineSummaryReadModel,
     BenchmarkDetailReadModel,
+    CampaignPlanningContextReadModel,
+    CampaignPlanPreviewReadModel,
+    CampaignPlanPreviewRequest,
     ComparisonReadModel,
     DatasetSummaryReadModel,
     EndpointConnectionInput,
@@ -79,8 +82,20 @@ def create_ui_app(
         result = await probe_endpoint_connection(request)
         if not result.healthy:
             return result
-        target = queries.register_session_connection(request)
+        target = queries.register_session_connection(
+            request,
+            discovered_models=result.models,
+            supported_generation_parameters=result.supported_generation_parameters,
+        )
         return result.model_copy(update={"target": target})
+
+    @app.get("/api/v1/campaign-planning", response_model=CampaignPlanningContextReadModel)
+    def campaign_planning() -> CampaignPlanningContextReadModel:
+        return queries.campaign_planning_context()
+
+    @app.post("/api/v1/campaign-plan-preview", response_model=CampaignPlanPreviewReadModel)
+    def campaign_plan_preview(request: CampaignPlanPreviewRequest) -> CampaignPlanPreviewReadModel:
+        return queries.preview_campaign_plan(request)
 
     @app.get("/api/v1/runs", response_model=list[RunSummaryReadModel])
     def list_runs(

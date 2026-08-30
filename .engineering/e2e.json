@@ -110,22 +110,22 @@
   "critical_journeys": [
     {
       "id": "J0",
-      "claim": "User can enter the use-case-first Find best setup journey, understand model + quantization candidate identity and configuration-search/campaign stages, and is not misled into starting an automatic campaign before the campaign engine exists.",
+      "claim": "User can enter the use-case-first Find best setup journey, choose backend-owned use-case and candidate evidence, build and freeze the benchmark campaign plan, inspect a truthful estimate, and is not misled into starting execution before the campaign engine exists.",
       "target_environment_refs": [
         "desktop-browser-product"
       ],
       "automated_environment_refs": [
-        "browser-built-mocked-api"
+        "browser-built-mocked-api",
+        "packaged-product-fixture"
       ],
-      "minimum_automated_fidelity": "host_or_fake",
+      "minimum_automated_fidelity": "representative_virtual",
       "residual_gaps": [
-        "server-owned use-case catalog and benchmark mapping",
-        "multi-model configuration search",
+        "bounded request-level parameter sweeps when a runtime exposes explicit search ranges",
         "campaign scheduling and immutable run grouping",
         "compatibility-aware recommendation policy"
       ],
       "real_environment_confirmation": "not_required",
-      "automation_gap_reason": "The UX contract and blocked state are executable; automatic campaign execution is not implemented yet."
+      "automation_gap_reason": null
     },
     {
       "id": "J1",
