@@ -22,11 +22,7 @@ export const SECONDARY_NAVIGATION = {
     },
     { label: "Benchmarks", href: "#benchmarks", activeAliases: ["Test suites"] },
     { label: "Datasets", href: "#datasets" },
-    {
-      label: "Evaluators",
-      href: null,
-      disabledReason: "Evaluator registry surface is pending Library convergence.",
-    },
+    { label: "Evaluators", href: "#evaluators" },
     {
       label: "Evidence",
       href: null,
