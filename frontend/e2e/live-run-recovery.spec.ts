@@ -50,7 +50,9 @@ test("Live Run can reconnect after a transient initial read failure", async ({ p
   });
 
   await page.goto("/#live-run/job-reconnect");
-  await expect(page.getByRole("heading", { name: "Could not reconnect to this run" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Could not reconnect to this run" }),
+  ).toBeVisible();
   await expect(page.getByText("Temporary local API interruption", { exact: false })).toBeVisible();
 
   await page.getByRole("button", { name: "Reconnect to run" }).click();
