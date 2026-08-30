@@ -202,7 +202,7 @@ test("J7: benchmark definition exposes inspectable cases and evaluator rules", a
 
   await page.getByRole("link", { name: "starter" }).click();
   await expect(page.getByRole("heading", { name: "starter" })).toBeVisible();
-  await expect(page.getByText("Benchmark definition")).toBeVisible();
+  await expect(page.getByText("Benchmark definition", { exact: true })).toBeVisible();
 
   await page.getByText("case-a · task-a").click();
   await expect(page.getByText("Question?")).toBeVisible();
