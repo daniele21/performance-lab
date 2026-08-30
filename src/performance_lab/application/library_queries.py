@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 from performance_lab.datasets import MaterializedDataset
-from performance_lab.domain import DatasetSnapshot, EndpointProfile, EvaluationSuite, EvaluatorRef, Target
+from performance_lab.domain import (
+    DatasetSnapshot,
+    EndpointProfile,
+    EvaluationSuite,
+    EvaluatorRef,
+    Target,
+)
 from performance_lab.evaluation import describe_evaluator
 from performance_lab.plugins import Evaluator
 from performance_lab.regression import BaselineBinding, RegressionPolicy
@@ -16,7 +22,7 @@ from .ui_models import (
     DatasetSummaryReadModel,
     EvaluatorDefinitionReadModel,
 )
-from .ui_queries import CompletedRunReader, UIQueryService as CoreUIQueryService, _suite_summary
+from .ui_queries import CompletedRunReader, UIQueryService as CoreUIQueryService
 
 
 class UIQueryService(CoreUIQueryService):
@@ -66,6 +72,11 @@ class UIQueryService(CoreUIQueryService):
         )
         if suite is None:
             raise LookupError(f"benchmark definition not found: {suite_id}@{suite_version}")
+        summary = next(
+            item
+            for item in self.list_suites()
+            if item.suite_id == suite_id and item.suite_version == suite_version
+        )
 
         snapshots = {snapshot.dataset_id: snapshot for snapshot in self.dataset_snapshots}
         tasks: list[BenchmarkTaskReadModel] = []
@@ -135,7 +146,7 @@ class UIQueryService(CoreUIQueryService):
             )
 
         return BenchmarkDetailReadModel(
-            summary=_suite_summary(suite),
+            summary=summary,
             generation=suite.generation,
             tasks=tuple(tasks),
             cases=tuple(cases),
