@@ -10,8 +10,9 @@ Always read this guide, then only:
 2. the canonical architecture/feature/workstream source required by the change;
 3. `.engineering/commands.json` when setup, test, E2E, build, runtime or cleanup behavior is relevant;
 4. `.engineering/e2e.json` when a complete workflow or browser/runtime/device/environment-dependent claim is relevant;
-5. for meaningful user-facing work, `design/ux-contract.json` and `design/brand-kit.json`;
-6. the owning implementation, direct consumers and nearby tests.
+5. `docs/README.md` when documentation ownership or README impact is unclear;
+6. for meaningful user-facing work, `design/ux-contract.json` and `design/brand-kit.json`;
+7. the owning implementation, direct consumers and nearby tests.
 
 Use `docs/current-state.md` only when the task depends on current integrated/blocked/next state. Do not load every plan or all documentation for a local change.
 
@@ -34,6 +35,8 @@ Performance Lab evaluates externally served AI inference endpoints. It answers a
 - Real device/model claims require real evidence; deterministic fakes or hosted CI must not be promoted into hardware claims.
 - Executor capability and environment fidelity are separate: `REMOTE_AUTOMATED` does not upgrade a fixture/emulator into target-environment evidence.
 - Final real-runtime/device validation should confirm residual hardware/runtime/telemetry gaps, not become the first complete product workflow test when that workflow is automatable earlier.
+- Code and durable documentation ship together; an affected stale canonical owner blocks publication readiness.
+- README identity and README usage are separate owners: stable purpose/positioning is not rewritten for usage-only changes, while setup/run/configuration/public examples must stay current.
 
 ## Ownership and routing
 
@@ -48,6 +51,7 @@ Performance Lab evaluates externally served AI inference endpoints. It answers a
 | Browser UI | `frontend/AGENTS.md` | `design/`, owning page/components/tests |
 | Product experience / design system | `design/ux-contract.json` | `design/brand-kit.json`, `frontend/src/design/`, critical journeys |
 | Active coordinated work | `docs/current-state.md` | relevant `docs/workstreams/*.md` only |
+| Documentation impact | `docs/README.md` | README identity/usage, feature/architecture/ADR/security/operations/design/current-state owner |
 
 Add another scoped `AGENTS.md` only when a subtree has meaningful local hazards, ownership or validation rules.
 
@@ -77,6 +81,8 @@ Use `skills/validate-change/SKILL.md` while iterating and `skills/preflight-chan
 - `FULL` — engineering/CI/dependency/toolchain/selector changes, promotion or unknown executable scope.
 
 Do not silently downgrade below `auto`. A repair that broadens scope must re-run selection.
+
+Before any ready state, `preflight-change` classifies `README_IDENTITY`, `README_USAGE`, `FEATURE_DOCS`, `ARCHITECTURE`, `ADR`, `SECURITY_DATA`, `OPERATIONS`, `PRODUCT_EXPERIENCE` and `CURRENT_STATE`; `DOCS_CURRENT_WITH_IMPLEMENTATION` must be `PASS`.
 
 If the current agent cannot execute an automatable deterministic gate, classify it `REMOTE_AUTOMATED` and use repository-owned GitHub workflows through `remote-preflight`; do not turn the user into the test runner. Physical/runtime/device/telemetry evidence is `REAL_ENVIRONMENT` only when the claim genuinely requires it.
 
@@ -120,15 +126,17 @@ Do not expose internal benchmark architecture merely because the backend has mor
 4. Implement one coherent slice without speculative layers.
 5. Validate narrowly while iterating, then expand according to blast radius.
 6. For complete workflows/environment claims, select the relevant `.engineering/e2e.json` journey and sufficient fidelity rather than running every E2E layer mechanically.
-7. Update only canonical durable docs/design contracts whose current behavior or decision changed.
+7. Assess documentation impact from observable behavior and update only affected canonical durable docs/design contracts; README identity and usage are independent owners.
 8. Update `docs/current-state.md` only for integrated/blocked/next state changes.
 9. Finalize completed workstreams by transferring durable knowledge and deleting the workstream by default.
-10. Run preflight, review the complete diff and publish only exact-head evidence.
+10. Run preflight, review the complete diff, require current documentation and publish only exact-head evidence.
 
 ## Documentation lifecycle
 
+- README identity owns stable purpose/audience/outcome/positioning; update only when those claims materially change.
+- README usage owns the shortest current setup/run/configuration/public usage path; update when existing instructions/examples become incomplete, wrong or misleading, while focused operational references remain canonical for detail.
 - `docs/architecture.md` owns current architecture and ownership boundaries.
-- `docs/features/` owns durable shipped feature behavior when extra explanation is needed.
+- `docs/features/` owns durable shipped feature behavior when extra explanation is needed; existing feature docs update in the same change as the behavior they describe.
 - `docs/adr/` owns accepted durable architectural decisions.
 - `docs/current-state.md` is the single short operational ledger.
 - `docs/workstreams/` contains only active bounded implementation/evidence plans.
@@ -139,4 +147,4 @@ Do not create new plan changelogs, per-branch progress docs or duplicate status 
 
 ## Evidence and stop conditions
 
-Never claim validation, accessibility, real-device performance, cleanup or release evidence that was not executed. Surface the conflict instead of improvising when a change would violate a durable invariant/ADR, expose sensitive state, create a second source of truth, bypass comparability/evidence identity, bypass required lifecycle cleanup, contradict the adopted product-experience contract, or overstate E2E environment fidelity.
+Never claim validation, accessibility, real-device performance, cleanup or release evidence that was not executed. Surface the conflict instead of improvising when a change would violate a durable invariant/ADR, expose sensitive state, create a second source of truth, bypass comparability/evidence identity, bypass required lifecycle cleanup, leave affected documentation stale, contradict the adopted product-experience contract, or overstate E2E environment fidelity.
