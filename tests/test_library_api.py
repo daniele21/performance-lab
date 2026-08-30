@@ -34,9 +34,7 @@ def test_benchmark_definition_api_exposes_cases_without_result_semantics(tmp_pat
         }
     ]
 
-    detail = client.get(
-        f"/api/v1/benchmarks/{bundle.suite.suite_id}/{bundle.suite.suite_version}"
-    )
+    detail = client.get(f"/api/v1/benchmarks/{bundle.suite.suite_id}/{bundle.suite.suite_version}")
     assert detail.status_code == 200
     payload = detail.json()
     assert len(payload["cases"]) == 23
