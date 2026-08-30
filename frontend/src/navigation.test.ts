@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  PRIMARY_NAVIGATION,
-  SECONDARY_NAVIGATION,
-  isSecondaryNavigationActive,
-} from "./navigation";
+import { PRIMARY_NAVIGATION, SECONDARY_NAVIGATION } from "./navigation";
 
 describe("product navigation contract", () => {
   it("keeps the use-case-first decision journey in primary navigation", () => {
@@ -37,30 +33,24 @@ describe("product navigation contract", () => {
     expect(PRIMARY_NAVIGATION).not.toContain("Datasets");
   });
 
-  it("marks not-yet-implemented secondary surfaces as unavailable instead of inventing routes", () => {
+  it("keeps only genuinely unimplemented secondary surfaces unavailable", () => {
     const pending = Object.values(SECONDARY_NAVIGATION)
       .flat()
       .filter((item) => item.href === null)
       .map((item) => item.label);
 
-    expect(pending).toEqual([
-      "Models",
-      "Evaluators",
-      "Evidence",
-      "Evidence retention",
-      "Accessibility",
-    ]);
+    expect(pending).toEqual(["Models", "Evidence", "Evidence retention", "Accessibility"]);
   });
 
-  it("keeps canonical navigation active while legacy page labels remain during convergence", () => {
-    const benchmarks = SECONDARY_NAVIGATION.Library.find((item) => item.label === "Benchmarks");
-    const connections = SECONDARY_NAVIGATION.Settings.find(
-      (item) => item.label === "Model connections",
+  it("exposes canonical routes for integrated Library and Settings owners", () => {
+    expect(SECONDARY_NAVIGATION.Library.find((item) => item.label === "Benchmarks")?.href).toBe(
+      "#benchmarks",
     );
-
-    expect(benchmarks).toBeDefined();
-    expect(connections).toBeDefined();
-    expect(isSecondaryNavigationActive(benchmarks!, "Test suites")).toBe(true);
-    expect(isSecondaryNavigationActive(connections!, "Endpoints")).toBe(true);
+    expect(SECONDARY_NAVIGATION.Library.find((item) => item.label === "Evaluators")?.href).toBe(
+      "#evaluators",
+    );
+    expect(
+      SECONDARY_NAVIGATION.Settings.find((item) => item.label === "Model connections")?.href,
+    ).toBe("#model-connections");
   });
 });

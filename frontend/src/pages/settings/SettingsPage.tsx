@@ -14,20 +14,23 @@ import {
 } from "../../components";
 import "../secondary.css";
 
-export type SettingsSection = "endpoints" | "devices-targets" | "advanced";
+export type SettingsSection = "model-connections" | "devices-targets" | "advanced";
 
-const SECTION_LABEL: Record<SettingsSection, "Endpoints" | "Devices / targets" | "Advanced"> = {
-  endpoints: "Endpoints",
+const SECTION_LABEL: Record<
+  SettingsSection,
+  "Model connections" | "Devices / targets" | "Advanced"
+> = {
+  "model-connections": "Model connections",
   "devices-targets": "Devices / targets",
   advanced: "Advanced",
 };
 
-const ENDPOINT_COLUMNS: readonly DataColumn<TargetSummaryReadModel>[] = [
-  { id: "profile", header: "Endpoint profile", render: (item) => item.endpoint_profile_id },
+const CONNECTION_COLUMNS: readonly DataColumn<TargetSummaryReadModel>[] = [
+  { id: "profile", header: "Connection profile", render: (item) => item.endpoint_profile_id },
   { id: "adapter", header: "Adapter", render: (item) => item.adapter_type },
   {
     id: "identity",
-    header: "Safe identity",
+    header: "Safe endpoint identity",
     render: (item) => <code>{item.endpoint_identity}</code>,
   },
   { id: "target", header: "Used by target", render: (item) => item.display_name },
@@ -58,21 +61,21 @@ export function SettingsView({ section, targets }: SettingsViewProps) {
         <PageHeader
           eyebrow="Settings"
           title={label}
-          description="Performance Lab keeps serving/runtime ownership outside the product core. These settings expose configured evaluation context without taking over the model runtime."
+          description="Performance Lab evaluates external serving runtimes without taking ownership of model loading or runtime lifecycle."
         />
 
-        {section === "endpoints" &&
+        {section === "model-connections" &&
           (targets.length ? (
             <DataTable
-              caption="Configured endpoint profiles used by targets"
-              columns={ENDPOINT_COLUMNS}
+              caption="Configured model connection profiles used by evaluation targets"
+              columns={CONNECTION_COLUMNS}
               rows={targets}
               rowKey={(item) => `${item.endpoint_profile_id}:${item.target_id}`}
             />
           ) : (
             <EmptyState
-              title="No endpoint context configured"
-              description="Connect a target through the local Performance Lab configuration before starting an evaluation."
+              title="No model connections configured"
+              description="Use Test a model to connect and discover a local server, or configure an evaluation target in the backend. Session connections are not presented as persisted settings."
             />
           ))}
 
@@ -109,8 +112,8 @@ export function SettingsView({ section, targets }: SettingsViewProps) {
                 <Status tone={targets.length ? "success" : "warning"}>{targets.length}</Status>
               </div>
               <p>
-                Advanced target capabilities are read from backend-owned target contracts. Unknown
-                capabilities remain unknown rather than being guessed in the UI.
+                Target capabilities come from backend-owned contracts. Unknown capabilities remain
+                unknown rather than being guessed in the browser.
               </p>
             </article>
           </div>

@@ -139,6 +139,16 @@ export interface SuiteSummaryReadModel extends UIModelIdentity {
   task_ids: string[];
 }
 
+export interface EvaluatorDefinitionReadModel extends UIModelIdentity {
+  evaluator_id: string;
+  version: string;
+  evaluator_type: string;
+  deterministic: boolean | null;
+  explanation_supported: boolean | null;
+  rule_summary: string | null;
+  configuration: Record<string, unknown>;
+}
+
 export interface BaselineSummaryReadModel extends UIModelIdentity {
   baseline_id: string;
   run_id: string;

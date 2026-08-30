@@ -18,25 +18,21 @@ export const SECONDARY_NAVIGATION = {
     {
       label: "Models",
       href: null,
-      disabledReason: "Model registry surface is pending Library convergence.",
+      disabledReason: "Model registry surface is pending a complete model inventory contract.",
     },
-    { label: "Benchmarks", href: "#benchmarks", activeAliases: ["Test suites"] },
+    { label: "Benchmarks", href: "#benchmarks" },
     { label: "Datasets", href: "#datasets" },
-    {
-      label: "Evaluators",
-      href: null,
-      disabledReason: "Evaluator registry surface is pending Library convergence.",
-    },
+    { label: "Evaluators", href: "#evaluators" },
     {
       label: "Evidence",
       href: null,
-      disabledReason: "Evidence repository surface is pending Library convergence.",
+      disabledReason: "Evidence repository surface is pending its dedicated read model.",
     },
     { label: "Baselines", href: "#baselines" },
     { label: "Regression policies", href: "#regression-policies" },
   ],
   Settings: [
-    { label: "Model connections", href: "#model-connections", activeAliases: ["Endpoints"] },
+    { label: "Model connections", href: "#model-connections" },
     { label: "Devices / targets", href: "#devices-targets" },
     {
       label: "Evidence retention",
