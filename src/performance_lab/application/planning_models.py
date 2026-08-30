@@ -9,7 +9,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from performance_lab.domain import GenerationConfig
 
-from .ui_models import DatasetSummaryReadModel, SuiteSummaryReadModel, TargetSummaryReadModel, UIModel
+from .ui_models import (
+    DatasetSummaryReadModel,
+    SuiteSummaryReadModel,
+    TargetSummaryReadModel,
+    UIModel,
+)
 
 
 class CampaignSearchStrategy(StrEnum):
