@@ -58,6 +58,7 @@ test("Live Run can reconnect after a transient initial read failure", async ({ p
   await page.getByRole("button", { name: "Reconnect to run" }).click();
 
   await expect(page.getByRole("heading", { name: "model-candidate" })).toBeVisible();
-  await expect(page.getByText("Live progress connected")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Progress" })).toBeVisible();
+  await expect(page.getByText("Reconnecting to progress")).toBeVisible();
   expect(readAttempts).toBe(2);
 });
