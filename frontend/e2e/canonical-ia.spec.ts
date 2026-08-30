@@ -1,7 +1,11 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 async function fulfillJson(route: Route, payload: unknown) {
-  await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payload) });
+  await route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
 }
 
 async function installEmptyProductFixture(page: Page) {
@@ -29,7 +33,7 @@ async function installEmptyProductFixture(page: Page) {
   });
 }
 
-test("canonical desktop IA stays secondary, truthful and backward compatible", async ({ page }) => {
+test("canonical desktop IA preserves staged navigation", async ({ page }) => {
   await page.setViewportSize({ width: 1536, height: 960 });
   await installEmptyProductFixture(page);
   await page.goto("/#overview");
@@ -45,6 +49,8 @@ test("canonical desktop IA stays secondary, truthful and backward compatible", a
 
   const library = page.getByRole("navigation", { name: "Library" });
   const settings = page.getByRole("navigation", { name: "Settings" });
+  const benchmarks = library.getByRole("link", { name: "Benchmarks" });
+  const modelConnections = settings.getByRole("link", { name: "Model connections" });
   await expect(library).toBeVisible();
   await expect(settings).toBeVisible();
 
@@ -59,33 +65,21 @@ test("canonical desktop IA stays secondary, truthful and backward compatible", a
   await expect(library.getByText("Pending", { exact: true })).toHaveCount(3);
   await expect(settings.getByText("Pending", { exact: true })).toHaveCount(2);
 
-  await library.getByRole("link", { name: "Benchmarks" }).click();
+  await benchmarks.click();
   await expect(page).toHaveURL(/#benchmarks$/);
   await expect(page.getByRole("heading", { name: "Test suites" })).toBeVisible();
-  await expect(
-    page.getByRole("navigation", { name: "Library" }).getByRole("link", { name: "Benchmarks" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expect(benchmarks).toHaveAttribute("aria-current", "page");
 
-  await settings.getByRole("link", { name: "Model connections" }).click();
+  await modelConnections.click();
   await expect(page).toHaveURL(/#model-connections$/);
   await expect(page.getByRole("heading", { name: "Endpoints" })).toBeVisible();
-  await expect(
-    page
-      .getByRole("navigation", { name: "Settings" })
-      .getByRole("link", { name: "Model connections" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expect(modelConnections).toHaveAttribute("aria-current", "page");
 
   await page.goto("/#test-suites");
   await expect(page.getByRole("heading", { name: "Test suites" })).toBeVisible();
-  await expect(
-    page.getByRole("navigation", { name: "Library" }).getByRole("link", { name: "Benchmarks" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expect(benchmarks).toHaveAttribute("aria-current", "page");
 
   await page.goto("/#endpoints");
   await expect(page.getByRole("heading", { name: "Endpoints" })).toBeVisible();
-  await expect(
-    page
-      .getByRole("navigation", { name: "Settings" })
-      .getByRole("link", { name: "Model connections" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expect(modelConnections).toHaveAttribute("aria-current", "page");
 });
