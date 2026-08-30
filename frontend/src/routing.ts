@@ -8,7 +8,7 @@ export type AppRoute =
   | { kind: "compare"; runId?: string }
   | {
       kind: "library";
-      section: "test-suites" | "datasets" | "baselines" | "regression-policies";
+      section: "test-suites" | "datasets" | "evaluators" | "baselines" | "regression-policies";
     }
   | { kind: "settings"; section: "endpoints" | "devices-targets" | "advanced" }
   | { kind: "not-found"; path: string };
@@ -50,7 +50,12 @@ export function parseHash(hash: string): AppRoute {
   if (raw === "benchmarks" || raw === "test-suites") {
     return { kind: "library", section: "test-suites" };
   }
-  if (raw === "datasets" || raw === "baselines" || raw === "regression-policies") {
+  if (
+    raw === "datasets" ||
+    raw === "evaluators" ||
+    raw === "baselines" ||
+    raw === "regression-policies"
+  ) {
     return { kind: "library", section: raw };
   }
 
