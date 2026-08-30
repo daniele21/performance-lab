@@ -1,6 +1,7 @@
 """Browser-facing application query projections."""
 
 from .endpoint_discovery import probe_endpoint_connection
+from .library_queries import UIQueryService
 from .ui_models import (
     UI_READ_MODEL_VERSION,
     BaselineSummaryReadModel,
@@ -35,7 +36,6 @@ from .ui_models import (
     TargetSummaryReadModel,
     TestedModelReadModel,
 )
-from .ui_queries import UIQueryService
 
 __all__ = [
     "UI_READ_MODEL_VERSION",
