@@ -111,7 +111,9 @@ class UIQueryService(EvidenceUIQueryService):
         configured_model_id = (
             self.starter_run_template.model_id if self.starter_run_template is not None else None
         )
-        hardware = self.starter_run_template.hardware if self.starter_run_template is not None else None
+        hardware = (
+            self.starter_run_template.hardware if self.starter_run_template is not None else None
+        )
         targets: list[CampaignTargetPlanningReadModel] = []
         for target in self.list_targets():
             candidates: list[CandidateModelReadModel] = []
@@ -167,7 +169,9 @@ class UIQueryService(EvidenceUIQueryService):
             None,
         )
         if use_case is None:
-            return _blocked("use_case_not_found", "use_case_id", "Selected use case is unavailable.")
+            return _blocked(
+                "use_case_not_found", "use_case_id", "Selected use case is unavailable."
+            )
 
         target_context = next(
             (item for item in context.targets if item.target.target_id == request.target_id),
