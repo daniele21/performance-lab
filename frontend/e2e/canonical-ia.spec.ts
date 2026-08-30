@@ -34,7 +34,9 @@ async function installEmptyProductFixture(page: Page) {
   });
 }
 
-test("canonical desktop IA preserves converged and staged secondary navigation", async ({ page }) => {
+test("canonical desktop IA preserves converged and staged secondary navigation", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1536, height: 960 });
   await installEmptyProductFixture(page);
   await page.goto("/#overview");
