@@ -1,4 +1,9 @@
 import type {
+  CampaignPlanPreviewReadModel,
+  CampaignPlanPreviewRequest,
+  CampaignPlanningContextReadModel,
+} from "./planning-types";
+import type {
   BaselineSummaryReadModel,
   BenchmarkDetailReadModel,
   ComparisonReadModel,
@@ -130,6 +135,18 @@ export function probeEndpoint(connection: EndpointConnectionInput, options?: Req
   return postJson<EndpointConnectionInput, EndpointProbeReadModel>(
     "/api/v1/endpoint-probes",
     connection,
+    options,
+  );
+}
+
+export function getCampaignPlanning(options?: RequestOptions) {
+  return getJson<CampaignPlanningContextReadModel>("/api/v1/campaign-planning", options);
+}
+
+export function previewCampaignPlan(request: CampaignPlanPreviewRequest, options?: RequestOptions) {
+  return postJson<CampaignPlanPreviewRequest, CampaignPlanPreviewReadModel>(
+    "/api/v1/campaign-plan-preview",
+    request,
     options,
   );
 }
