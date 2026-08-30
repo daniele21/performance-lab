@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 
 import {
   listBaselines,
+  listBenchmarks,
   listDatasets,
+  listEvaluators,
   listRegressionPolicies,
-  listSuites,
   type BaselineSummaryReadModel,
   type DatasetSummaryReadModel,
+  type EvaluatorDefinitionReadModel,
   type PolicySummaryReadModel,
   type SuiteSummaryReadModel,
 } from "../../api";
@@ -22,29 +24,52 @@ import {
 } from "../../components";
 import "../secondary.css";
 
-export type LibrarySection = "test-suites" | "datasets" | "baselines" | "regression-policies";
+export type LibrarySection =
+  | "benchmarks"
+  | "datasets"
+  | "evaluators"
+  | "baselines"
+  | "regression-policies";
 
 interface LibraryData {
-  suites: SuiteSummaryReadModel[];
+  benchmarks: SuiteSummaryReadModel[];
   datasets: DatasetSummaryReadModel[];
+  evaluators: EvaluatorDefinitionReadModel[];
   baselines: BaselineSummaryReadModel[];
   policies: PolicySummaryReadModel[];
 }
 
-const EMPTY_DATA: LibraryData = { suites: [], datasets: [], baselines: [], policies: [] };
+const EMPTY_DATA: LibraryData = {
+  benchmarks: [],
+  datasets: [],
+  evaluators: [],
+  baselines: [],
+  policies: [],
+};
 
-const SECTION_LABEL: Record<
-  LibrarySection,
-  "Test suites" | "Datasets" | "Baselines" | "Regression policies"
-> = {
-  "test-suites": "Test suites",
+const SECTION_LABEL: Record<LibrarySection, string> = {
+  benchmarks: "Benchmarks",
   datasets: "Datasets",
+  evaluators: "Evaluators",
   baselines: "Baselines",
   "regression-policies": "Regression policies",
 };
 
-const SUITE_COLUMNS: readonly DataColumn<SuiteSummaryReadModel>[] = [
-  { id: "suite", header: "Suite", render: (item) => item.suite_id },
+const SECTION_DESCRIPTION: Record<LibrarySection, string> = {
+  benchmarks:
+    "Benchmark definitions describe tasks and protocol context. Execution results remain separate immutable Run evidence.",
+  datasets:
+    "Versioned dataset snapshots expose their source and immutable identity without implying mutable catalog state.",
+  evaluators:
+    "Evaluator definitions describe scoring behavior and explanation capability. Weights are contextual, never global.",
+  baselines:
+    "Baselines are explicit immutable Run references used for regression comparisons; no implicit baseline is selected here.",
+  "regression-policies":
+    "Versioned regression policies define comparison thresholds without collapsing quality, performance and resources into one score.",
+};
+
+const BENCHMARK_COLUMNS: readonly DataColumn<SuiteSummaryReadModel>[] = [
+  { id: "benchmark", header: "Benchmark", render: (item) => item.suite_id },
   { id: "version", header: "Version", render: (item) => item.suite_version },
   { id: "tasks", header: "Tasks", render: (item) => String(item.task_count) },
   { id: "task-ids", header: "Task IDs", render: (item) => item.task_ids.join(", ") },
@@ -52,10 +77,39 @@ const SUITE_COLUMNS: readonly DataColumn<SuiteSummaryReadModel>[] = [
 
 const DATASET_COLUMNS: readonly DataColumn<DatasetSummaryReadModel>[] = [
   { id: "dataset", header: "Dataset", render: (item) => item.dataset_id },
-  { id: "version", header: "Version", render: (item) => item.dataset_version },
+  { id: "version", header: "Snapshot", render: (item) => item.dataset_version },
+  { id: "source", header: "Source", render: (item) => item.source },
   { id: "split", header: "Split", render: (item) => item.split },
   { id: "samples", header: "Samples", render: (item) => String(item.sample_count) },
   { id: "selection", header: "Selection", render: (item) => item.selection_policy },
+  {
+    id: "digest",
+    header: "Immutable digest",
+    render: (item) => <code>{item.content_sha256.slice(0, 12)}…</code>,
+  },
+];
+
+const EVALUATOR_COLUMNS: readonly DataColumn<EvaluatorDefinitionReadModel>[] = [
+  { id: "evaluator", header: "Evaluator", render: (item) => item.evaluator_id },
+  { id: "version", header: "Version", render: (item) => item.version },
+  { id: "type", header: "Type", render: (item) => item.evaluator_type },
+  {
+    id: "deterministic",
+    header: "Deterministic",
+    render: (item) =>
+      item.deterministic === null ? "Not reported" : item.deterministic ? "Yes" : "No",
+  },
+  {
+    id: "explanation",
+    header: "Explanation",
+    render: (item) =>
+      item.explanation_supported === null
+        ? "Not reported"
+        : item.explanation_supported
+          ? "Supported"
+          : "Unavailable",
+  },
+  { id: "rules", header: "Rule summary", render: (item) => item.rule_summary ?? "Not reported" },
 ];
 
 const BASELINE_COLUMNS: readonly DataColumn<BaselineSummaryReadModel>[] = [
@@ -86,33 +140,35 @@ interface LibraryViewProps {
 
 export function LibraryView({ section, data }: LibraryViewProps) {
   const label = SECTION_LABEL[section];
-  const commonDescription =
-    "Library is read-only product context. Benchmark definitions and evidence identity remain owned by the backend contracts.";
 
   return (
     <AppShell activeSecondary={label}>
       <div className="secondary-page">
-        <PageHeader eyebrow="Library" title={label} description={commonDescription} />
+        <PageHeader
+          eyebrow="Library"
+          title={label}
+          description={SECTION_DESCRIPTION[section]}
+        />
 
-        {section === "test-suites" &&
-          (data.suites.length ? (
+        {section === "benchmarks" &&
+          (data.benchmarks.length ? (
             <DataTable
-              caption="Available test suites"
-              columns={SUITE_COLUMNS}
-              rows={data.suites}
+              caption="Available benchmark definitions"
+              columns={BENCHMARK_COLUMNS}
+              rows={data.benchmarks}
               rowKey={(item) => `${item.suite_id}:${item.suite_version}`}
             />
           ) : (
             <EmptyState
-              title="No test suites available"
-              description="Configured evaluation suites will appear here when exposed by the local Performance Lab backend."
+              title="No benchmarks available"
+              description="Configured benchmark definitions will appear here when exposed by the local Performance Lab backend."
             />
           ))}
 
         {section === "datasets" &&
           (data.datasets.length ? (
             <DataTable
-              caption="Available datasets"
+              caption="Available dataset snapshots"
               columns={DATASET_COLUMNS}
               rows={data.datasets}
               rowKey={(item) => `${item.dataset_id}:${item.dataset_version}:${item.split}`}
@@ -120,7 +176,22 @@ export function LibraryView({ section, data }: LibraryViewProps) {
           ) : (
             <EmptyState
               title="No datasets available"
-              description="Frozen dataset identities will appear here when a configured suite exposes them."
+              description="Frozen dataset identities will appear here when a configured benchmark exposes them."
+            />
+          ))}
+
+        {section === "evaluators" &&
+          (data.evaluators.length ? (
+            <DataTable
+              caption="Available evaluator definitions"
+              columns={EVALUATOR_COLUMNS}
+              rows={data.evaluators}
+              rowKey={(item) => `${item.evaluator_id}:${item.version}`}
+            />
+          ) : (
+            <EmptyState
+              title="No evaluators available"
+              description="Evaluator definitions will appear here when registered by the backend."
             />
           ))}
 
@@ -163,6 +234,22 @@ type LoadState =
   | { status: "ready"; data: LibraryData }
   | { status: "error"; message: string };
 
+async function loadSection(section: LibrarySection, signal: AbortSignal): Promise<LibraryData> {
+  if (section === "benchmarks") {
+    return { ...EMPTY_DATA, benchmarks: await listBenchmarks({ signal }) };
+  }
+  if (section === "datasets") {
+    return { ...EMPTY_DATA, datasets: await listDatasets({ signal }) };
+  }
+  if (section === "evaluators") {
+    return { ...EMPTY_DATA, evaluators: await listEvaluators({ signal }) };
+  }
+  if (section === "baselines") {
+    return { ...EMPTY_DATA, baselines: await listBaselines({ signal }) };
+  }
+  return { ...EMPTY_DATA, policies: await listRegressionPolicies({ signal }) };
+}
+
 export function LibraryPage({ section }: { section: LibrarySection }) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<LoadState>({ status: "loading" });
@@ -170,15 +257,8 @@ export function LibraryPage({ section }: { section: LibrarySection }) {
   useEffect(() => {
     const controller = new AbortController();
     setState({ status: "loading" });
-    Promise.all([
-      listSuites({ signal: controller.signal }),
-      listDatasets({ signal: controller.signal }),
-      listBaselines({ signal: controller.signal }),
-      listRegressionPolicies({ signal: controller.signal }),
-    ])
-      .then(([suites, datasets, baselines, policies]) => {
-        setState({ status: "ready", data: { suites, datasets, baselines, policies } });
-      })
+    loadSection(section, controller.signal)
+      .then((data) => setState({ status: "ready", data }))
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setState({
@@ -187,7 +267,7 @@ export function LibraryPage({ section }: { section: LibrarySection }) {
         });
       });
     return () => controller.abort();
-  }, [attempt]);
+  }, [attempt, section]);
 
   const label = SECTION_LABEL[section];
   if (state.status === "loading") {
@@ -195,7 +275,7 @@ export function LibraryPage({ section }: { section: LibrarySection }) {
       <AppShell activeSecondary={label}>
         <LoadingState
           title={`Loading ${label.toLowerCase()}`}
-          description="Reading canonical local configuration and evidence references."
+          description="Reading canonical local definitions and evidence references."
         />
       </AppShell>
     );
@@ -213,5 +293,5 @@ export function LibraryPage({ section }: { section: LibrarySection }) {
     );
   }
 
-  return <LibraryView section={section} data={state.data ?? EMPTY_DATA} />;
+  return <LibraryView section={section} data={state.data} />;
 }
