@@ -16,7 +16,10 @@ import "../secondary.css";
 
 export type SettingsSection = "model-connections" | "devices-targets" | "advanced";
 
-const SECTION_LABEL: Record<SettingsSection, "Model connections" | "Devices / targets" | "Advanced"> = {
+const SECTION_LABEL: Record<
+  SettingsSection,
+  "Model connections" | "Devices / targets" | "Advanced"
+> = {
   "model-connections": "Model connections",
   "devices-targets": "Devices / targets",
   advanced: "Advanced",
