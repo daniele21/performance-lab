@@ -216,14 +216,15 @@ test("J1 discovery: connect local server, discover model, freeze, run and inspec
   await expect(page.getByText("Connection discovered")).toBeVisible();
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("model-discovered");
 
-  const runtimeConfig = page.getByRole("group", {
-    name: "Runtime configuration reported by Local LLM Server",
+  const runtimeConfig = page.locator("details.disclosure").filter({
+    has: page
+      .locator("summary")
+      .filter({ hasText: "Runtime configuration reported by Local LLM Server" }),
   });
+  await expect(runtimeConfig).not.toHaveAttribute("open", "");
   await expect(runtimeConfig.getByText("n_batch")).toBeHidden();
-  await page
-    .locator("summary")
-    .filter({ hasText: "Runtime configuration reported by Local LLM Server" })
-    .click();
+  await runtimeConfig.locator("summary").click();
+  await expect(runtimeConfig).toHaveAttribute("open", "");
   await expect(runtimeConfig.getByText("n_batch")).toBeVisible();
 
   expect(probeBody).toMatchObject({
