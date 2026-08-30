@@ -4,12 +4,13 @@ import { describe, expect, it } from "vitest";
 import type {
   BaselineSummaryReadModel,
   DatasetSummaryReadModel,
+  EvaluatorDefinitionReadModel,
   PolicySummaryReadModel,
   SuiteSummaryReadModel,
 } from "../../api";
 import { LibraryView } from "./LibraryPage";
 
-const suite: SuiteSummaryReadModel = {
+const benchmark: SuiteSummaryReadModel = {
   api_version: "v1",
   read_model_version: 1,
   suite_id: "starter",
@@ -30,6 +31,18 @@ const dataset: DatasetSummaryReadModel = {
   content_sha256: "a".repeat(64),
 };
 
+const evaluator: EvaluatorDefinitionReadModel = {
+  api_version: "v1",
+  read_model_version: 1,
+  evaluator_id: "exact-match",
+  version: "1",
+  evaluator_type: "deterministic",
+  deterministic: true,
+  explanation_supported: false,
+  rule_summary: "Exact normalized match",
+  configuration: {},
+};
+
 const baseline: BaselineSummaryReadModel = {
   api_version: "v1",
   read_model_version: 1,
@@ -48,9 +61,42 @@ const policy: PolicySummaryReadModel = {
   rule_count: 3,
 };
 
-const data = { suites: [suite], datasets: [dataset], baselines: [baseline], policies: [policy] };
+const data = {
+  benchmarks: [benchmark],
+  datasets: [dataset],
+  evaluators: [evaluator],
+  baselines: [baseline],
+  policies: [policy],
+};
 
 describe("LibraryView", () => {
+  it("uses benchmark terminology and keeps definition separate from Run results", () => {
+    const markup = renderToStaticMarkup(<LibraryView section="benchmarks" data={data} />);
+
+    expect(markup).toContain("Benchmarks");
+    expect(markup).toContain("starter");
+    expect(markup).toContain("Execution results remain separate immutable Run evidence");
+    expect(markup).not.toContain("Test suites");
+  });
+
+  it("keeps dataset snapshot provenance visible", () => {
+    const markup = renderToStaticMarkup(<LibraryView section="datasets" data={data} />);
+
+    expect(markup).toContain("dataset-a");
+    expect(markup).toContain("fixture");
+    expect(markup).toContain("frozen");
+    expect(markup).toContain("aaaaaaaaaaaa…");
+  });
+
+  it("shows evaluator rules without inventing a global weight", () => {
+    const markup = renderToStaticMarkup(<LibraryView section="evaluators" data={data} />);
+
+    expect(markup).toContain("exact-match");
+    expect(markup).toContain("Exact normalized match");
+    expect(markup).toContain("Weights are contextual, never global");
+    expect(markup).not.toContain("Default weight");
+  });
+
   it("shows explicit immutable baseline identity rather than inventing one", () => {
     const markup = renderToStaticMarkup(<LibraryView section="baselines" data={data} />);
 
@@ -58,13 +104,5 @@ describe("LibraryView", () => {
     expect(markup).toContain("run-a");
     expect(markup).toContain("fp-a");
     expect(markup).not.toContain("Recommended baseline");
-  });
-
-  it("keeps dataset provenance visible as backend-owned context", () => {
-    const markup = renderToStaticMarkup(<LibraryView section="datasets" data={data} />);
-
-    expect(markup).toContain("dataset-a");
-    expect(markup).toContain("frozen");
-    expect(markup).toContain("Benchmark definitions and evidence identity remain owned");
   });
 });
