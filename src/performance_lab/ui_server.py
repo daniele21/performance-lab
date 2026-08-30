@@ -14,7 +14,11 @@ from fastapi.staticfiles import StaticFiles
 
 from performance_lab.application import UIQueryService
 from performance_lab.application.run_jobs import RunJobManager
-from performance_lab.datasets import build_general_starter_suite
+from performance_lab.datasets import (
+    available_workload_packs,
+    build_general_starter_suite,
+    build_workload_pack,
+)
 from performance_lab.domain import Target
 from performance_lab.run_config import RunConfigError, StarterRunConfig, load_starter_run_config
 from performance_lab.storage import SQLiteRunStore
@@ -54,6 +58,10 @@ def build_local_ui_app(
     """Build the real local UI graph from one versioned starter execution config."""
 
     bundle = build_general_starter_suite()
+    workload_bundles = tuple(
+        build_workload_pack(definition.pack_id, version=definition.version)
+        for definition in available_workload_packs()
+    )
     store = SQLiteRunStore(config.store_path)
     target = Target(
         target_id=config.target_id,
@@ -71,6 +79,7 @@ def build_local_ui_app(
         inspectable_datasets=tuple(bundle.datasets.values()),
         evaluators=tuple(bundle.evaluators.values()),
         starter_run_template=config,
+        workload_packs=workload_bundles,
     )
     run_jobs = RunJobManager(recovered_runs=store.list_working())
     app = create_ui_app(queries, run_jobs=run_jobs)
