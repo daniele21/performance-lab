@@ -204,10 +204,15 @@ test("J7: benchmark definition exposes inspectable cases and evaluator rules", a
   await expect(page.getByRole("heading", { name: "starter" })).toBeVisible();
   await expect(page.getByText("Benchmark definition", { exact: true })).toBeVisible();
 
-  await page.getByText("case-a · task-a").click();
-  await expect(page.getByText("Question?")).toBeVisible();
-  await expect(page.getByText("Expected answer")).toBeVisible();
-  await expect(page.getByText("Normalize text and compare exact equality.")).toBeVisible();
+  const caseDisclosure = page.locator("details").filter({
+    has: page.getByText("case-a · task-a", { exact: true }),
+  });
+  await caseDisclosure.locator("summary").click();
+  await expect(caseDisclosure.getByText("Question?", { exact: true })).toBeVisible();
+  await expect(caseDisclosure.getByText("Expected answer", { exact: true })).toBeVisible();
+  await expect(
+    caseDisclosure.getByText("Normalize text and compare exact equality.", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("model-a")).toHaveCount(0);
 });
 
