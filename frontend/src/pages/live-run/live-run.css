@@ -5,7 +5,8 @@
 }
 
 .live-run-status-row,
-.live-run-actions {
+.live-run-actions,
+.live-run-recovery-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
@@ -78,7 +79,8 @@
     grid-template-columns: 1fr;
   }
 
-  .live-run-actions {
+  .live-run-actions,
+  .live-run-recovery-actions {
     align-items: flex-start;
     flex-direction: column;
   }

@@ -80,6 +80,16 @@ describe("RunDetailView", () => {
     expect(markup).toContain("Not evaluated");
   });
 
+  it("makes evidence inspection primary while keeping comparison secondary", () => {
+    const markup = renderToStaticMarkup(<RunDetailView run={run} />);
+
+    expect(markup).toContain("button button--primary");
+    expect(markup).toContain("Inspect evidence");
+    expect(markup).toContain("button button--secondary");
+    expect(markup).toContain("Compare");
+    expect(markup).toContain('aria-label="Run evidence and reproducibility"');
+  });
+
   it("exposes immutable evidence identity without inventing a generic verdict", () => {
     const markup = renderToStaticMarkup(<RunDetailView run={run} />);
 

@@ -47,6 +47,7 @@ function stateTone(state: RunJobSnapshot["state"]): "neutral" | "success" | "war
 export function LiveRunPage({ jobId, onCompleted, onTestAgain, onRuns }: LiveRunPageProps) {
   const [snapshot, setSnapshot] = useState<RunJobSnapshot | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadAttempt, setReloadAttempt] = useState(0);
   const [connection, setConnection] = useState<ConnectionState>("connecting");
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
@@ -55,6 +56,10 @@ export function LiveRunPage({ jobId, onCompleted, onTestAgain, onRuns }: LiveRun
     const controller = new AbortController();
     let disposed = false;
     let closeStream: () => void = () => undefined;
+
+    setLoadError(null);
+    setSnapshot(null);
+    setConnection("connecting");
 
     const applySnapshot = (next: RunJobSnapshot) => {
       if (disposed) return;
@@ -88,7 +93,7 @@ export function LiveRunPage({ jobId, onCompleted, onTestAgain, onRuns }: LiveRun
       controller.abort();
       closeStream();
     };
-  }, [jobId, onCompleted]);
+  }, [jobId, onCompleted, reloadAttempt]);
 
   const cancel = () => {
     if (!snapshot || isTerminal(snapshot)) return;
@@ -107,8 +112,17 @@ export function LiveRunPage({ jobId, onCompleted, onTestAgain, onRuns }: LiveRun
       <AppShell activePrimary="Runs">
         <ErrorState
           title="Could not reconnect to this run"
-          description={`${loadError} The server-owned job may still be running; reload or return to Runs before starting another evaluation.`}
-          action={<Button onClick={onRuns}>Back to Runs</Button>}
+          description={`${loadError} The server-owned job may still be running. Reconnect to read its latest state before starting another evaluation.`}
+          action={
+            <div className="live-run-recovery-actions">
+              <Button variant="primary" onClick={() => setReloadAttempt((value) => value + 1)}>
+                Reconnect to run
+              </Button>
+              <Button variant="quiet" onClick={onRuns}>
+                Back to Runs
+              </Button>
+            </div>
+          }
         />
       </AppShell>
     );

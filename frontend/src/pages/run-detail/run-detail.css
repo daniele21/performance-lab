@@ -10,6 +10,12 @@
   text-decoration: none;
 }
 
+.run-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .run-detail__status-row {
   display: flex;
   gap: var(--space-4);
@@ -31,6 +37,11 @@
   display: grid;
   gap: var(--space-4);
   min-width: 0;
+}
+
+.run-detail__evidence:focus {
+  outline: 2px solid var(--color-focus);
+  outline-offset: var(--space-2);
 }
 
 .run-detail__evidence-summary {
