@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
-import { getRun } from "../../api";
-import type { MetricReadModel, RunDetailReadModel } from "../../api";
+import { getRun, listRunSamples } from "../../api";
+import type { MetricReadModel, RunDetailReadModel, SampleSummaryReadModel } from "../../api";
 import {
   AppShell,
   Button,
   Disclosure,
+  EmptyState,
   ErrorState,
   LoadingState,
   Metric,
@@ -14,6 +15,7 @@ import {
   SectionHeader,
   Status,
 } from "../../components";
+import "../evidence-drilldown.css";
 import "./run-detail.css";
 
 interface RunDetailViewProps {
@@ -32,6 +34,12 @@ function statusTone(status: RunDetailReadModel["summary"]["status"]) {
   if (status === "failed") return "error" as const;
   if (status === "cancelled") return "warning" as const;
   return "neutral" as const;
+}
+
+function sampleTone(status: SampleSummaryReadModel["status"]) {
+  if (status === "succeeded") return "success" as const;
+  if (status === "failed") return "error" as const;
+  return "warning" as const;
 }
 
 function Metrics({
@@ -67,6 +75,113 @@ function Metrics({
           <Metric label={title} value={null} dimension={dimension} availability="not_evaluated" />
         </MetricGroup>
       )}
+    </section>
+  );
+}
+
+type SamplesState =
+  | { status: "loading" }
+  | { status: "ready"; samples: SampleSummaryReadModel[] }
+  | { status: "error"; message: string };
+
+export function RunSamplesSection({ runId }: { runId: string }) {
+  const [attempt, setAttempt] = useState(0);
+  const [state, setState] = useState<SamplesState>({ status: "loading" });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setState({ status: "loading" });
+    listRunSamples(runId, { signal: controller.signal })
+      .then((samples) => setState({ status: "ready", samples }))
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setState({
+          status: "error",
+          message: error instanceof Error ? error.message : "Run samples could not be loaded.",
+        });
+      });
+    return () => controller.abort();
+  }, [attempt, runId]);
+
+  return (
+    <section className="evidence-drilldown__section" aria-labelledby="run-samples-heading">
+      <SectionHeader
+        title="Samples"
+        description="Each row is one immutable benchmark-case attempt contributing to this run."
+      />
+      <span id="run-samples-heading" className="sr-only">
+        Run samples
+      </span>
+      {state.status === "loading" ? (
+        <div className="evidence-drilldown__notice" role="status">
+          <p>Loading sample evidence…</p>
+        </div>
+      ) : null}
+      {state.status === "error" ? (
+        <div className="evidence-drilldown__notice" role="alert">
+          <strong>Could not load run samples</strong>
+          <p>{state.message}</p>
+          <div>
+            <Button onClick={() => setAttempt((value) => value + 1)}>Try again</Button>
+          </div>
+        </div>
+      ) : null}
+      {state.status === "ready" && !state.samples.length ? (
+        <EmptyState
+          title="No sample evidence retained"
+          description="This run has no retained sample attempts to inspect."
+        />
+      ) : null}
+      {state.status === "ready" && state.samples.length ? (
+        <div className="evidence-drilldown__stack">
+          {state.samples.map((sample) => (
+            <article
+              className="evidence-drilldown__card"
+              key={`${sample.task_id}:${sample.sample_id}:${sample.attempt}`}
+            >
+              <div className="evidence-drilldown__card-header">
+                <div>
+                  <h3>{sample.sample_id}</h3>
+                  <p>
+                    {sample.task_id} · attempt {sample.attempt}
+                  </p>
+                </div>
+                <Status tone={sampleTone(sample.status)}>{sample.status}</Status>
+              </div>
+              <div className="evidence-drilldown__metadata-grid">
+                <div>
+                  <dl>
+                    <dt>Elapsed</dt>
+                    <dd>{sample.elapsed_ms.toFixed(1)} ms</dd>
+                  </dl>
+                </div>
+                <div>
+                  <dl>
+                    <dt>Tokens</dt>
+                    <dd>
+                      {sample.input_tokens ?? "?"} in · {sample.output_tokens ?? "?"} out
+                    </dd>
+                  </dl>
+                </div>
+                <div>
+                  <dl>
+                    <dt>Evidence</dt>
+                    <dd>
+                      {sample.score_count} scores · {sample.measurement_count} measurements
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+              <a
+                className="evidence-drilldown__link"
+                href={`#runs/${encodeURIComponent(runId)}/samples/${encodeURIComponent(sample.task_id)}/${encodeURIComponent(sample.sample_id)}/${sample.attempt}`}
+              >
+                Inspect sample evidence
+              </a>
+            </article>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -126,6 +241,8 @@ export function RunDetailView({ run, onCompare }: RunDetailViewProps) {
           dimension="resources"
           metrics={summary.metrics}
         />
+
+        <RunSamplesSection runId={summary.run_id} />
 
         <section
           className="run-detail__evidence"
