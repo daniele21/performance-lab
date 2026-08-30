@@ -4,13 +4,13 @@ Status: active
 Document type: current-state
 Owner: repository
 Canonical scope: state.repository
-Last reviewed: 2026-08-29
+Last reviewed: 2026-08-30
 
 Short operational ledger only. Durable behavior belongs in architecture/ADR/design docs; active detail belongs in workstreams; Git history owns implementation history.
 
 ## Current phase
 
-The benchmark/evidence core and local browser product are integrated on `dev`. Remaining product evidence is representative-hardware validation plus the evidence-gated cutover of evaluation responsibilities duplicated in Local LLM Server.
+The benchmark/evidence core and local browser product are integrated on `dev`. A new coordinated product UX/UI convergence workstream is active to move the built desktop product from the existing manual/run/compare baseline to the current use-case-first UX contract and approved design targets. Remaining product evidence also includes representative-hardware validation plus the evidence-gated cutover of evaluation responsibilities duplicated in Local LLM Server.
 
 Primary product question:
 
@@ -53,8 +53,17 @@ Hosted CI/fixtures do not prove `RUNTIME-1`. Real model/runtime identity, physic
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
+| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | ACTIVE | UXUI-00: restore exact-head Browser Acceptance on PR #65, complete preflight and merge the UX/discovery baseline to `dev` |
 | [Representative device evidence](workstreams/representative-device-evidence.md) | READY | first real LLS/model/device run with retained fingerprint/bundle |
 | [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 IMPLEMENTATION DONE-EVIDENCE BLOCKED / MIG-003 BLOCKED | retain EV-3 + run PL against real LLS, then remove redundant evaluation paths and smoke |
+
+## Product UX/UI convergence
+
+`design/ux-contract.json` and `design/brand-kit.json` own the durable product experience. Approved generated desktop targets are organized under `design/reference/visual-targets/desktop-standard/` and are design intent, not pixel-diff truth.
+
+PR #65 owns the current baseline addition: use-case-first `Find best setup` UX shell, loopback local-model discovery and the approved target set. The automatic campaign engine remains intentionally unimplemented until backend-owned use-case planning, configuration search, campaign lifecycle and compatibility-aware recommendation contracts exist.
+
+After PR #65 is green and integrated, independent work should be parallelized only along explicit write boundaries: shared design-system primitives, backend Library/evidence read models, then separate manual-journey and Library/Settings page convergence. Campaign planning/lifecycle/recommendation remains a sequential shared contract.
 
 ## Evaluation migration
 
@@ -77,6 +86,8 @@ MIG-003 requires two post-convergence EV-3 reports, a real PL run against LLS wi
 
 ## Evidence still required
 
+- completion of UXUI-00 exact-head Browser Acceptance and integration of PR #65;
+- later J7-J9 browser/product evidence as benchmark/sample/campaign contracts become executable;
 - representative resident-model run(s) with retained fingerprints/bundles;
 - controlled repeated/load evidence on known hardware;
 - real identity/telemetry validation;
