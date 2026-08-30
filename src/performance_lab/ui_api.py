@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Query, Response, status
+from fastapi import FastAPI, HTTPException, Path, Query, Response, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -22,6 +22,8 @@ from performance_lab.application import (
     RunPreflightReadModel,
     RunPreflightRequest,
     RunSummaryReadModel,
+    SampleEvidenceDetailReadModel,
+    SampleSummaryReadModel,
     ScenarioSummaryReadModel,
     SuiteSummaryReadModel,
     TargetSummaryReadModel,
@@ -93,6 +95,28 @@ def create_ui_app(
             return queries.get_run(run_id)
         except (LookupError, RunNotFoundError) as exc:
             raise HTTPException(status_code=404, detail="completed run not found") from exc
+
+    @app.get("/api/v1/runs/{run_id}/samples", response_model=list[SampleSummaryReadModel])
+    def list_run_samples(run_id: str) -> tuple[SampleSummaryReadModel, ...]:
+        try:
+            return queries.list_run_samples(run_id)
+        except (LookupError, RunNotFoundError) as exc:
+            raise HTTPException(status_code=404, detail="completed run not found") from exc
+
+    @app.get(
+        "/api/v1/runs/{run_id}/samples/{task_id}/{sample_id}/{attempt}",
+        response_model=SampleEvidenceDetailReadModel,
+    )
+    def get_sample_evidence(
+        run_id: str,
+        task_id: str,
+        sample_id: str,
+        attempt: int = Path(ge=1),
+    ) -> SampleEvidenceDetailReadModel:
+        try:
+            return queries.get_sample_evidence(run_id, task_id, sample_id, attempt)
+        except (LookupError, RunNotFoundError) as exc:
+            raise HTTPException(status_code=404, detail="sample evidence not found") from exc
 
     @app.get("/api/v1/tested-models", response_model=list[TestedModelReadModel])
     def list_tested_models() -> tuple[TestedModelReadModel, ...]:
