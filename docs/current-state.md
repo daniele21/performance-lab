@@ -10,7 +10,7 @@ Short operational ledger only. Durable behavior belongs in architecture/ADR/desi
 
 ## Current phase
 
-The desktop browser product covers use-case-first planning/results, evidence drill-down, same-case comparison and product hardening. Product UX/UI convergence remains active for final human accessibility/usability review. Representative-hardware evidence is blocked behind `PRE_REAL_E2E` so real-device work confirms residual runtime/hardware gaps rather than ordinary product-flow defects.
+The desktop browser product covers use-case-first planning/results, evidence drill-down, same-case comparison and product hardening. Product UX/UI convergence remains active for final human accessibility/usability review. `PRE_REAL_E2E` now gates representative-hardware work so real-device runs confirm residual runtime/hardware gaps rather than discover ordinary product-flow defects.
 
 Primary product question:
 
@@ -24,7 +24,7 @@ Campaigns revalidate frozen plan digests, persist reconnectable lifecycle separa
 
 Product hardening covers keyboard/focus semantics, assistive loading/error feedback, reduced motion, long-content containment and 1024/1280/1600 desktop widths. Five provenance-bound 1536x960 browser goldens protect selected high-value surfaces.
 
-Browser J0-J9 acceptance is executable; packaged-product evidence covers J0/J1/J8/J9 through the installed wheel, built frontend, loopback API, SQLite and deterministic inference fixture. `PRE_REAL_E2E` requires screenshots plus Playwright traces for every browser journey and the declared packaged journeys before `RUNTIME-1`. Exact-head evidence for the new gate is pending integration.
+`PRE_REAL_E2E` requires every J0-J9 browser journey to pass with retained screenshot and Playwright trace, then requires assembled packaged-product evidence for J0/J1/J8/J9. The current acceptance evidence satisfies both layers and reports `READY_FOR_REAL_ENVIRONMENT: YES`; subsequent real-device work must still use a current passing gate rather than treating this status text as evidence.
 
 Hosted fixtures never prove representative hardware/runtime behavior; `RUNTIME-1` remains real-environment evidence.
 
@@ -33,8 +33,8 @@ Hosted fixtures never prove representative hardware/runtime behavior; `RUNTIME-1
 | Workstream | State | Next gate |
 | --- | --- | --- |
 | [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | ACTIVE | UXUI-10 manual compact/standard/wide accessibility and representative-user review |
-| [Representative device evidence](workstreams/representative-device-evidence.md) | BLOCKED | `PRE_REAL_E2E = PASS` / `READY_FOR_REAL_ENVIRONMENT: YES`, then first real LLS/model/device run |
-| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 EVIDENCE BLOCKED / MIG-003 BLOCKED | EV-3 + pre-real acceptance + real PL replacement run, then redundant-path removal/smoke |
+| [Representative device evidence](workstreams/representative-device-evidence.md) | READY | first real LLS/model/device run with retained fingerprint/bundle; re-check current `PRE_REAL_E2E` before execution |
+| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 EVIDENCE BLOCKED / MIG-003 BLOCKED | EV-3 + real PL replacement run, then redundant-path removal/smoke |
 
 ## UX/UI baseline
 
@@ -48,7 +48,7 @@ UXUI-10 has automated implementation-golden evidence; manual assistive-technolog
 
 Post-cutover evaluation evidence belongs to Performance Lab under PL-native identities; existing LLS `general-purpose@1.0.0` evidence remains legacy. Serving, residency, runtime identity/status, provider metrics and hardware/resource correctness remain LLS-owned.
 
-MIG-003 still requires EV-3, `PRE_REAL_E2E = PASS`, a real PL run against LLS and post-disable serving/runtime smoke.
+MIG-003 still requires EV-3, a current passing `PRE_REAL_E2E`, a real PL run against LLS and post-disable serving/runtime smoke.
 
 ## Integration lines
 
@@ -57,7 +57,6 @@ MIG-003 still requires EV-3, `PRE_REAL_E2E = PASS`, a real PL run against LLS an
 
 ## Evidence still required
 
-- exact-head `PRE_REAL_E2E` bundle: J0-J9 browser screenshots/traces plus packaged J0/J1/J8/J9 evidence;
 - UXUI-10 manual accessibility/representative-user acceptance;
 - representative resident-model identity/resource/telemetry/repeated-load evidence after pre-real acceptance;
 - LLS EV-3, real PL replacement run and post-disable cross-repository smoke;
