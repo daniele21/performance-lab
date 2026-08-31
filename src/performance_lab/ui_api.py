@@ -12,6 +12,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from performance_lab.application import (
     BaselineSummaryReadModel,
     BenchmarkDetailReadModel,
+    CampaignCaseComparisonReadModel,
+    CampaignCaseSummaryReadModel,
     CampaignPlanDigestMismatchError,
     CampaignPlanLaunchError,
     CampaignPlanningContextReadModel,
@@ -154,6 +156,34 @@ def create_ui_app(
             return read_queries.get(campaign_id)
         except CampaignNotFoundError as exc:
             raise HTTPException(status_code=404, detail="campaign not found") from exc
+
+    @app.get(
+        "/api/v1/campaigns/{campaign_id}/cases",
+        response_model=list[CampaignCaseSummaryReadModel],
+    )
+    def list_campaign_cases(campaign_id: str) -> tuple[CampaignCaseSummaryReadModel, ...]:
+        _, read_queries = _require_campaigns(campaign_jobs, campaign_queries)
+        try:
+            return read_queries.list_cases(campaign_id)
+        except CampaignNotFoundError as exc:
+            raise HTTPException(status_code=404, detail="campaign not found") from exc
+
+    @app.get(
+        "/api/v1/campaigns/{campaign_id}/cases/{task_id}/{sample_id}",
+        response_model=CampaignCaseComparisonReadModel,
+    )
+    def compare_campaign_case(
+        campaign_id: str,
+        task_id: str,
+        sample_id: str,
+    ) -> CampaignCaseComparisonReadModel:
+        _, read_queries = _require_campaigns(campaign_jobs, campaign_queries)
+        try:
+            return read_queries.compare_case(campaign_id, task_id, sample_id)
+        except CampaignNotFoundError as exc:
+            raise HTTPException(status_code=404, detail="campaign not found") from exc
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail="campaign case evidence not found") from exc
 
     @app.post("/api/v1/campaigns/{campaign_id}/cancel", response_model=CampaignReadModel)
     async def cancel_campaign(campaign_id: str) -> CampaignReadModel:

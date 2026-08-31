@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Literal, Protocol
 
 from performance_lab.domain import (
     TERMINAL_CAMPAIGN_STATUSES,
     Campaign,
+    CampaignEntry,
     CampaignEntryStatus,
     CampaignStatus,
     ComparisonDimension,
     MeasurementProvenance,
     Run,
     RunStatus,
+    SampleExecution,
     compare_fingerprints,
 )
 
 from .campaign_models import (
+    CampaignCaseCandidateReadModel,
+    CampaignCaseComparisonReadModel,
+    CampaignCaseSummaryReadModel,
     CampaignCompatibilityReasonReadModel,
     CampaignDimensionReadModel,
     CampaignEntryReadModel,
@@ -30,6 +35,7 @@ from .campaign_policy import (
     decision_policy_read_model,
     recommend_strict_quality_dominance,
 )
+from .evidence_models import SampleEvidenceDetailReadModel
 from .ui_models import RunDetailReadModel
 from .ui_queries import CompletedRunReader
 
@@ -45,6 +51,14 @@ class RunProjectionQueries(Protocol):
 
     def get_run(self, run_id: str) -> RunDetailReadModel: ...
 
+    def get_sample_evidence(
+        self,
+        run_id: str,
+        task_id: str,
+        sample_id: str,
+        attempt: int,
+    ) -> SampleEvidenceDetailReadModel: ...
+
 
 class CampaignQueryService:
     """Join Campaign progress with immutable Run evidence without changing either owner."""
@@ -58,6 +72,221 @@ class CampaignQueryService:
 
     def get(self, campaign_id: str) -> CampaignReadModel:
         return self._project(self._campaigns.get(campaign_id))
+
+    def list_cases(self, campaign_id: str) -> tuple[CampaignCaseSummaryReadModel, ...]:
+        """List retained case identities without manufacturing case content or joins in the UI."""
+        campaign = self._campaigns.get(campaign_id)
+        runs = tuple(
+            run
+            for entry in campaign.entries
+            if entry.run_id is not None
+            for run in (self._runs.store.get_completed(entry.run_id, required=False),)
+            if run is not None
+        )
+        identities = sorted(
+            {(sample.task_id, sample.sample_id) for run in runs for sample in run.samples}
+        )
+        summaries: list[CampaignCaseSummaryReadModel] = []
+        for task_id, sample_id in identities:
+            available = 0
+            case_id = None
+            for run in runs:
+                matches = _matching_samples(run, task_id, sample_id)
+                if len(matches) != 1:
+                    continue
+                available += 1
+                if case_id is not None:
+                    continue
+                try:
+                    evidence = self._runs.get_sample_evidence(
+                        run.run_id,
+                        task_id,
+                        sample_id,
+                        matches[0].attempt,
+                    )
+                except LookupError:
+                    continue
+                if evidence.benchmark_case is not None:
+                    case_id = evidence.benchmark_case.case_id
+            summaries.append(
+                CampaignCaseSummaryReadModel(
+                    task_id=task_id,
+                    sample_id=sample_id,
+                    case_id=case_id,
+                    candidate_count=len(campaign.entries),
+                    available_candidate_count=available,
+                )
+            )
+        return tuple(summaries)
+
+    def compare_case(
+        self,
+        campaign_id: str,
+        task_id: str,
+        sample_id: str,
+    ) -> CampaignCaseComparisonReadModel:
+        """Compare one exact retained case across Campaign candidates using Python-owned truth."""
+        campaign = self._campaigns.get(campaign_id)
+        available: dict[
+            str,
+            tuple[CampaignEntry, Run, SampleEvidenceDetailReadModel],
+        ] = {}
+        unavailable: dict[str, str] = {}
+        raw_runs: dict[str, Run] = {}
+
+        for entry in campaign.entries:
+            if entry.run_id is None:
+                unavailable[entry.entry_id] = "Campaign entry has no immutable Run identity."
+                continue
+            run = self._runs.store.get_completed(entry.run_id, required=False)
+            if run is None:
+                unavailable[entry.entry_id] = "Immutable Run evidence is unavailable."
+                continue
+            raw_runs[entry.entry_id] = run
+            matches = _matching_samples(run, task_id, sample_id)
+            if not matches:
+                unavailable[entry.entry_id] = (
+                    "This exact benchmark case is not retained in this Run."
+                )
+                continue
+            if len(matches) != 1:
+                unavailable[entry.entry_id] = (
+                    "Multiple retained attempts exist for this case; select an exact attempt "
+                    "before comparing."
+                )
+                continue
+            try:
+                evidence = self._runs.get_sample_evidence(
+                    run.run_id,
+                    task_id,
+                    sample_id,
+                    matches[0].attempt,
+                )
+            except LookupError:
+                unavailable[entry.entry_id] = "Sample evidence projection is unavailable."
+                continue
+            available[entry.entry_id] = (entry, run, evidence)
+
+        if not available:
+            raise LookupError(f"campaign case not found: {campaign_id}/{task_id}/{sample_id}")
+
+        reference_entry, reference_run, reference_evidence = next(iter(available.values()))
+        candidates: list[CampaignCaseCandidateReadModel] = []
+        for entry in campaign.entries:
+            run = raw_runs.get(entry.entry_id)
+            identity = self._runs.get_run(run.run_id).summary.identity if run is not None else None
+            candidate = available.get(entry.entry_id)
+            if candidate is None:
+                candidates.append(
+                    CampaignCaseCandidateReadModel(
+                        entry_id=entry.entry_id,
+                        candidate_id=entry.candidate_id,
+                        model_id=entry.model_id,
+                        config_digest=entry.config_digest,
+                        entry_status=entry.status,
+                        run_id=entry.run_id,
+                        identity=identity,
+                        unavailable_reason=unavailable.get(
+                            entry.entry_id,
+                            "Comparable sample evidence is unavailable.",
+                        ),
+                    )
+                )
+                continue
+
+            _, candidate_run, evidence = candidate
+            reasons: list[CampaignCompatibilityReasonReadModel] = []
+            if entry.entry_id != reference_entry.entry_id:
+                compatibility = compare_fingerprints(
+                    reference_run.fingerprint,
+                    candidate_run.fingerprint,
+                    ComparisonDimension.CAPABILITY,
+                )
+                reasons.extend(
+                    CampaignCompatibilityReasonReadModel(
+                        baseline_run_id=reference_run.run_id,
+                        candidate_run_id=candidate_run.run_id,
+                        code=reason.code.value,
+                        field=reason.field,
+                        message=reason.message,
+                    )
+                    for reason in compatibility.reasons
+                )
+                if (
+                    reference_evidence.benchmark_case is not None
+                    and evidence.benchmark_case is not None
+                    and reference_evidence.benchmark_case.case_id != evidence.benchmark_case.case_id
+                ):
+                    reasons.append(
+                        CampaignCompatibilityReasonReadModel(
+                            baseline_run_id=reference_run.run_id,
+                            candidate_run_id=candidate_run.run_id,
+                            code="benchmark_case_mismatch",
+                            field="benchmark_case.case_id",
+                            message=(
+                                "benchmark case identity differs between reference and candidate"
+                            ),
+                        )
+                    )
+            candidates.append(
+                CampaignCaseCandidateReadModel(
+                    entry_id=entry.entry_id,
+                    candidate_id=entry.candidate_id,
+                    model_id=entry.model_id,
+                    config_digest=entry.config_digest,
+                    entry_status=entry.status,
+                    run_id=candidate_run.run_id,
+                    identity=identity,
+                    comparable_to_reference=not reasons,
+                    compatibility_reasons=tuple(reasons),
+                    evidence=evidence,
+                )
+            )
+
+        comparable_count = sum(
+            item.evidence is not None and item.comparable_to_reference for item in candidates
+        )
+        state: Literal["ready", "partial", "not_comparable"]
+        if comparable_count == len(campaign.entries) and comparable_count >= 2:
+            state = "ready"
+            summary = (
+                "All candidate Runs retain this exact case and are capability-compatible under "
+                "the frozen benchmark, dataset and evaluator protocol."
+            )
+        elif comparable_count >= 2:
+            state = "partial"
+            summary = (
+                "At least two candidate Runs can be compared for this exact case. Missing or "
+                "incompatible candidates remain explicit and are excluded from conclusions."
+            )
+        else:
+            state = "not_comparable"
+            summary = (
+                "Fewer than two compatible candidate Runs retain this exact case, so no "
+                "cross-candidate conclusion is valid."
+            )
+
+        benchmark_case = next(
+            (
+                item.evidence.benchmark_case
+                for item in candidates
+                if item.evidence is not None and item.evidence.benchmark_case is not None
+            ),
+            None,
+        )
+        return CampaignCaseComparisonReadModel(
+            campaign_id=campaign.campaign_id,
+            suite_id=campaign.suite_id,
+            suite_version=campaign.suite_version,
+            task_id=task_id,
+            sample_id=sample_id,
+            state=state,
+            reference_run_id=reference_run.run_id,
+            benchmark_case=benchmark_case,
+            candidates=tuple(candidates),
+            comparable_candidate_count=comparable_count,
+            summary=summary,
+        )
 
     def _project(self, campaign: Campaign) -> CampaignReadModel:
         raw_runs: dict[str, Run] = {}
@@ -182,6 +411,18 @@ class CampaignQueryService:
             recommendation=recommendation,
             recommendation_reason=decision.reason,
         )
+
+
+def _matching_samples(
+    run: Run,
+    task_id: str,
+    sample_id: str,
+) -> tuple[SampleExecution, ...]:
+    return tuple(
+        sample
+        for sample in run.samples
+        if sample.task_id == task_id and sample.sample_id == sample_id
+    )
 
 
 def _compatibility(

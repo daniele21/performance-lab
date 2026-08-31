@@ -30,4 +30,4 @@ The initial versioned decision policy is `strict-quality-dominance@1.0.0`. It re
 
 If no candidate strictly dominates every alternative, the product reports that there is no single recommended winner and leaves the separate evidence trade-offs inspectable. Performance and resource evidence stay separate and are not used as undocumented tie-breakers.
 
-Same-case cross-candidate evidence comparison is intentionally owned by UXUI-08 and is not part of this feature slice.
+Campaign Results can also enumerate retained benchmark case identities and hand one exact task/sample identity to the [same-case candidate comparison](same-case-candidate-comparison.md) read path. That drill-down reuses immutable Run/sample evidence and canonical capability compatibility; it does not alter Campaign recommendation semantics.

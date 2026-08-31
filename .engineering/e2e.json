@@ -251,13 +251,9 @@
         "packaged-product-fixture"
       ],
       "minimum_automated_fidelity": "representative_virtual",
-      "residual_gaps": [
-        "cross-candidate case comparison read model",
-        "same-case compatibility projection",
-        "candidate-level retained response/evaluator evidence"
-      ],
+      "residual_gaps": [],
       "real_environment_confirmation": "not_required",
-      "automation_gap_reason": "Campaign execution is integrated; same-case cross-candidate sample comparison remains UXUI-08."
+      "automation_gap_reason": null
     },
     {
       "id": "RUNTIME-1",

@@ -278,6 +278,8 @@ Canonical comparison order:
 
 Campaign recommendation follows the same compatibility-first rule. The current `strict-quality-dominance@1.0.0` application policy recommends only a unique candidate that is no worse on every comparable quality metric and strictly better on at least one metric against every alternative. It introduces no metric weights, cross-dimension normalization or hidden tie-break. Runtime and resource evidence remain separate read-model dimensions rather than inputs to an opaque universal score.
 
+Same-case Campaign comparison is an application projection, not a second comparison engine. It aligns one exact retained `(task_id, sample_id)` across Campaign Runs and reuses canonical capability fingerprint compatibility before presenting candidate sample evidence. A Run with zero matching samples is unavailable; multiple retained attempts are not silently chosen. The projection does not create a case winner or cross-case delta.
+
 ## 14. Local UI application boundary
 
 `UIQueryService` and related application models translate canonical run/evidence semantics into task-oriented browser read models. Preflight resolves/validates a user selection and produces a frozen execution preview before launch. Campaign planning similarly resolves use-case, candidate, configuration-search and benchmark semantics in Python and produces a deterministic frozen plan digest.
@@ -286,7 +288,7 @@ Campaign recommendation follows the same compatibility-first rule. The current `
 
 Campaign launch never trusts the browser preview as executable truth: the server rebuilds the requested plan from current backend-owned semantics and requires its digest to match the reviewed digest before capacity is acquired. Each Campaign matrix entry then receives one explicit Run ID and executes through the canonical runner. `SQLiteCampaignStore` retains lifecycle/reconnect state separately from `SQLiteRunStore`; completed Run truth remains immutable Run evidence.
 
-Campaign result projection joins persisted Campaign entries to completed Runs, evaluates dimension-specific compatibility and applies an explicit versioned decision policy. The frontend only renders that projection; it does not rank candidates, assign benchmark relevance or combine quality/runtime/resource metrics itself.
+Campaign result projection joins persisted Campaign entries to completed Runs, evaluates dimension-specific compatibility and applies an explicit versioned decision policy. The same application owner enumerates retained Campaign case identities and composes exact sample-evidence projections with capability compatibility for same-case drill-down. The frontend only renders those projections; it does not rank candidates, assign benchmark relevance, join samples across Runs or combine quality/runtime/resource metrics itself.
 
 `ui_server.py` composes the local graph from one versioned starter execution config and binds the API to `127.0.0.1` by default. During development Vite proxies `/api` to this loopback service. Built static-product ownership, build identity/artifact promotion and final smoke/cleanup remain release concerns rather than campaign-lifecycle ownership.
 

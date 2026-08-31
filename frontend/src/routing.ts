@@ -2,6 +2,12 @@ export type AppRoute =
   | { kind: "overview" }
   | { kind: "best-setup" }
   | { kind: "campaign"; campaignId: string }
+  | {
+      kind: "campaign-case-comparison";
+      campaignId: string;
+      taskId: string;
+      sampleId: string;
+    }
   | { kind: "runs" }
   | { kind: "run-detail"; runId: string }
   | {
@@ -34,10 +40,22 @@ export function parseHash(hash: string): AppRoute {
   if (raw === "test-a-model") return { kind: "test-model" };
 
   if (raw.startsWith("campaigns/")) {
-    const encodedCampaignId = raw.slice("campaigns/".length);
-    if (!encodedCampaignId) return { kind: "not-found", path: raw };
+    const parts = raw.split("/");
+    if (parts.length === 5 && parts[2] === "cases") {
+      try {
+        return {
+          kind: "campaign-case-comparison",
+          campaignId: decodePathSegment(parts[1]),
+          taskId: decodePathSegment(parts[3]),
+          sampleId: decodePathSegment(parts[4]),
+        };
+      } catch {
+        return { kind: "not-found", path: raw };
+      }
+    }
+    if (parts.length !== 2 || !parts[1]) return { kind: "not-found", path: raw };
     try {
-      return { kind: "campaign", campaignId: decodePathSegment(encodedCampaignId) };
+      return { kind: "campaign", campaignId: decodePathSegment(parts[1]) };
     } catch {
       return { kind: "not-found", path: raw };
     }

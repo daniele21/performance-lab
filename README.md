@@ -236,7 +236,7 @@ Then open the loopback address printed by `performance-lab-ui`. The primary **Fi
 
 Campaign execution revalidates the exact frozen plan on the server before launch. Candidate identity remains explicit, including `unknown` quantization/runtime fields when the connected runtime cannot report them. Parameter sweeps stay unavailable unless the runtime contract supplies bounded ranges.
 
-Results show compatibility and the explicit versioned decision policy before any recommendation. The current `strict-quality-dominance@1.0.0` policy only recommends a unique candidate when comparable quality evidence shows it is no worse on every reported quality metric and strictly better on at least one metric against every alternative; it does not create a universal weighted score. Same-case cross-candidate sample comparison remains a separate downstream capability.
+Results show compatibility and the explicit versioned decision policy before any recommendation. The current `strict-quality-dominance@1.0.0` policy only recommends a unique candidate when comparable quality evidence shows it is no worse on every reported quality metric and strictly better on at least one metric against every alternative; it does not create a universal weighted score. Campaign Results also expose retained benchmark case identities: opening a case compares that exact `(task_id, sample_id)` across candidate Runs, preserves each model/quantization/configuration/Run/sample-attempt identity, and keeps unavailable or non-comparable evidence explicit rather than inferring a case-level winner.
 
 ## Current implemented baseline
 
@@ -253,16 +253,16 @@ The repository now includes:
 - compatible run comparison, explicit immutable baselines and versioned regression policies;
 - executable `run`, `regress` and `regress-ci` flows with machine-readable results and deterministic exit codes;
 - a reusable GitHub Actions regression integration;
-- a local browser product with Overview, executable Find best setup planning/campaign/results, Test a model, Live Run, Runs/Run Detail, Compare, Library and Settings;
+- a local browser product with Overview, executable Find best setup planning/campaign/results, Case Comparison Across Candidates, Test a model, Live Run, Runs/Run Detail, Compare, Library and Settings;
 - server-owned Campaign lifecycle with frozen-plan revalidation, bounded execution, cancellation/recovery, immutable Run grouping and compatibility-aware policy-backed results;
-- benchmark and sample evidence drill-down with explicit content-retention and evaluator-explanation states;
-- browser acceptance for J0-J8 where the corresponding journey is executable, with packaged-product evidence for the highest-value local workflows;
+- benchmark, sample and same-case cross-candidate evidence drill-down with explicit content-retention, evaluator-explanation and non-comparability states;
+- browser acceptance for J0-J9 where the corresponding journey is executable, with packaged-product evidence for J0, J1, J8 and J9;
 - unique build/source identity, immutable packaged artifacts, manifest/checksums, build delta, bounded retention and built-product smoke/cleanup;
 - constrained CI dependency snapshots validated on Python 3.12 and 3.13.
 
-The next product UX/UI capability is **same-case cross-candidate comparison** from campaign results. Representative real-model/runtime/device evidence remains a separate required track before making hardware-specific deployment claims.
+The next product UX/UI capability is **UXUI-09 product hardening** across the now-complete J0-J9 journey surface. Representative real-model/runtime/device evidence remains a separate required track before making hardware-specific deployment claims.
 
-See [`docs/current-state.md`](docs/current-state.md) for the operational ledger.
+See [`docs/current-state.md`](docs/current-state.md) for the operational ledger and [`docs/features/same-case-candidate-comparison.md`](docs/features/same-case-candidate-comparison.md) for the same-case comparison contract.
 
 ## Documentation
 

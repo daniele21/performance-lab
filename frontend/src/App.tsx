@@ -4,6 +4,7 @@ import { AppShell, Button, StateSurface } from "./components";
 import "./foundation.css";
 import { BenchmarkDetailPage } from "./pages/benchmark-detail";
 import { CampaignPage } from "./pages/campaign";
+import { CaseComparisonPage } from "./pages/case-comparison";
 import { ComparePage } from "./pages/compare";
 import { FindBestSetupPage } from "./pages/find-best-setup";
 import { LibraryPage } from "./pages/library";
@@ -52,7 +53,22 @@ export function App() {
       <CampaignPage
         campaignId={route.campaignId}
         onOpenRun={(runId) => navigate(`runs/${encodeURIComponent(runId)}`)}
+        onOpenCase={(taskId, sampleId) =>
+          navigate(
+            `campaigns/${encodeURIComponent(route.campaignId)}/cases/${encodeURIComponent(taskId)}/${encodeURIComponent(sampleId)}`,
+          )
+        }
         onNewCampaign={() => navigate("find-best-setup")}
+      />
+    );
+  }
+
+  if (route.kind === "campaign-case-comparison") {
+    return (
+      <CaseComparisonPage
+        campaignId={route.campaignId}
+        taskId={route.taskId}
+        sampleId={route.sampleId}
       />
     );
   }

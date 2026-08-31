@@ -1,6 +1,9 @@
 """Browser-facing application query projections."""
 
 from .campaign_models import (
+    CampaignCaseCandidateReadModel,
+    CampaignCaseComparisonReadModel,
+    CampaignCaseSummaryReadModel,
     CampaignCompatibilityReasonReadModel,
     CampaignDimensionReadModel,
     CampaignEntryReadModel,
@@ -81,6 +84,9 @@ __all__ = [
     "BenchmarkDetailReadModel",
     "BenchmarkPlanReadModel",
     "BenchmarkTaskReadModel",
+    "CampaignCaseCandidateReadModel",
+    "CampaignCaseComparisonReadModel",
+    "CampaignCaseSummaryReadModel",
     "CampaignCompatibilityReasonReadModel",
     "CampaignDimensionReadModel",
     "CampaignEntryReadModel",

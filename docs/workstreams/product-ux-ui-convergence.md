@@ -41,45 +41,41 @@ Canonical experience truth lives in `design/ux-contract.json`, `design/brand-kit
 | UXUI-05 | Benchmark/sample evidence drill-down | UXUI-04A | DONE |
 | UXUI-06 | Find best setup planning | UXUI-04A/05 | DONE |
 | UXUI-07 | Campaign lifecycle + results/recommendation | UXUI-06 | DONE |
-| UXUI-08 | Same-case cross-candidate comparison | UXUI-05/07 | READY |
-| UXUI-09 | Product hardening | UXUI-03..08 | BLOCKED |
+| UXUI-08 | Same-case cross-candidate comparison | UXUI-05/07 | DONE |
+| UXUI-09 | Product hardening | UXUI-03..08 | READY |
 | UXUI-10 | Built-product acceptance and browser goldens | UXUI-09 | BLOCKED |
 
 Allowed states: `READY`, `ACTIVE`, `BLOCKED`, `DONE`. Shared API/read-model changes integrate before dependent frontend slices; shared design primitives have one owner at a time.
 
 ## Current executable slice
 
-### UXUI-08 — Same-case cross-candidate comparison
+### UXUI-09 — Product hardening
 
 Owning boundary:
 
-- start from one benchmark case selected in Campaign Results or retained Run evidence;
-- compare that exact case only across candidate Runs whose benchmark/evaluator protocol is compatible for the case;
-- preserve candidate identity as model + quantization + frozen configuration + Run;
-- project retained response/evaluator evidence from Python read models rather than joining or interpreting it in TypeScript;
-- keep unavailable content and non-comparability explicit instead of forcing a winner;
-- reuse Campaign and Run identities from UXUI-07/05 rather than creating a second comparison ownership model.
+- harden the complete use-case-first, manual-run, campaign, same-case evidence and Compare journeys without changing their domain owners;
+- cover loading/empty/error/reconnect/cancel/partial/not-comparable states consistently;
+- verify keyboard/focus, WCAG 2.2 AA semantics, reduced motion and compact/standard/wide desktop behavior;
+- verify long model ids, config digests, case content and evidence lists do not break hierarchy or navigation;
+- preserve explicit unavailable/not-retained/not-comparable states instead of smoothing them into generic errors.
 
 Acceptance direction:
 
-- a user can open one benchmark case from campaign results and see the same case across compatible candidate Runs;
-- incompatible protocol/snapshot/evaluator evidence explains why the case cannot be compared and shows no invalid winner/delta;
-- retained response/evaluator evidence remains traceable to each immutable Run/sample attempt;
-- J9 becomes executable in `browser-built-mocked-api` and `packaged-product-fixture` without weakening existing Compare semantics.
+- J0-J9 remain green while failure/recovery and accessibility coverage expands;
+- no frontend fallback recreates Python comparison, campaign or evidence semantics;
+- responsive and long-data behavior remains usable at the approved desktop breakpoints;
+- remaining visual-target gaps are implementation-ready for UXUI-10 acceptance.
 
 ## Integrated foundation
 
-UXUI-01 through UXUI-07 are integrated through PRs #69, #71, #75, #70/#73, #72/#76, #77 and #80 respectively. The current built product therefore has the canonical shell/design system, manual evaluation recovery, converged Library/Settings, inspectable benchmark/sample evidence, executable Find best setup planning and a persisted/reconnectable Campaign lifecycle with policy-backed results.
+UXUI-01 through UXUI-07 are integrated through the established convergence PR sequence, with Campaign lifecycle/recommendation finalized by PR #81. The built product has the canonical shell/design system, manual evaluation recovery, converged Library/Settings, inspectable benchmark/sample evidence, executable Find best setup planning and a persisted/reconnectable Campaign lifecycle with policy-backed results.
 
-UXUI-06 adds backend-owned versioned use cases, target-scoped candidate inventory, runtime-reported parameter capabilities, starter/workload benchmark mapping, bounded planning and a deterministic frozen campaign-plan digest. Sweep strategies remain unavailable when no bounded ranges are reported.
-
-UXUI-07 executes only a server-revalidated frozen plan/digest, persists Campaign lifecycle separately from immutable Run evidence, shares bounded local evaluation capacity with manual runs, executes every matrix entry through the canonical native runner and exposes compatibility before recommendation. The versioned `strict-quality-dominance@1.0.0` policy produces a recommendation only when one candidate uniquely dominates every alternative on comparable quality metrics; otherwise the product exposes the trade-off without hidden weights or a universal score. J0 is exercised in both `browser-built-mocked-api` and `packaged-product-fixture` through campaign results and refresh-safe recovery.
+UXUI-08 adds a Python-owned same-case projection over existing Campaign/Run/sample owners. Campaign Results enumerates retained task/sample identities; opening one exact case shows model + quantization + frozen config + immutable Run/sample attempt for every candidate. Capability compatibility reuses the canonical fingerprint rules, incompatible candidates remain explicit, response retention state is never reconstructed and the case surface does not invent a winner or delta. J9 is exercised in both mocked-browser and packaged-product environments.
 
 ## Integration strategy
 
-1. UXUI-08 adds same-case comparison on top of stable Campaign/Run/sample contracts.
-2. UXUI-09 hardens failure, accessibility, responsive and long-data behavior across the complete journey.
-3. UXUI-10 captures built-product acceptance and accepted implementation goldens.
+1. UXUI-09 hardens failure, accessibility, responsive and long-data behavior across the complete journey.
+2. UXUI-10 captures built-product acceptance and accepted implementation goldens.
 
 Ordinary UX/UI branches start from current green `dev` and target `dev`; if `dev` moves, readiness is re-established on the regenerated merge-ref.
 
