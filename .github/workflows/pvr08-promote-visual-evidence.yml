@@ -15,6 +15,7 @@ jobs:
     name: Promote reviewed bounded visual evidence
     runs-on: ubuntu-24.04
     env:
+      GH_TOKEN: ${{ github.token }}
       GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -37,44 +38,47 @@ jobs:
           import shutil
           import subprocess
           import tempfile
-          import urllib.request
-          import zipfile
 
-          ROOT = pathlib.Path.cwd()
-          config_path = ROOT / ".engineering" / "pvr08-promotion.json"
-          config = json.loads(config_path.read_text(encoding="utf-8"))
-
-          repo = os.environ["GITHUB_REPOSITORY"]
-          token = os.environ["GITHUB_TOKEN"]
-          artifact_id = int(config["artifact_id"])
-          artifact_url = f"https://api.github.com/repos/{repo}/actions/artifacts/{artifact_id}/zip"
-          request = urllib.request.Request(
-              artifact_url,
-              headers={
-                  "Authorization": f"Bearer {token}",
-                  "Accept": "application/vnd.github+json",
-                  "X-GitHub-Api-Version": "2022-11-28",
-              },
+          root = pathlib.Path.cwd()
+          config = json.loads(
+              (root / ".engineering" / "pvr08-promotion.json").read_text(encoding="utf-8")
           )
-          with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310
-              archive = response.read()
+          repo = os.environ["GITHUB_REPOSITORY"]
+          artifact_id = int(config["artifact_id"])
+          artifact_name = config["artifact_name"]
+          run_id = int(config["workflow_run_id"])
 
-          archive_sha = hashlib.sha256(archive).hexdigest()
-          if archive_sha != config["artifact_sha256"]:
+          remote_digest = subprocess.check_output(
+              ["gh", "api", f"repos/{repo}/actions/artifacts/{artifact_id}", "--jq", ".digest"],
+              text=True,
+          ).strip()
+          expected_artifact_digest = f"sha256:{config['artifact_sha256']}"
+          if remote_digest != expected_artifact_digest:
               raise SystemExit(
-                  f"artifact digest mismatch: expected {config['artifact_sha256']}, got {archive_sha}"
+                  f"artifact metadata digest mismatch: expected {expected_artifact_digest}, got {remote_digest}"
               )
 
           expected_hashes = config["files"]
           expected_names = sorted(expected_hashes)
           with tempfile.TemporaryDirectory(prefix="pvr08-") as temp_dir:
-              temp = pathlib.Path(temp_dir)
-              archive_path = temp / "artifact.zip"
-              archive_path.write_bytes(archive)
-              with zipfile.ZipFile(archive_path) as bundle:
-                  bundle.extractall(temp / "capture")
+              capture = pathlib.Path(temp_dir) / "capture"
+              capture.mkdir()
+              subprocess.run(
+                  [
+                      "gh",
+                      "run",
+                      "download",
+                      str(run_id),
+                      "--repo",
+                      repo,
+                      "--name",
+                      artifact_name,
+                      "--dir",
+                      str(capture),
+                  ],
+                  check=True,
+              )
 
-              capture = temp / "capture"
               actual_names = sorted(path.name for path in capture.rglob("*.png"))
               if actual_names != expected_names:
                   raise SystemExit(
@@ -95,11 +99,16 @@ jobs:
 
               stage = config["stage"]
               if stage == "target":
-                  destination = ROOT / "design" / "reference" / "visual-targets" / "desktop-standard-v0.6"
+                  destination = (
+                      root
+                      / "design"
+                      / "reference"
+                      / "visual-targets"
+                      / "desktop-standard-v0.6"
+                  )
                   destination.mkdir(parents=True, exist_ok=True)
                   for name, source in captured.items():
                       shutil.copyfile(source, destination / name)
-
                   manifest = {
                       "schema_version": 1,
                       "target_type": "approved-design-target",
@@ -110,8 +119,9 @@ jobs:
                       "brand_source": "design/brand-kit.json",
                       "capture": {
                           "source_head_sha": config["source_head_sha"],
-                          "workflow_run_id": config["workflow_run_id"],
+                          "workflow_run_id": run_id,
                           "artifact_id": artifact_id,
+                          "artifact_name": artifact_name,
                           "artifact_sha256": config["artifact_sha256"],
                           "platform": "GitHub-hosted Ubuntu 24.04",
                           "locale": "en-US",
@@ -134,15 +144,14 @@ jobs:
                       },
                       "scope_note": "Only these five stable surfaces are approved as v0.6 visual targets. Broader J0-J9 screenshot/trace evidence remains owned by PRE_REAL.",
                   }
-                  (destination / "manifest.json").write_text(
-                      json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
-                  )
+                  manifest_path = destination / "manifest.json"
+                  manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
                   expected_paths = {
-                      str((destination / name).relative_to(ROOT)) for name in expected_names
-                  } | {str((destination / "manifest.json").relative_to(ROOT))}
+                      str((destination / name).relative_to(root)) for name in expected_names
+                  } | {str(manifest_path.relative_to(root))}
               elif stage == "golden":
                   target_manifest_path = (
-                      ROOT
+                      root
                       / "design"
                       / "reference"
                       / "visual-targets"
@@ -153,24 +162,24 @@ jobs:
                       raise SystemExit("v0.6 target manifest must exist before golden promotion")
                   target_manifest = json.loads(target_manifest_path.read_text(encoding="utf-8"))
                   for name in expected_names:
-                      expected_target_sha = target_manifest["targets"][name.removesuffix(".png")]["sha256"]
-                      if expected_hashes[name] != expected_target_sha:
+                      target_sha = target_manifest["targets"][name.removesuffix(".png")]["sha256"]
+                      if expected_hashes[name] != target_sha:
                           raise SystemExit(
                               f"second capture {name} does not match approved target: "
-                              f"{expected_hashes[name]} != {expected_target_sha}"
+                              f"{expected_hashes[name]} != {target_sha}"
                           )
 
-                  destination = ROOT / "design" / "reference" / "visual-goldens" / "desktop-standard"
+                  destination = root / "design" / "reference" / "visual-goldens" / "desktop-standard"
                   for name, source in captured.items():
                       shutil.copyfile(source, destination / name)
-
-                  golden_manifest_path = destination / "manifest.json"
-                  golden_manifest = json.loads(golden_manifest_path.read_text(encoding="utf-8"))
-                  golden_manifest["status"] = "approved-v0.6-automated-visual-regression-baseline"
-                  golden_manifest["capture"] = {
+                  manifest_path = destination / "manifest.json"
+                  manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                  manifest["status"] = "approved-v0.6-automated-visual-regression-baseline"
+                  manifest["capture"] = {
                       "source_head_sha": config["source_head_sha"],
-                      "browser_capture_run_id": config["workflow_run_id"],
+                      "browser_capture_run_id": run_id,
                       "artifact_id": artifact_id,
+                      "artifact_name": artifact_name,
                       "artifact_sha256": config["artifact_sha256"],
                       "platform": "GitHub-hosted Ubuntu 24.04",
                       "locale": "en-US",
@@ -178,31 +187,29 @@ jobs:
                       "color_scheme": "dark",
                       "reduced_motion": "reduce",
                   }
-                  golden_manifest["review"] = {
+                  manifest["review"] = {
                       "method": "second independent CI capture matched byte-for-byte against the approved bounded v0.6 target set",
                       "decision": "accepted for bounded automated visual regression",
                       "human_reference_grade_claim": False,
                   }
-                  golden_manifest["design_target_root"] = (
+                  manifest["design_target_root"] = (
                       "design/reference/visual-targets/desktop-standard-v0.6"
                   )
-                  golden_manifest["goldens"] = {
+                  manifest["goldens"] = {
                       name.removesuffix(".png"): {
                           "file": name,
                           "sha256": expected_hashes[name],
                       }
                       for name in expected_names
                   }
-                  golden_manifest["scope_note"] = (
+                  manifest["scope_note"] = (
                       "These five stable surfaces are v0.6 automated visual-regression goldens. "
                       "They do not substitute for PRE_REAL J0-J9 or final human accessibility/usability review."
                   )
-                  golden_manifest_path.write_text(
-                      json.dumps(golden_manifest, indent=2) + "\n", encoding="utf-8"
-                  )
+                  manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
                   expected_paths = {
-                      str((destination / name).relative_to(ROOT)) for name in expected_names
-                  } | {str(golden_manifest_path.relative_to(ROOT))}
+                      str((destination / name).relative_to(root)) for name in expected_names
+                  } | {str(manifest_path.relative_to(root))}
               else:
                   raise SystemExit(f"unsupported promotion stage: {stage}")
 
