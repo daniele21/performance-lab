@@ -98,8 +98,18 @@ jobs:
         run: python -m pytest tests/e2e -v --tb=short
       - name: Run pre-real browser J0-J9 with retained evidence
         run: python scripts/pre_real_e2e.py --output-root build/pre-real-e2e
+      - name: Verify pre-real screenshot and video evidence
+        run: >-
+          python scripts/verify_e2e_media.py
+          build/pre-real-e2e/playwright-report.json
+          J0 J1 J2 J3 J4 J5 J6 J7 J8 J9
       - name: Build, smoke, run packaged J0/J1/J8/J9 and atomically publish local artifact
         run: python scripts/package_release.py --validated --require-full-product-e2e
+      - name: Verify packaged-product screenshot and video evidence
+        run: >-
+          python scripts/verify_e2e_media.py
+          frontend/test-results-full-product/report.json
+          J0 J1 J8 J9
       - name: Finalize pre-real readiness verdict
         run: |
           python scripts/finalize_pre_real_e2e.py \
@@ -116,6 +126,7 @@ jobs:
           path: build/artifacts
           key: performance-lab-build-history-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Upload bounded built-product evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: performance-lab-built-${{ github.run_id }}-${{ github.run_attempt }}
@@ -128,7 +139,7 @@ jobs:
         with:
           name: pre-real-e2e-${{ github.run_id }}-${{ github.run_attempt }}
           path: build/pre-real-e2e/**
-          if-no-files-found: ignore
+          if-no-files-found: error
           retention-days: 7
       - name: Upload bounded packaged E2E evidence
         if: always()
@@ -136,5 +147,5 @@ jobs:
         with:
           name: packaged-e2e-${{ github.run_id }}-${{ github.run_attempt }}
           path: frontend/test-results-full-product/**
-          if-no-files-found: ignore
+          if-no-files-found: error
           retention-days: 7

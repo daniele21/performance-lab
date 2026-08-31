@@ -25,6 +25,6 @@ export default defineConfig({
     browserName: "chromium",
     trace: "on",
     screenshot: "on",
-    video: "off",
+    video: "on",
   },
 });

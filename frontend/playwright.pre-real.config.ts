@@ -23,7 +23,7 @@ export default defineConfig({
     timezoneId: "UTC",
     trace: "on",
     screenshot: "on",
-    video: "off",
+    video: "on",
   },
   webServer: {
     command: "npm run build && npm run preview -- --port 4173 --strictPort",

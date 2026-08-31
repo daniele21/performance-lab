@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.1.0",
+  "contract_version": "0.1.1",
   "applicability": {
     "status": "required",
     "reason": "Performance Lab has critical browser, CLI, persistence, regression and external-runtime workflows whose complete outcomes cannot be established by lower-level tests alone."
@@ -11,7 +11,8 @@
     "lowest_sufficient_test_level": true,
     "critical_journeys_only": true,
     "built_artifact_when_material": true,
-    "residual_fidelity_gaps_explicit": true
+    "residual_fidelity_gaps_explicit": true,
+    "ui_journey_screenshot_and_video_artifacts_required": true
   },
   "fidelity_order": [
     "host_or_fake",
@@ -53,9 +54,7 @@
       "automation": "automated",
       "platform": "GitHub-hosted Linux + Chromium",
       "artifact_surface": "built frontend served by Vite preview with mocked Performance Lab API responses",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
+      "target_environment_refs": ["desktop-browser-product"],
       "known_gaps": [
         "Performance Lab Python API and persistence are mocked",
         "external inference endpoint is not exercised"
@@ -67,10 +66,7 @@
       "automation": "automated",
       "platform": "GitHub-hosted Linux + Python",
       "artifact_surface": "real CLI subprocesses, HTTP transport, orchestrator, SQLite persistence and regression against a deterministic external inference fixture",
-      "target_environment_refs": [
-        "desktop-browser-product",
-        "representative-ai-runtime-device"
-      ],
+      "target_environment_refs": ["desktop-browser-product", "representative-ai-runtime-device"],
       "known_gaps": [
         "no browser interaction",
         "source checkout rather than packaged product",
@@ -83,10 +79,7 @@
       "automation": "automated",
       "platform": "GitHub-hosted Linux + Chromium + Python",
       "artifact_surface": "published package candidate with installed wheel, built web assets, real loopback API, real SQLite, real Chromium and deterministic external inference fixture",
-      "target_environment_refs": [
-        "desktop-browser-product",
-        "representative-ai-runtime-device"
-      ],
+      "target_environment_refs": ["desktop-browser-product", "representative-ai-runtime-device"],
       "known_gaps": [
         "external inference runtime/model is a deterministic fixture",
         "hosted CI hardware is not the representative target device",
@@ -99,9 +92,7 @@
       "automation": "real_environment",
       "platform": "representative physical device running the external inference runtime",
       "artifact_surface": "real Performance Lab run against real Local LLM Server, model and device with retained fingerprint/evidence bundle",
-      "target_environment_refs": [
-        "representative-ai-runtime-device"
-      ],
+      "target_environment_refs": ["representative-ai-runtime-device"],
       "known_gaps": [
         "a single smoke run does not by itself establish repeated-load variability or thermal envelopes"
       ]
@@ -111,30 +102,22 @@
     {
       "id": "J0",
       "claim": "User can enter the use-case-first Find best setup journey, build and freeze a backend-owned campaign plan, start only the exact server-revalidated digest, reconnect to persisted campaign progress, inspect immutable candidate Runs, and see compatibility plus the versioned decision policy before any recommendation.",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
-      "automated_environment_refs": [
-        "browser-built-mocked-api",
-        "packaged-product-fixture"
-      ],
+      "ui_surface": true,
+      "required_media_artifacts": ["screenshots", "video"],
+      "target_environment_refs": ["desktop-browser-product"],
+      "automated_environment_refs": ["browser-built-mocked-api", "packaged-product-fixture"],
       "minimum_automated_fidelity": "representative_virtual",
-      "residual_gaps": [
-        "bounded request-level parameter sweeps when a runtime exposes explicit search ranges"
-      ],
+      "residual_gaps": ["bounded request-level parameter sweeps when a runtime exposes explicit search ranges"],
       "real_environment_confirmation": "not_required",
       "automation_gap_reason": null
     },
     {
       "id": "J1",
       "claim": "User configures a model, reviews a frozen preflight, launches the evaluation, observes progress and can reopen the immutable persisted result.",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
-      "automated_environment_refs": [
-        "browser-built-mocked-api",
-        "packaged-product-fixture"
-      ],
+      "ui_surface": true,
+      "required_media_artifacts": ["screenshots", "video"],
+      "target_environment_refs": ["desktop-browser-product"],
+      "automated_environment_refs": ["browser-built-mocked-api", "packaged-product-fixture"],
       "minimum_automated_fidelity": "representative_virtual",
       "residual_gaps": [],
       "real_environment_confirmation": "not_required",
@@ -143,12 +126,10 @@
     {
       "id": "J2",
       "claim": "User can find tested-model evidence with workload and device context without an unsupported opaque winner claim.",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
-      "automated_environment_refs": [
-        "browser-built-mocked-api"
-      ],
+      "ui_surface": true,
+      "required_media_artifacts": ["screenshots", "video"],
+      "target_environment_refs": ["desktop-browser-product"],
+      "automated_environment_refs": ["browser-built-mocked-api"],
       "minimum_automated_fidelity": "host_or_fake",
       "residual_gaps": [],
       "real_environment_confirmation": "not_required",
@@ -157,13 +138,10 @@
     {
       "id": "J3",
       "claim": "User can compare compatible evidence and see only valid quality/runtime/resource trade-off deltas.",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
-      "automated_environment_refs": [
-        "browser-built-mocked-api",
-        "python-product-fixture"
-      ],
+      "ui_surface": true,
+      "required_media_artifacts": ["screenshots", "video"],
+      "target_environment_refs": ["desktop-browser-product"],
+      "automated_environment_refs": ["browser-built-mocked-api", "python-product-fixture"],
       "minimum_automated_fidelity": "representative_virtual",
       "residual_gaps": [],
       "real_environment_confirmation": "not_required",
@@ -172,12 +150,10 @@
     {
       "id": "J4",
       "claim": "An incompatible comparison explains why deltas are invalid and does not render misleading metric deltas.",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
-      "automated_environment_refs": [
-        "browser-built-mocked-api"
-      ],
+      "ui_surface": true,
+      "required_media_artifacts": ["screenshots", "video"],
+      "target_environment_refs": ["desktop-browser-product"],
+      "automated_environment_refs": ["browser-built-mocked-api"],
       "minimum_automated_fidelity": "host_or_fake",
       "residual_gaps": [],
       "real_environment_confirmation": "not_required",
@@ -186,12 +162,10 @@
     {
       "id": "J5",
       "claim": "A failed run exposes an actionable cause and the user can retry successfully without stale run ownership.",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
-      "automated_environment_refs": [
-        "browser-built-mocked-api"
-      ],
+      "ui_surface": true,
+      "required_media_artifacts": ["screenshots", "video"],
+      "target_environment_refs": ["desktop-browser-product"],
+      "automated_environment_refs": ["browser-built-mocked-api"],
       "minimum_automated_fidelity": "host_or_fake",
       "residual_gaps": [],
       "real_environment_confirmation": "not_required",
@@ -200,12 +174,10 @@
     {
       "id": "J6",
       "claim": "Cancelling a run releases owned resources before a subsequent evaluation can start and complete.",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
-      "automated_environment_refs": [
-        "browser-built-mocked-api"
-      ],
+      "ui_surface": true,
+      "required_media_artifacts": ["screenshots", "video"],
+      "target_environment_refs": ["desktop-browser-product"],
+      "automated_environment_refs": ["browser-built-mocked-api"],
       "minimum_automated_fidelity": "host_or_fake",
       "residual_gaps": [],
       "real_environment_confirmation": "not_required",
@@ -214,12 +186,10 @@
     {
       "id": "J7",
       "claim": "User can inspect a benchmark definition, browse its test cases and understand prompt/input, expected output and evaluator/scoring rules without confusing definition data with a model execution result.",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
-      "automated_environment_refs": [
-        "browser-built-mocked-api"
-      ],
+      "ui_surface": true,
+      "required_media_artifacts": ["screenshots", "video"],
+      "target_environment_refs": ["desktop-browser-product"],
+      "automated_environment_refs": ["browser-built-mocked-api"],
       "minimum_automated_fidelity": "host_or_fake",
       "residual_gaps": [],
       "real_environment_confirmation": "not_required",
@@ -228,13 +198,10 @@
     {
       "id": "J8",
       "claim": "User can open one immutable run, drill into its contributing samples and understand one sample from retained prompt/expected/actual/evaluator evidence or an explicit content-not-retained state.",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
-      "automated_environment_refs": [
-        "browser-built-mocked-api",
-        "packaged-product-fixture"
-      ],
+      "ui_surface": true,
+      "required_media_artifacts": ["screenshots", "video"],
+      "target_environment_refs": ["desktop-browser-product"],
+      "automated_environment_refs": ["browser-built-mocked-api", "packaged-product-fixture"],
       "minimum_automated_fidelity": "representative_virtual",
       "residual_gaps": [],
       "real_environment_confirmation": "not_required",
@@ -243,13 +210,10 @@
     {
       "id": "J9",
       "claim": "User can select one benchmark case from campaign results and compare that same case across compatible model + quantization + configuration runs without showing invalid cross-protocol conclusions.",
-      "target_environment_refs": [
-        "desktop-browser-product"
-      ],
-      "automated_environment_refs": [
-        "browser-built-mocked-api",
-        "packaged-product-fixture"
-      ],
+      "ui_surface": true,
+      "required_media_artifacts": ["screenshots", "video"],
+      "target_environment_refs": ["desktop-browser-product"],
+      "automated_environment_refs": ["browser-built-mocked-api", "packaged-product-fixture"],
       "minimum_automated_fidelity": "representative_virtual",
       "residual_gaps": [],
       "real_environment_confirmation": "not_required",
@@ -258,13 +222,10 @@
     {
       "id": "RUNTIME-1",
       "claim": "Performance Lab retains truthful model/runtime/device identity and runtime/resource evidence when evaluating a real external Local LLM Server on representative hardware.",
-      "target_environment_refs": [
-        "representative-ai-runtime-device"
-      ],
-      "automated_environment_refs": [
-        "python-product-fixture",
-        "packaged-product-fixture"
-      ],
+      "ui_surface": false,
+      "required_media_artifacts": [],
+      "target_environment_refs": ["representative-ai-runtime-device"],
+      "automated_environment_refs": ["python-product-fixture", "packaged-product-fixture"],
       "minimum_automated_fidelity": "representative_virtual",
       "residual_gaps": [
         "real model/runtime identity and effective backend behavior",
