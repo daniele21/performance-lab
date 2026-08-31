@@ -56,7 +56,15 @@ def write_summary(path: Path, manifest: dict[str, Any]) -> None:
             f"{'PASS' if required['final_screenshot'] else 'FAIL'} | "
             f"{'PASS' if required['trace'] else 'FAIL'} |"
         )
-    lines.extend(["", "## Packaged-product journeys", "", "| Journey | Status | Screenshot | Trace |", "| --- | --- | --- | --- |"])
+    lines.extend(
+        [
+            "",
+            "## Packaged-product journeys",
+            "",
+            "| Journey | Status | Screenshot | Trace |",
+            "| --- | --- | --- | --- |",
+        ]
+    )
     for journey, evidence in manifest["packaged_layer"]["journeys"].items():
         required = evidence["required_evidence"]
         lines.append(
@@ -64,11 +72,13 @@ def write_summary(path: Path, manifest: dict[str, Any]) -> None:
             f"{'PASS' if required['final_screenshot'] else 'FAIL'} | "
             f"{'PASS' if required['trace'] else 'FAIL'} |"
         )
-    lines.extend([
-        "",
-        "This gate proves the declared automated pre-real layers only. Physical runtime/model/device evidence remains RUNTIME-1 and is never inferred from browser or packaged fixtures.",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "This gate proves the declared automated pre-real layers only. Physical runtime/model/device evidence remains RUNTIME-1 and is never inferred from browser or packaged fixtures.",
+            "",
+        ]
+    )
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
