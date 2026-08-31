@@ -223,7 +223,9 @@ class CampaignQueryService:
                             candidate_run_id=candidate_run.run_id,
                             code="benchmark_case_mismatch",
                             field="benchmark_case.case_id",
-                            message="benchmark case identity differs between reference and candidate",
+                            message=(
+                                "benchmark case identity differs between reference and candidate"
+                            ),
                         )
                     )
             candidates.append(
