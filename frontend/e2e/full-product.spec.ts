@@ -30,7 +30,9 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
 
   await page.getByRole("button", { name: "Continue" }).click();
   const targetSelect = page.getByLabel("Target / device");
-  const discoveredTarget = targetSelect.locator("option").filter({ hasText: "J9 discovered fixture" });
+  const discoveredTarget = targetSelect
+    .locator("option")
+    .filter({ hasText: "J9 discovered fixture" });
   const discoveredTargetId = await discoveredTarget.getAttribute("value");
   expect(discoveredTargetId).not.toBeNull();
   await targetSelect.selectOption(discoveredTargetId!);
