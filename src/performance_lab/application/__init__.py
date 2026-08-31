@@ -1,5 +1,14 @@
 """Browser-facing application query projections."""
 
+from .campaign_models import (
+    CampaignCompatibilityReasonReadModel,
+    CampaignDimensionReadModel,
+    CampaignEntryReadModel,
+    CampaignReadModel,
+    CampaignRecommendationReadModel,
+    CampaignResultsReadModel,
+)
+from .campaign_queries import CampaignQueryService
 from .endpoint_discovery import probe_endpoint_connection
 from .evidence_models import (
     EvidenceContentReadModel,
@@ -22,9 +31,14 @@ from .planning_models import (
     CandidateModelReadModel,
     ConfigurationSearchOptionReadModel,
     ConfigurationSearchPlanReadModel,
+    DecisionPolicyReadModel,
     UseCaseReadModel,
 )
-from .planning_queries import UIQueryService
+from .planning_queries import (
+    CampaignPlanDigestMismatchError,
+    CampaignPlanLaunchError,
+    UIQueryService,
+)
 from .ui_models import (
     UI_READ_MODEL_VERSION,
     BaselineSummaryReadModel,
@@ -67,11 +81,20 @@ __all__ = [
     "BenchmarkDetailReadModel",
     "BenchmarkPlanReadModel",
     "BenchmarkTaskReadModel",
+    "CampaignCompatibilityReasonReadModel",
+    "CampaignDimensionReadModel",
+    "CampaignEntryReadModel",
     "CampaignEstimateReadModel",
+    "CampaignPlanDigestMismatchError",
     "CampaignPlanIssueReadModel",
+    "CampaignPlanLaunchError",
     "CampaignPlanPreviewReadModel",
     "CampaignPlanPreviewRequest",
     "CampaignPlanningContextReadModel",
+    "CampaignQueryService",
+    "CampaignReadModel",
+    "CampaignRecommendationReadModel",
+    "CampaignResultsReadModel",
     "CampaignSearchStrategy",
     "CampaignTargetPlanningReadModel",
     "CandidateModelReadModel",
@@ -81,6 +104,7 @@ __all__ = [
     "ConfigurationSearchOptionReadModel",
     "ConfigurationSearchPlanReadModel",
     "DatasetSummaryReadModel",
+    "DecisionPolicyReadModel",
     "DimensionComparisonReadModel",
     "DiscoveredModelReadModel",
     "EndpointConnectionInput",
