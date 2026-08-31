@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Literal, Protocol
 
 from performance_lab.domain import (
     TERMINAL_CAMPAIGN_STATUSES,
@@ -242,6 +242,7 @@ class CampaignQueryService:
         comparable_count = sum(
             item.evidence is not None and item.comparable_to_reference for item in candidates
         )
+        state: Literal["ready", "partial", "not_comparable"]
         if comparable_count == len(campaign.entries) and comparable_count >= 2:
             state = "ready"
             summary = (
