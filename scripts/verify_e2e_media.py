@@ -13,11 +13,7 @@ def attachment_exists(report_path: Path, attachment: dict) -> bool:
     if not isinstance(raw, str) or not raw:
         return False
     path = Path(raw)
-    candidates = (
-        [path]
-        if path.is_absolute()
-        else [Path.cwd() / path, report_path.parent / path]
-    )
+    candidates = [path] if path.is_absolute() else [Path.cwd() / path, report_path.parent / path]
     return any(candidate.is_file() for candidate in candidates)
 
 
@@ -28,9 +24,7 @@ def walk_specs(suite: dict, parents: tuple[str, ...] = ()) -> list[dict]:
     for spec in suite.get("specs", []):
         if isinstance(spec, dict):
             spec = dict(spec)
-            spec["full_title"] = " ".join(
-                (*next_parents, str(spec.get("title") or ""))
-            )
+            spec["full_title"] = " ".join((*next_parents, str(spec.get("title") or "")))
             specs.append(spec)
     for child in suite.get("suites", []):
         if isinstance(child, dict):
@@ -57,9 +51,7 @@ def main() -> int:
     errors: list[str] = []
     for journey in required_journeys:
         candidates = [
-            spec
-            for spec in specs
-            if journey.lower() in str(spec.get("full_title", "")).lower()
+            spec for spec in specs if journey.lower() in str(spec.get("full_title", "")).lower()
         ]
         passed_results: list[dict] = []
         for spec in candidates:
@@ -72,8 +64,7 @@ def main() -> int:
 
         if not passed_results:
             errors.append(
-                f"{journey}: no passing Playwright result mapped to this "
-                "critical journey"
+                f"{journey}: no passing Playwright result mapped to this critical journey"
             )
             continue
 
@@ -81,25 +72,19 @@ def main() -> int:
             attachment
             for result in passed_results
             for attachment in result.get("attachments", [])
-            if isinstance(attachment, dict)
-            and attachment_exists(report_path, attachment)
+            if isinstance(attachment, dict) and attachment_exists(report_path, attachment)
         ]
         has_screenshot = any(
-            attachment.get("contentType") == "image/png"
-            for attachment in attachments
+            attachment.get("contentType") == "image/png" for attachment in attachments
         )
         has_video = any(
             str(attachment.get("contentType") or "").startswith("video/")
             for attachment in attachments
         )
         if not has_screenshot:
-            errors.append(
-                f"{journey}: missing screenshot artifact on passing E2E evidence"
-            )
+            errors.append(f"{journey}: missing screenshot artifact on passing E2E evidence")
         if not has_video:
-            errors.append(
-                f"{journey}: missing video artifact on passing E2E evidence"
-            )
+            errors.append(f"{journey}: missing video artifact on passing E2E evidence")
 
     if errors:
         print("E2E media evidence check: FAIL", file=sys.stderr)
