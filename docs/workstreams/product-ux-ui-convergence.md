@@ -40,8 +40,8 @@ Canonical experience truth lives in `design/ux-contract.json`, `design/brand-kit
 | UXUI-04B | Library + Settings UI convergence | UXUI-01/02/04A | DONE |
 | UXUI-05 | Benchmark/sample evidence drill-down | UXUI-04A | DONE |
 | UXUI-06 | Find best setup planning | UXUI-04A/05 | DONE |
-| UXUI-07 | Campaign lifecycle + results/recommendation | UXUI-06 | READY |
-| UXUI-08 | Same-case cross-candidate comparison | UXUI-05/07 | BLOCKED |
+| UXUI-07 | Campaign lifecycle + results/recommendation | UXUI-06 | DONE |
+| UXUI-08 | Same-case cross-candidate comparison | UXUI-05/07 | READY |
 | UXUI-09 | Product hardening | UXUI-03..08 | BLOCKED |
 | UXUI-10 | Built-product acceptance and browser goldens | UXUI-09 | BLOCKED |
 
@@ -49,36 +49,37 @@ Allowed states: `READY`, `ACTIVE`, `BLOCKED`, `DONE`. Shared API/read-model chan
 
 ## Current executable slice
 
-### UXUI-07 — Campaign lifecycle + results/recommendation
+### UXUI-08 — Same-case cross-candidate comparison
 
 Owning boundary:
 
-- consume the deterministic frozen plan from UXUI-06 rather than rebuilding use-case, candidate or benchmark semantics;
-- persist and orchestrate a bounded Campaign that groups immutable Runs without replacing Run identity;
-- expose queued/running/completed/failed/cancelled lifecycle, cancellation, recovery and resource ownership;
-- produce results only from compatible retained evidence and an explicit versioned decision policy;
-- keep quality, runtime performance and resources separate; never introduce a universal opaque score;
-- preserve external model/runtime lifecycle ownership and do not invent mutable runtime configuration.
+- start from one benchmark case selected in Campaign Results or retained Run evidence;
+- compare that exact case only across candidate Runs whose benchmark/evaluator protocol is compatible for the case;
+- preserve candidate identity as model + quantization + frozen configuration + Run;
+- project retained response/evaluator evidence from Python read models rather than joining or interpreting it in TypeScript;
+- keep unavailable content and non-comparability explicit instead of forcing a winner;
+- reuse Campaign and Run identities from UXUI-07/05 rather than creating a second comparison ownership model.
 
 Acceptance direction:
 
-- `Start evaluation campaign` executes only the exact server-revalidated frozen plan/digest;
-- progress/recovery are server-owned and reconnectable without duplicate ownership;
-- each campaign matrix entry resolves to one model candidate + frozen configuration + immutable Run;
-- compatibility and decision-policy identity appear before any recommendation or alternative ranking;
-- J9 remains blocked until UXUI-08 adds same-case cross-candidate comparison.
+- a user can open one benchmark case from campaign results and see the same case across compatible candidate Runs;
+- incompatible protocol/snapshot/evaluator evidence explains why the case cannot be compared and shows no invalid winner/delta;
+- retained response/evaluator evidence remains traceable to each immutable Run/sample attempt;
+- J9 becomes executable in `browser-built-mocked-api` and `packaged-product-fixture` without weakening existing Compare semantics.
 
 ## Integrated foundation
 
-UXUI-01 through UXUI-06 are integrated through PRs #69, #71, #75, #70/#73, #72/#76 and #77 respectively. The current built product therefore has the canonical shell/design system, manual evaluation recovery, converged Library/Settings, inspectable benchmark/sample evidence and executable Find best setup planning.
+UXUI-01 through UXUI-07 are integrated through PRs #69, #71, #75, #70/#73, #72/#76, #77 and #80 respectively. The current built product therefore has the canonical shell/design system, manual evaluation recovery, converged Library/Settings, inspectable benchmark/sample evidence, executable Find best setup planning and a persisted/reconnectable Campaign lifecycle with policy-backed results.
 
-UXUI-06 specifically adds backend-owned versioned use cases, target-scoped candidate inventory, runtime-reported parameter capabilities, starter/workload benchmark mapping, bounded planning and a deterministic frozen campaign-plan digest. Sweep strategies remain unavailable when no bounded ranges are reported. J0 is exercised in both `browser-built-mocked-api` and `packaged-product-fixture`; campaign execution/recommendation intentionally remains UXUI-07.
+UXUI-06 adds backend-owned versioned use cases, target-scoped candidate inventory, runtime-reported parameter capabilities, starter/workload benchmark mapping, bounded planning and a deterministic frozen campaign-plan digest. Sweep strategies remain unavailable when no bounded ranges are reported.
+
+UXUI-07 executes only a server-revalidated frozen plan/digest, persists Campaign lifecycle separately from immutable Run evidence, shares bounded local evaluation capacity with manual runs, executes every matrix entry through the canonical native runner and exposes compatibility before recommendation. The versioned `strict-quality-dominance@1.0.0` policy produces a recommendation only when one candidate uniquely dominates every alternative on comparable quality metrics; otherwise the product exposes the trade-off without hidden weights or a universal score. J0 is exercised in both `browser-built-mocked-api` and `packaged-product-fixture` through campaign results and refresh-safe recovery.
 
 ## Integration strategy
 
-1. UXUI-07 makes the frozen campaign plan executable and produces policy-backed results.
-2. UXUI-08 adds same-case comparison after stable campaign contracts.
-3. UXUI-09/10 harden and prove the complete experience.
+1. UXUI-08 adds same-case comparison on top of stable Campaign/Run/sample contracts.
+2. UXUI-09 hardens failure, accessibility, responsive and long-data behavior across the complete journey.
+3. UXUI-10 captures built-product acceptance and accepted implementation goldens.
 
 Ordinary UX/UI branches start from current green `dev` and target `dev`; if `dev` moves, readiness is re-established on the regenerated merge-ref.
 
