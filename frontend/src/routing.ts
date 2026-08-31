@@ -1,6 +1,7 @@
 export type AppRoute =
   | { kind: "overview" }
   | { kind: "best-setup" }
+  | { kind: "campaign"; campaignId: string }
   | { kind: "runs" }
   | { kind: "run-detail"; runId: string }
   | {
@@ -31,6 +32,16 @@ export function parseHash(hash: string): AppRoute {
   if (raw === "find-best-setup") return { kind: "best-setup" };
   if (raw === "runs") return { kind: "runs" };
   if (raw === "test-a-model") return { kind: "test-model" };
+
+  if (raw.startsWith("campaigns/")) {
+    const encodedCampaignId = raw.slice("campaigns/".length);
+    if (!encodedCampaignId) return { kind: "not-found", path: raw };
+    try {
+      return { kind: "campaign", campaignId: decodePathSegment(encodedCampaignId) };
+    } catch {
+      return { kind: "not-found", path: raw };
+    }
+  }
 
   if (raw.startsWith("live-run/")) {
     const encodedJobId = raw.slice("live-run/".length);
