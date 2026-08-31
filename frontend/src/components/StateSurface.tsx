@@ -20,7 +20,9 @@ export function StateSurface({ kind, title, description, action }: StateSurfaceP
     <section
       className="state-surface"
       data-kind={kind}
-      aria-live={kind === "loading" ? "polite" : undefined}
+      role={kind === "error" ? "alert" : kind === "loading" ? "status" : undefined}
+      aria-live={kind === "error" ? "assertive" : kind === "loading" ? "polite" : undefined}
+      aria-atomic={kind === "error" || kind === "loading" ? true : undefined}
     >
       <p className="state-surface__kind">{KIND_LABELS[kind]}</p>
       <h2>{title}</h2>
