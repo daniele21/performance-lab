@@ -5,7 +5,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from performance_lab.domain import Campaign, TERMINAL_CAMPAIGN_STATUSES, load_json
+from performance_lab.domain import TERMINAL_CAMPAIGN_STATUSES, Campaign, load_json
 
 
 class CampaignStoreError(RuntimeError):
