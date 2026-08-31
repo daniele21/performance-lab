@@ -24,15 +24,16 @@ This workstream does not change benchmark semantics merely to fit a device. It p
 
 | Task | State | Acceptance |
 | --- | --- | --- |
-| EVID-000 pre-real E2E | BLOCKING | Built Product CI reports `READY_FOR_REAL_ENVIRONMENT: YES`; J0-J9 have retained browser screenshots/traces and the declared packaged-product journeys have assembled-product evidence |
-| EVID-001 representative run | BLOCKED ON EVID-000 | real endpoint completes; fingerprint and retained `.plab.zip` identify model/runtime/device/suite/datasets/config |
+| EVID-000 pre-real E2E | DONE | Built Product reports `READY_FOR_REAL_ENVIRONMENT: YES`; J0-J9 retain browser screenshots/traces and packaged J0/J1/J8/J9 retain assembled-product screenshots/traces |
+| EVID-001 representative run | READY | re-check a current `PRE_REAL_E2E = PASS`, then real endpoint completes and retained `.plab.zip` identifies model/runtime/device/suite/datasets/config |
 | EVID-002 repeat/load evidence | PLANNED | controlled repeated runs document warmup/load assumptions, variability and failures without hiding denominators |
 | EVID-003 telemetry validation | PLANNED | supported sensors/metrics have explicit scope/unit/provenance; unavailable data remains typed |
 | EVID-004 comparison/regression evidence | PLANNED | representative compatible and incompatible pairs preserve comparison reasons and valid-delta boundaries; at least one regression policy outcome is retained where applicable |
 
 ## Evidence rules
 
-- `RUNTIME-1` must not start as an acceptance exercise while `PRE_REAL_E2E` is failing or missing; the real environment should confirm residual fidelity gaps, not discover ordinary browser/product workflow defects.
+- `RUNTIME-1` starts only while the current relevant `PRE_REAL_E2E` evidence is passing; a material edit or target-base movement invalidates older readiness evidence.
+- The real environment should confirm residual fidelity gaps, not discover ordinary browser/product workflow defects.
 - A hosted CI run or mocked endpoint cannot satisfy a representative hardware claim.
 - A model name alone is not evidence identity.
 - Record exact runtime version, model revision/artifact/quantization when obtainable, device identity/class and benchmark protocol inputs.
@@ -42,6 +43,6 @@ This workstream does not change benchmark semantics merely to fit a device. It p
 
 ## Completion gate
 
-Complete when `PRE_REAL_E2E` is retained as PASS and the representative runs needed for the current M1-M6 claims are retained and reproducible, their limitations are reflected in canonical evidence/telemetry docs, and no fixture-only assumption is presented as a real-device fact.
+Complete when the representative runs needed for the current M1-M6 claims are retained and reproducible, their limitations are reflected in canonical evidence/telemetry docs, and no fixture-only assumption is presented as a real-device fact.
 
 After completion, update `current-state.md`/roadmap and delete this workstream by default. Git history owns the plan history.
