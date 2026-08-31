@@ -38,11 +38,12 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def write_summary(path: Path, manifest: dict[str, Any]) -> None:
+    ready_label = "YES" if manifest["ready_for_real_environment"] else "NO"
     lines = [
         "# Pre-real E2E readiness",
         "",
         f"Overall: **{manifest['status']}**",
-        f"Ready for REAL_ENVIRONMENT: **{'YES' if manifest['ready_for_real_environment'] else 'NO'}**",
+        f"Ready for REAL_ENVIRONMENT: **{ready_label}**",
         "",
         "## Browser-emulated journeys",
         "",
@@ -75,7 +76,11 @@ def write_summary(path: Path, manifest: dict[str, Any]) -> None:
     lines.extend(
         [
             "",
-            "This gate proves the declared automated pre-real layers only. Physical runtime/model/device evidence remains RUNTIME-1 and is never inferred from browser or packaged fixtures.",
+            (
+                "This gate proves the declared automated pre-real layers only. "
+                "Physical runtime/model/device evidence remains RUNTIME-1 and is never inferred "
+                "from browser or packaged fixtures."
+            ),
             "",
         ]
     )
