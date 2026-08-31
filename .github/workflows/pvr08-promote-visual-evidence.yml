@@ -1,0 +1,229 @@
+name: PVR-08 promote visual evidence
+
+on:
+  push:
+    branches: [agent/pvr-08-visual-acceptance]
+    paths:
+      - ".engineering/pvr08-promotion.json"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  promote:
+    name: Promote reviewed bounded visual evidence
+    runs-on: ubuntu-24.04
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify reviewed artifact and promote exact files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import shutil
+          import subprocess
+          import tempfile
+          import urllib.request
+          import zipfile
+
+          ROOT = pathlib.Path.cwd()
+          config_path = ROOT / ".engineering" / "pvr08-promotion.json"
+          config = json.loads(config_path.read_text(encoding="utf-8"))
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          token = os.environ["GITHUB_TOKEN"]
+          artifact_id = int(config["artifact_id"])
+          artifact_url = f"https://api.github.com/repos/{repo}/actions/artifacts/{artifact_id}/zip"
+          request = urllib.request.Request(
+              artifact_url,
+              headers={
+                  "Authorization": f"Bearer {token}",
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+              },
+          )
+          with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310
+              archive = response.read()
+
+          archive_sha = hashlib.sha256(archive).hexdigest()
+          if archive_sha != config["artifact_sha256"]:
+              raise SystemExit(
+                  f"artifact digest mismatch: expected {config['artifact_sha256']}, got {archive_sha}"
+              )
+
+          expected_hashes = config["files"]
+          expected_names = sorted(expected_hashes)
+          with tempfile.TemporaryDirectory(prefix="pvr08-") as temp_dir:
+              temp = pathlib.Path(temp_dir)
+              archive_path = temp / "artifact.zip"
+              archive_path.write_bytes(archive)
+              with zipfile.ZipFile(archive_path) as bundle:
+                  bundle.extractall(temp / "capture")
+
+              capture = temp / "capture"
+              actual_names = sorted(path.name for path in capture.rglob("*.png"))
+              if actual_names != expected_names:
+                  raise SystemExit(
+                      f"bounded capture mismatch: expected {expected_names}, got {actual_names}"
+                  )
+
+              captured: dict[str, pathlib.Path] = {}
+              for name in expected_names:
+                  matches = list(capture.rglob(name))
+                  if len(matches) != 1:
+                      raise SystemExit(f"expected exactly one {name}, found {len(matches)}")
+                  digest = hashlib.sha256(matches[0].read_bytes()).hexdigest()
+                  if digest != expected_hashes[name]:
+                      raise SystemExit(
+                          f"{name} digest mismatch: expected {expected_hashes[name]}, got {digest}"
+                      )
+                  captured[name] = matches[0]
+
+              stage = config["stage"]
+              if stage == "target":
+                  destination = ROOT / "design" / "reference" / "visual-targets" / "desktop-standard-v0.6"
+                  destination.mkdir(parents=True, exist_ok=True)
+                  for name, source in captured.items():
+                      shutil.copyfile(source, destination / name)
+
+                  manifest = {
+                      "schema_version": 1,
+                      "target_type": "approved-design-target",
+                      "target_set_version": "0.6.0",
+                      "status": "approved-bounded-v0.6-target",
+                      "viewport": {"width": 1536, "height": 960, "class": "desktop-standard"},
+                      "source_of_truth": "design/ux-contract.json",
+                      "brand_source": "design/brand-kit.json",
+                      "capture": {
+                          "source_head_sha": config["source_head_sha"],
+                          "workflow_run_id": config["workflow_run_id"],
+                          "artifact_id": artifact_id,
+                          "artifact_sha256": config["artifact_sha256"],
+                          "platform": "GitHub-hosted Ubuntu 24.04",
+                          "locale": "en-US",
+                          "timezone": "UTC",
+                          "color_scheme": "dark",
+                          "reduced_motion": "reduce",
+                      },
+                      "review": {
+                          "method": "manual visual inspection of the exact bounded CI capture against the v0.6 brand and UX contracts",
+                          "decision": "approved as bounded v0.6 design target",
+                          "human_reference_grade_claim": False,
+                      },
+                      "targets": {
+                          name.removesuffix(".png"): {
+                              "file": name,
+                              "sha256": expected_hashes[name],
+                              "status": "approved-v0.6-design-target",
+                          }
+                          for name in expected_names
+                      },
+                      "scope_note": "Only these five stable surfaces are approved as v0.6 visual targets. Broader J0-J9 screenshot/trace evidence remains owned by PRE_REAL.",
+                  }
+                  (destination / "manifest.json").write_text(
+                      json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+                  )
+                  expected_paths = {
+                      str((destination / name).relative_to(ROOT)) for name in expected_names
+                  } | {str((destination / "manifest.json").relative_to(ROOT))}
+              elif stage == "golden":
+                  target_manifest_path = (
+                      ROOT
+                      / "design"
+                      / "reference"
+                      / "visual-targets"
+                      / "desktop-standard-v0.6"
+                      / "manifest.json"
+                  )
+                  if not target_manifest_path.exists():
+                      raise SystemExit("v0.6 target manifest must exist before golden promotion")
+                  target_manifest = json.loads(target_manifest_path.read_text(encoding="utf-8"))
+                  for name in expected_names:
+                      expected_target_sha = target_manifest["targets"][name.removesuffix(".png")]["sha256"]
+                      if expected_hashes[name] != expected_target_sha:
+                          raise SystemExit(
+                              f"second capture {name} does not match approved target: "
+                              f"{expected_hashes[name]} != {expected_target_sha}"
+                          )
+
+                  destination = ROOT / "design" / "reference" / "visual-goldens" / "desktop-standard"
+                  for name, source in captured.items():
+                      shutil.copyfile(source, destination / name)
+
+                  golden_manifest_path = destination / "manifest.json"
+                  golden_manifest = json.loads(golden_manifest_path.read_text(encoding="utf-8"))
+                  golden_manifest["status"] = "approved-v0.6-automated-visual-regression-baseline"
+                  golden_manifest["capture"] = {
+                      "source_head_sha": config["source_head_sha"],
+                      "browser_capture_run_id": config["workflow_run_id"],
+                      "artifact_id": artifact_id,
+                      "artifact_sha256": config["artifact_sha256"],
+                      "platform": "GitHub-hosted Ubuntu 24.04",
+                      "locale": "en-US",
+                      "timezone": "UTC",
+                      "color_scheme": "dark",
+                      "reduced_motion": "reduce",
+                  }
+                  golden_manifest["review"] = {
+                      "method": "second independent CI capture matched byte-for-byte against the approved bounded v0.6 target set",
+                      "decision": "accepted for bounded automated visual regression",
+                      "human_reference_grade_claim": False,
+                  }
+                  golden_manifest["design_target_root"] = (
+                      "design/reference/visual-targets/desktop-standard-v0.6"
+                  )
+                  golden_manifest["goldens"] = {
+                      name.removesuffix(".png"): {
+                          "file": name,
+                          "sha256": expected_hashes[name],
+                      }
+                      for name in expected_names
+                  }
+                  golden_manifest["scope_note"] = (
+                      "These five stable surfaces are v0.6 automated visual-regression goldens. "
+                      "They do not substitute for PRE_REAL J0-J9 or final human accessibility/usability review."
+                  )
+                  golden_manifest_path.write_text(
+                      json.dumps(golden_manifest, indent=2) + "\n", encoding="utf-8"
+                  )
+                  expected_paths = {
+                      str((destination / name).relative_to(ROOT)) for name in expected_names
+                  } | {str(golden_manifest_path.relative_to(ROOT))}
+              else:
+                  raise SystemExit(f"unsupported promotion stage: {stage}")
+
+          subprocess.run(["git", "config", "user.name", "github-actions[bot]"], check=True)
+          subprocess.run(
+              ["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"],
+              check=True,
+          )
+          subprocess.run(["git", "add", "design/reference"], check=True)
+          changed = set(
+              subprocess.check_output(["git", "diff", "--cached", "--name-only"], text=True)
+              .strip()
+              .splitlines()
+          )
+          if changed != expected_paths:
+              raise SystemExit(
+                  f"promotion diff escaped bounded scope: expected {sorted(expected_paths)}, got {sorted(changed)}"
+              )
+          subprocess.run(
+              ["git", "commit", "-m", f"design: promote PVR-08 {config['stage']} evidence"],
+              check=True,
+          )
+          subprocess.run(["git", "push", "origin", "HEAD:agent/pvr-08-visual-acceptance"], check=True)
+          PY
