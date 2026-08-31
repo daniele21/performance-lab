@@ -7,6 +7,7 @@ from collections.abc import AsyncIterator, Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from functools import partial
 from typing import Protocol
 from uuid import uuid4
 
@@ -247,11 +248,7 @@ class CampaignJobManager:
                 try:
                     result = await self._executor(
                         spec.config,
-                        progress_sink=lambda event, entry_index=index: self._on_progress(
-                            campaign_id,
-                            entry_index,
-                            event,
-                        ),
+                        progress_sink=partial(self._on_progress, campaign_id, index),
                     )
                     self._finish_entry_from_run(campaign_id, index, result)
                 except asyncio.CancelledError:
