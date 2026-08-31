@@ -258,7 +258,8 @@ export function FindBestSetupView({
               {target ? (
                 <div className="best-setup-target-context">
                   <span>
-                    Device: {target.hardware_device_id ?? target.hardware_device_class ?? "Unknown"}
+                    Device:{" "}
+                    {target.hardware_device_id ?? target.hardware_device_class ?? "Unknown"}
                   </span>
                   <span>Endpoint: {target.target.endpoint_identity}</span>
                 </div>
@@ -482,7 +483,9 @@ export function FindBestSetupView({
                 >
                   {launchState === "loading" ? "Starting campaign…" : "Start evaluation campaign"}
                 </Button>
-                {preview.execution_blocked_reason ? <p>{preview.execution_blocked_reason}</p> : null}
+                {preview.execution_blocked_reason ? (
+                  <p>{preview.execution_blocked_reason}</p>
+                ) : null}
               </div>
             </>
           ) : null}
