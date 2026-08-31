@@ -42,9 +42,7 @@ export function App() {
     return (
       <FindBestSetupPage
         onManualTest={() => navigate("test-a-model")}
-        onCampaignStarted={(campaignId) =>
-          navigate(`campaigns/${encodeURIComponent(campaignId)}`)
-        }
+        onCampaignStarted={(campaignId) => navigate(`campaigns/${encodeURIComponent(campaignId)}`)}
       />
     );
   }
