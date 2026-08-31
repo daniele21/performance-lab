@@ -262,7 +262,11 @@ test("J9: campaign results drill into one exact case and explain incompatible ca
   page,
 }) => {
   await page.route("**/api/v1/campaigns/campaign-j9", async (route) => {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(campaign) });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(campaign),
+    });
   });
   await page.route("**/api/v1/campaigns/campaign-j9/cases", async (route) => {
     await route.fulfill({
@@ -294,8 +298,7 @@ test("J9: campaign results drill into one exact case and explain incompatible ca
   ).toBeVisible();
   await expect(page.getByText("Content not retained").first()).toBeVisible();
   await expect(page.getByText("accuracy · exact@1").first()).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open exact sample evidence" }).first()).toHaveAttribute(
-    "href",
-    "#runs/run-1/samples/reasoning/case-7/1",
-  );
+  await expect(
+    page.getByRole("link", { name: "Open exact sample evidence" }).first(),
+  ).toHaveAttribute("href", "#runs/run-1/samples/reasoning/case-7/1");
 });
