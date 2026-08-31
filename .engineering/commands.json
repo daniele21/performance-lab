@@ -20,6 +20,10 @@
       "status": "required",
       "run": "python -m pytest tests/e2e -v --tb=short"
     },
+    "pre_real_e2e": {
+      "status": "required",
+      "run": "python scripts/pre_real_e2e.py --output-root build/pre-real-e2e"
+    },
     "build": {"status": "required", "run": "npm --prefix frontend run build"},
     "smoke": {"status": "recommended", "run": "python scripts/smoke_release.py"},
     "package": {
