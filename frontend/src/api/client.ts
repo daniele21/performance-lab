@@ -1,4 +1,9 @@
-import type { CampaignLaunchRequest, CampaignReadModel } from "./campaign-types";
+import type {
+  CampaignCaseComparisonReadModel,
+  CampaignCaseSummaryReadModel,
+  CampaignLaunchRequest,
+  CampaignReadModel,
+} from "./campaign-types";
 import type {
   CampaignPlanPreviewReadModel,
   CampaignPlanPreviewRequest,
@@ -162,6 +167,26 @@ export function launchCampaign(request: CampaignLaunchRequest, options?: Request
 
 export function getCampaign(campaignId: string, options?: RequestOptions) {
   return getJson<CampaignReadModel>(`/api/v1/campaigns/${encodeURIComponent(campaignId)}`, options);
+}
+
+export function listCampaignCases(campaignId: string, options?: RequestOptions) {
+  return getJson<CampaignCaseSummaryReadModel[]>(
+    `/api/v1/campaigns/${encodeURIComponent(campaignId)}/cases`,
+    options,
+  );
+}
+
+export function getCampaignCaseComparison(
+  campaignId: string,
+  taskId: string,
+  sampleId: string,
+  options?: RequestOptions,
+) {
+  const segments = [campaignId, taskId, sampleId].map(encodeURIComponent);
+  return getJson<CampaignCaseComparisonReadModel>(
+    `/api/v1/campaigns/${segments[0]}/cases/${segments[1]}/${segments[2]}`,
+    options,
+  );
 }
 
 export function cancelCampaign(campaignId: string, options?: RequestOptions) {
