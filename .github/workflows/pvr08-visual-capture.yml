@@ -1,5 +1,6 @@
 name: PVR-08 visual capture
 
+# PVR-08 deliberately uses a fresh workflow run for each acceptance capture.
 on:
   push:
     branches: [agent/pvr-08-visual-acceptance]
