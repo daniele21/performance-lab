@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.5.0",
+  "contract_version": "0.6.0",
   "applicable": true,
   "design_source_of_truth": {
     "type": "in-repo",
@@ -398,7 +398,7 @@
     }
   },
   "automatic_campaign": {
-    "status": "ux_integrated_engine_pending",
+    "status": "campaign_engine_integrated_case_comparison_pending",
     "use_case_first": true,
     "use_case_mapping_owner": "Python application/evaluation contracts",
     "candidate_identity": [
