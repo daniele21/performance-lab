@@ -61,6 +61,7 @@ a {
   transform: translateY(0);
 }
 
+.app-shell__main,
 code,
 pre,
 dd,
