@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell, Button, StateSurface } from "./components";
 import "./foundation.css";
 import { BenchmarkDetailPage } from "./pages/benchmark-detail";
+import { CampaignPage } from "./pages/campaign";
 import { ComparePage } from "./pages/compare";
 import { FindBestSetupPage } from "./pages/find-best-setup";
 import { LibraryPage } from "./pages/library";
@@ -38,7 +39,22 @@ export function App() {
   }
 
   if (route.kind === "best-setup") {
-    return <FindBestSetupPage onManualTest={() => navigate("test-a-model")} />;
+    return (
+      <FindBestSetupPage
+        onManualTest={() => navigate("test-a-model")}
+        onCampaignStarted={(campaignId) => navigate(`campaigns/${encodeURIComponent(campaignId)}`)}
+      />
+    );
+  }
+
+  if (route.kind === "campaign") {
+    return (
+      <CampaignPage
+        campaignId={route.campaignId}
+        onOpenRun={(runId) => navigate(`runs/${encodeURIComponent(runId)}`)}
+        onNewCampaign={() => navigate("find-best-setup")}
+      />
+    );
   }
 
   if (route.kind === "test-model") {

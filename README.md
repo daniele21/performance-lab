@@ -214,13 +214,29 @@ Create a run config, for example for `local-llm-server` running on port `1235`:
 }
 ```
 
-Then execute:
+Then execute one controlled run:
 
 ```bash
 performance-lab run --config local-llm-server-run.json
 ```
 
 The run is persisted in SQLite and exported as a portable `.plab.zip` evidence bundle. The execution fingerprint records the endpoint/model/runtime-config/generation/dataset/evaluator/hardware/telemetry identity actually known at run start. Unobserved fields remain unknown rather than being guessed.
+
+### Run the local browser product
+
+From a repository checkout, build the frontend and serve it together with the loopback API:
+
+```bash
+npm --prefix frontend ci
+npm --prefix frontend run build
+performance-lab-ui --config local-llm-server-run.json --assets frontend/dist
+```
+
+Then open the loopback address printed by `performance-lab-ui`. The primary **Find best setup** journey is executable: choose a versioned use case, select candidate models on one target/device, review the backend-owned benchmark plan and frozen digest, start the campaign, follow reconnectable progress, and inspect results backed by immutable Runs.
+
+Campaign execution revalidates the exact frozen plan on the server before launch. Candidate identity remains explicit, including `unknown` quantization/runtime fields when the connected runtime cannot report them. Parameter sweeps stay unavailable unless the runtime contract supplies bounded ranges.
+
+Results show compatibility and the explicit versioned decision policy before any recommendation. The current `strict-quality-dominance@1.0.0` policy only recommends a unique candidate when comparable quality evidence shows it is no worse on every reported quality metric and strictly better on at least one metric against every alternative; it does not create a universal weighted score. Same-case cross-candidate sample comparison remains a separate downstream capability.
 
 ## Current implemented baseline
 
@@ -237,12 +253,14 @@ The repository now includes:
 - compatible run comparison, explicit immutable baselines and versioned regression policies;
 - executable `run`, `regress` and `regress-ci` flows with machine-readable results and deterministic exit codes;
 - a reusable GitHub Actions regression integration;
-- a local browser product with Overview, Test a model, Live Run, Runs/Run Detail, Compare, Library and Settings;
-- Playwright J1-J6 browser acceptance plus compact/wide, overflow, duplicate-ID and reduced-motion checks;
+- a local browser product with Overview, executable Find best setup planning/campaign/results, Test a model, Live Run, Runs/Run Detail, Compare, Library and Settings;
+- server-owned Campaign lifecycle with frozen-plan revalidation, bounded execution, cancellation/recovery, immutable Run grouping and compatibility-aware policy-backed results;
+- benchmark and sample evidence drill-down with explicit content-retention and evaluator-explanation states;
+- browser acceptance for J0-J8 where the corresponding journey is executable, with packaged-product evidence for the highest-value local workflows;
 - unique build/source identity, immutable packaged artifacts, manifest/checksums, build delta, bounded retention and built-product smoke/cleanup;
 - constrained CI dependency snapshots validated on Python 3.12 and 3.13.
 
-The next high-value work is a **representative evidence campaign on real models, runtimes and devices**, in parallel with staged removal of evaluation responsibilities duplicated in Local LLM Server after parity/history/consumer evidence is complete.
+The next product UX/UI capability is **same-case cross-candidate comparison** from campaign results. Representative real-model/runtime/device evidence remains a separate required track before making hardware-specific deployment claims.
 
 See [`docs/current-state.md`](docs/current-state.md) for the operational ledger.
 

@@ -12,6 +12,13 @@ describe("hash routing", () => {
     expect(parseHash("#find-best-setup")).toEqual({ kind: "best-setup" });
   });
 
+  it("keeps campaign identity in a refresh-safe campaign route", () => {
+    expect(parseHash("#campaigns/campaign%2Fone")).toEqual({
+      kind: "campaign",
+      campaignId: "campaign/one",
+    });
+  });
+
   it("decodes immutable run identities from the Runs route", () => {
     expect(parseHash("#runs/run%2Fone")).toEqual({ kind: "run-detail", runId: "run/one" });
   });
@@ -77,10 +84,14 @@ describe("hash routing", () => {
     });
   });
 
-  it("keeps malformed run routes explicit", () => {
+  it("keeps malformed run and campaign routes explicit", () => {
     expect(parseHash("#runs/%E0%A4%A")).toEqual({
       kind: "not-found",
       path: "runs/%E0%A4%A",
+    });
+    expect(parseHash("#campaigns/%E0%A4%A")).toEqual({
+      kind: "not-found",
+      path: "campaigns/%E0%A4%A",
     });
     expect(parseHash("#live-run/%E0%A4%A")).toEqual({
       kind: "not-found",

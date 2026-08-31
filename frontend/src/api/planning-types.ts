@@ -93,6 +93,15 @@ export interface CampaignEstimateReadModel extends UIModelIdentity {
   duration_reason: string;
 }
 
+export interface DecisionPolicyReadModel extends UIModelIdentity {
+  policy_id: string;
+  policy_version: string;
+  title: string;
+  method: "strict_quality_dominance";
+  description: string;
+  no_hidden_weights: true;
+}
+
 export interface CampaignPlanPreviewReadModel extends UIModelIdentity {
   can_plan: boolean;
   issues: CampaignPlanIssueReadModel[];
@@ -103,6 +112,7 @@ export interface CampaignPlanPreviewReadModel extends UIModelIdentity {
   configuration_search: ConfigurationSearchPlanReadModel | null;
   benchmark_plan: BenchmarkPlanReadModel | null;
   estimate: CampaignEstimateReadModel | null;
-  execution_available: false;
-  execution_blocked_reason: string;
+  decision_policy: DecisionPolicyReadModel | null;
+  execution_available: boolean;
+  execution_blocked_reason: string | null;
 }

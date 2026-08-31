@@ -110,7 +110,7 @@
   "critical_journeys": [
     {
       "id": "J0",
-      "claim": "User can enter the use-case-first Find best setup journey, choose backend-owned use-case and candidate evidence, build and freeze the benchmark campaign plan, inspect a truthful estimate, and is not misled into starting execution before the campaign engine exists.",
+      "claim": "User can enter the use-case-first Find best setup journey, build and freeze a backend-owned campaign plan, start only the exact server-revalidated digest, reconnect to persisted campaign progress, inspect immutable candidate Runs, and see compatibility plus the versioned decision policy before any recommendation.",
       "target_environment_refs": [
         "desktop-browser-product"
       ],
@@ -120,9 +120,7 @@
       ],
       "minimum_automated_fidelity": "representative_virtual",
       "residual_gaps": [
-        "bounded request-level parameter sweeps when a runtime exposes explicit search ranges",
-        "campaign scheduling and immutable run grouping",
-        "compatibility-aware recommendation policy"
+        "bounded request-level parameter sweeps when a runtime exposes explicit search ranges"
       ],
       "real_environment_confirmation": "not_required",
       "automation_gap_reason": null
@@ -254,13 +252,12 @@
       ],
       "minimum_automated_fidelity": "representative_virtual",
       "residual_gaps": [
-        "automatic campaign execution",
         "cross-candidate case comparison read model",
         "same-case compatibility projection",
         "candidate-level retained response/evaluator evidence"
       ],
       "real_environment_confirmation": "not_required",
-      "automation_gap_reason": "The comparison UX is defined; campaign execution and cross-candidate sample comparison are not implemented yet."
+      "automation_gap_reason": "Campaign execution is integrated; same-case cross-candidate sample comparison remains UXUI-08."
     },
     {
       "id": "RUNTIME-1",

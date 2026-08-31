@@ -5,7 +5,7 @@ Document type: architecture
 Owner: repository
 Canonical scope: architecture.repository
 Read when: changing dependency boundaries, adding a domain/application/adapter/storage boundary, or deciding where new behavior belongs
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-31
 
 ## 1. Architectural objective
 
@@ -52,9 +52,9 @@ A black-box evaluation remains valid when telemetry is unavailable. Resource/dev
 - `evaluation/` owns parsers/evaluators and score semantics.
 - `performance/` owns runtime measurement protocols/statistics.
 - `telemetry/` owns metric collection/provenance, not benchmark pass/fail policy.
-- `storage/` owns run persistence, immutable completed evidence, import/export and migrations.
+- `storage/` owns run persistence, immutable completed evidence, bounded Campaign lifecycle persistence, import/export and migrations.
 - `regression/` and comparison owners consume canonical fingerprints/metrics; persistence/UI do not redefine comparability.
-- `application/` exposes task-oriented read models, preflight/frozen configuration and bounded server-owned run jobs to presentation layers.
+- `application/` exposes task-oriented read models, preflight/frozen configuration, bounded server-owned run/campaign jobs and versioned decision policy to presentation layers.
 - `ui_api.py` and `ui_server.py` are transport/composition boundaries, not domain-policy owners.
 - `frontend/` consumes versioned application/API contracts and semantic design contracts; it never reads SQLite directly or reimplements canonical benchmark/comparability truth.
 - CLI/CI/automation are presentation/automation entry points over the same canonical engine/evidence semantics.
@@ -85,14 +85,14 @@ src/performance_lab/
   engine/          run orchestration
   adapters/        inference-provider boundaries
   datasets/        dataset registry/loading/snapshots
-  evaluation/      parsers and evaluators
+  evaluation/      parsers/evaluators and score semantics
   performance/     latency/throughput/load/statistics
   telemetry/       collectors and provenance
   storage/         SQLite/artifact persistence
   regression/      baseline/policy/verdict logic
   integrations/    external product/framework integration
   plugins/         extension discovery/contracts
-  application/     UI read/preflight/run-job application layer
+  application/     UI read/preflight/run/campaign application layer
   cli.py            command-line surface
   ci.py             CI regression surface
   automation.py     automation-facing helpers
@@ -179,7 +179,7 @@ PENDING -> RUNNING -> SUCCESS
 
 Evaluator infrastructure failure is not model failure; transport timeout is not an incorrect answer. Aggregation preserves those distinctions.
 
-The UI application layer additionally owns bounded server-side run jobs, progress, reconnect/cancellation state and restart/interruption recovery without changing the immutable run-evidence contract.
+The UI application layer additionally owns bounded server-side Run and Campaign jobs, progress, reconnect/cancellation state and restart/interruption recovery without changing the immutable run-evidence contract. A Campaign groups immutable Runs; it does not become an alternate Run identity or portable replacement for Run evidence.
 
 ## 8. Reproducibility rules
 
@@ -253,7 +253,7 @@ Imported evidence preserves framework/task/version/config provenance and is neve
 
 Current persistence uses a queryable run store plus portable evidence artifacts. Technology remains replaceable as long as migration, immutability and atomic-publication contracts hold.
 
-Queryable metadata includes run headers/fingerprints, aggregate quality/runtime/resource evidence, baselines and comparison/regression state. Larger artifacts may include per-sample evidence, telemetry series and imported benchmark output.
+Queryable metadata includes run headers/fingerprints, aggregate quality/runtime/resource evidence, baselines and comparison/regression state. Campaign lifecycle is persisted separately as bounded orchestration state that references immutable Run IDs; terminal Campaign snapshots are immutable, while Run records remain the authoritative benchmark evidence. Larger artifacts may include per-sample evidence, telemetry series and imported benchmark output.
 
 Privacy modes are conceptually:
 
@@ -276,13 +276,19 @@ Canonical comparison order:
 
 `PASS`, `FAIL`, `NOT_COMPARABLE` and `NOT_EVALUATED` remain distinct. Missing evidence cannot silently pass and incompatible deltas are absent, not cosmetically disabled into apparent validity.
 
+Campaign recommendation follows the same compatibility-first rule. The current `strict-quality-dominance@1.0.0` application policy recommends only a unique candidate that is no worse on every comparable quality metric and strictly better on at least one metric against every alternative. It introduces no metric weights, cross-dimension normalization or hidden tie-break. Runtime and resource evidence remain separate read-model dimensions rather than inputs to an opaque universal score.
+
 ## 14. Local UI application boundary
 
-`UIQueryService` and related application models translate canonical run/evidence semantics into task-oriented browser read models. Preflight resolves/validates a user selection and produces a frozen execution preview before launch.
+`UIQueryService` and related application models translate canonical run/evidence semantics into task-oriented browser read models. Preflight resolves/validates a user selection and produces a frozen execution preview before launch. Campaign planning similarly resolves use-case, candidate, configuration-search and benchmark semantics in Python and produces a deterministic frozen plan digest.
 
-`RunJobManager` owns bounded in-process run-job state, progress, cancellation/reconnect and interruption recovery. Completed truth still comes from the immutable run store rather than transient job memory.
+`RunJobManager` owns bounded single-Run job state, progress, cancellation/reconnect and interruption recovery. `CampaignJobManager` owns bounded multi-Run Campaign orchestration over that same native runner. A shared `EvaluationCapacity` prevents manual Runs and Campaigns from concurrently claiming the same local evaluation slot. Both managers release ownership across success, failure, cancellation and shutdown/restart paths.
 
-`ui_server.py` composes the local graph from one versioned starter execution config and binds the API to `127.0.0.1` by default. During development Vite proxies `/api` to this loopback service. Built static-product ownership, build identity/artifact promotion and final smoke/cleanup are intentionally deferred to `REL-UI-001`.
+Campaign launch never trusts the browser preview as executable truth: the server rebuilds the requested plan from current backend-owned semantics and requires its digest to match the reviewed digest before capacity is acquired. Each Campaign matrix entry then receives one explicit Run ID and executes through the canonical runner. `SQLiteCampaignStore` retains lifecycle/reconnect state separately from `SQLiteRunStore`; completed Run truth remains immutable Run evidence.
+
+Campaign result projection joins persisted Campaign entries to completed Runs, evaluates dimension-specific compatibility and applies an explicit versioned decision policy. The frontend only renders that projection; it does not rank candidates, assign benchmark relevance or combine quality/runtime/resource metrics itself.
+
+`ui_server.py` composes the local graph from one versioned starter execution config and binds the API to `127.0.0.1` by default. During development Vite proxies `/api` to this loopback service. Built static-product ownership, build identity/artifact promotion and final smoke/cleanup remain release concerns rather than campaign-lifecycle ownership.
 
 Frontend information architecture and interaction rules belong in `design/ux-contract.json`; brand/component/motion semantics belong in `design/brand-kit.json` and `frontend/src/design/`. Architecture does not duplicate those UX contracts.
 

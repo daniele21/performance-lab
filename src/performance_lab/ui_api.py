@@ -12,9 +12,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from performance_lab.application import (
     BaselineSummaryReadModel,
     BenchmarkDetailReadModel,
+    CampaignPlanDigestMismatchError,
+    CampaignPlanLaunchError,
     CampaignPlanningContextReadModel,
     CampaignPlanPreviewReadModel,
     CampaignPlanPreviewRequest,
+    CampaignQueryService,
+    CampaignReadModel,
     ComparisonReadModel,
     DatasetSummaryReadModel,
     EndpointConnectionInput,
@@ -34,6 +38,11 @@ from performance_lab.application import (
     UIQueryService,
     probe_endpoint_connection,
 )
+from performance_lab.application.campaign_jobs import (
+    CampaignCapacityError,
+    CampaignJobManager,
+    CampaignNotFoundJobError,
+)
 from performance_lab.application.run_jobs import (
     FrozenConfigMismatchError,
     RunJobCapacityError,
@@ -41,7 +50,7 @@ from performance_lab.application.run_jobs import (
     RunJobNotFoundError,
     RunJobSnapshot,
 )
-from performance_lab.storage import RunNotFoundError
+from performance_lab.storage import CampaignNotFoundError, RunNotFoundError
 
 
 class RunLaunchRequest(BaseModel):
@@ -51,16 +60,27 @@ class RunLaunchRequest(BaseModel):
     config_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
+class CampaignLaunchRequest(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    plan: CampaignPlanPreviewRequest
+    plan_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 def create_ui_app(
     queries: UIQueryService,
     *,
     run_jobs: RunJobManager | None = None,
+    campaign_jobs: CampaignJobManager | None = None,
+    campaign_queries: CampaignQueryService | None = None,
 ) -> FastAPI:
     """Create the loopback UI API while keeping benchmark truth in application services."""
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         yield
+        if campaign_jobs is not None:
+            await campaign_jobs.shutdown()
         if run_jobs is not None:
             await run_jobs.shutdown()
 
@@ -96,6 +116,79 @@ def create_ui_app(
     @app.post("/api/v1/campaign-plan-preview", response_model=CampaignPlanPreviewReadModel)
     def campaign_plan_preview(request: CampaignPlanPreviewRequest) -> CampaignPlanPreviewReadModel:
         return queries.preview_campaign_plan(request)
+
+    @app.get("/api/v1/campaigns", response_model=list[CampaignReadModel])
+    def list_campaigns() -> tuple[CampaignReadModel, ...]:
+        _, read_queries = _require_campaigns(campaign_jobs, campaign_queries)
+        return read_queries.list_campaigns()
+
+    @app.post(
+        "/api/v1/campaigns",
+        response_model=CampaignReadModel,
+        status_code=status.HTTP_202_ACCEPTED,
+    )
+    async def launch_campaign(request: CampaignLaunchRequest) -> CampaignReadModel:
+        manager, read_queries = _require_campaigns(campaign_jobs, campaign_queries)
+        try:
+            plan = queries.prepare_campaign_launch(
+                request.plan,
+                expected_plan_digest=request.plan_digest,
+            )
+        except CampaignPlanDigestMismatchError as exc:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+        except CampaignPlanLaunchError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=str(exc),
+            ) from exc
+        try:
+            campaign = await manager.launch(plan)
+        except CampaignCapacityError as exc:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+        return read_queries.get(campaign.campaign_id)
+
+    @app.get("/api/v1/campaigns/{campaign_id}", response_model=CampaignReadModel)
+    def get_campaign(campaign_id: str) -> CampaignReadModel:
+        _, read_queries = _require_campaigns(campaign_jobs, campaign_queries)
+        try:
+            return read_queries.get(campaign_id)
+        except CampaignNotFoundError as exc:
+            raise HTTPException(status_code=404, detail="campaign not found") from exc
+
+    @app.post("/api/v1/campaigns/{campaign_id}/cancel", response_model=CampaignReadModel)
+    async def cancel_campaign(campaign_id: str) -> CampaignReadModel:
+        manager, read_queries = _require_campaigns(campaign_jobs, campaign_queries)
+        try:
+            campaign = await manager.cancel(campaign_id)
+        except CampaignNotFoundJobError as exc:
+            raise HTTPException(status_code=404, detail="campaign not found") from exc
+        return read_queries.get(campaign.campaign_id)
+
+    @app.get("/api/v1/campaigns/{campaign_id}/events")
+    def stream_campaign(
+        campaign_id: str,
+        after_revision: int = Query(default=-1, ge=-1),
+    ) -> Response:
+        manager, read_queries = _require_campaigns(campaign_jobs, campaign_queries)
+        try:
+            manager.get(campaign_id)
+        except CampaignNotFoundJobError as exc:
+            raise HTTPException(status_code=404, detail="campaign not found") from exc
+
+        async def events() -> AsyncIterator[str]:
+            async for _ in manager.stream(campaign_id, after_revision=after_revision):
+                snapshot = read_queries.get(campaign_id)
+                yield (
+                    f"id: {snapshot.revision}\n"
+                    "event: campaign\n"
+                    f"data: {snapshot.model_dump_json()}\n\n"
+                )
+
+        return StreamingResponse(
+            events(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
 
     @app.get("/api/v1/runs", response_model=list[RunSummaryReadModel])
     def list_runs(
@@ -281,3 +374,15 @@ def _require_run_jobs(run_jobs: RunJobManager | None) -> RunJobManager:
             detail="run lifecycle is not configured for this local process",
         )
     return run_jobs
+
+
+def _require_campaigns(
+    campaign_jobs: CampaignJobManager | None,
+    campaign_queries: CampaignQueryService | None,
+) -> tuple[CampaignJobManager, CampaignQueryService]:
+    if campaign_jobs is None or campaign_queries is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="campaign lifecycle is not configured for this local process",
+        )
+    return campaign_jobs, campaign_queries

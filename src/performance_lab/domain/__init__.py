@@ -1,5 +1,14 @@
 """Stable public domain contracts for Performance Lab."""
 
+from .campaign import (
+    TERMINAL_CAMPAIGN_ENTRY_STATUSES,
+    TERMINAL_CAMPAIGN_STATUSES,
+    Campaign,
+    CampaignEntry,
+    CampaignEntryStatus,
+    CampaignStatus,
+    DecisionPolicyRef,
+)
 from .compatibility import (
     ComparisonDimension,
     CompatibilityResult,
@@ -47,13 +56,20 @@ from .serialization import (
 
 __all__ = [
     "SCHEMA_VERSION",
+    "TERMINAL_CAMPAIGN_ENTRY_STATUSES",
+    "TERMINAL_CAMPAIGN_STATUSES",
     "AuthConfig",
     "AuthStrategy",
     "BenchmarkProtocol",
+    "Campaign",
+    "CampaignEntry",
+    "CampaignEntryStatus",
+    "CampaignStatus",
     "Capability",
     "ComparisonDimension",
     "CompatibilityResult",
     "DatasetSnapshot",
+    "DecisionPolicyRef",
     "EndpointProfile",
     "ErrorInfo",
     "EvaluationSuite",

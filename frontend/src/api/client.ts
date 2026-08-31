@@ -1,3 +1,4 @@
+import type { CampaignLaunchRequest, CampaignReadModel } from "./campaign-types";
 import type {
   CampaignPlanPreviewReadModel,
   CampaignPlanPreviewRequest,
@@ -149,6 +150,63 @@ export function previewCampaignPlan(request: CampaignPlanPreviewRequest, options
     request,
     options,
   );
+}
+
+export function listCampaigns(options?: RequestOptions) {
+  return getJson<CampaignReadModel[]>("/api/v1/campaigns", options);
+}
+
+export function launchCampaign(request: CampaignLaunchRequest, options?: RequestOptions) {
+  return postJson<CampaignLaunchRequest, CampaignReadModel>("/api/v1/campaigns", request, options);
+}
+
+export function getCampaign(campaignId: string, options?: RequestOptions) {
+  return getJson<CampaignReadModel>(`/api/v1/campaigns/${encodeURIComponent(campaignId)}`, options);
+}
+
+export function cancelCampaign(campaignId: string, options?: RequestOptions) {
+  return postJson<Record<string, never>, CampaignReadModel>(
+    `/api/v1/campaigns/${encodeURIComponent(campaignId)}/cancel`,
+    {},
+    options,
+  );
+}
+
+const TERMINAL_CAMPAIGN_STATES = new Set<CampaignReadModel["status"]>([
+  "succeeded",
+  "failed",
+  "cancelled",
+  "interrupted",
+]);
+
+interface CampaignSubscription {
+  afterRevision?: number;
+  onSnapshot: (snapshot: CampaignReadModel) => void;
+  onDisconnect?: () => void;
+  onMalformedEvent?: () => void;
+}
+
+export function subscribeCampaign(campaignId: string, subscription: CampaignSubscription) {
+  const query = new URLSearchParams({
+    after_revision: String(subscription.afterRevision ?? -1),
+  });
+  const source = new EventSource(
+    `/api/v1/campaigns/${encodeURIComponent(campaignId)}/events?${query.toString()}`,
+  );
+  const handleSnapshot = (event: Event) => {
+    const message = event as MessageEvent<string>;
+    try {
+      const snapshot = JSON.parse(message.data) as CampaignReadModel;
+      subscription.onSnapshot(snapshot);
+      if (TERMINAL_CAMPAIGN_STATES.has(snapshot.status)) source.close();
+    } catch {
+      subscription.onMalformedEvent?.();
+    }
+  };
+
+  source.addEventListener("campaign", handleSnapshot);
+  source.onerror = () => subscription.onDisconnect?.();
+  return () => source.close();
 }
 
 export function listSuites(options?: RequestOptions) {

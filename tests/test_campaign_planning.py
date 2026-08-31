@@ -1,6 +1,9 @@
 from pathlib import Path
 
+import pytest
+
 from performance_lab.application import (
+    CampaignPlanDigestMismatchError,
     CampaignPlanPreviewRequest,
     CampaignSearchStrategy,
     DiscoveredModelReadModel,
@@ -69,7 +72,7 @@ def test_planning_context_uses_starter_and_versioned_workload_packs(tmp_path: Pa
     assert all(not option.available for option in target.configuration_search_options[1:])
 
 
-def test_fixed_general_plan_is_frozen_deterministic_and_bounded(tmp_path: Path) -> None:
+def test_fixed_general_plan_is_frozen_deterministic_and_executable(tmp_path: Path) -> None:
     queries = _queries(tmp_path)
     target = queries.campaign_planning_context().targets[0]
     candidate_id = target.candidates[0].candidate_id
@@ -86,7 +89,10 @@ def test_fixed_general_plan_is_frozen_deterministic_and_bounded(tmp_path: Path) 
     assert first.can_plan
     assert first.plan_digest == second.plan_digest
     assert first.plan_digest is not None
-    assert not first.execution_available
+    assert first.execution_available
+    assert first.execution_blocked_reason is None
+    assert first.decision_policy is not None
+    assert first.decision_policy.policy_id == "strict-quality-dominance"
     assert first.configuration_search is not None
     assert first.configuration_search.configuration_count_per_candidate == 1
     assert first.configuration_search.bounded_parameter_ranges == ()
@@ -98,18 +104,37 @@ def test_fixed_general_plan_is_frozen_deterministic_and_bounded(tmp_path: Path) 
     assert first.estimate.estimated_request_count == 23
     assert first.estimate.estimated_duration_seconds is None
 
+    launch = queries.prepare_campaign_launch(request, expected_plan_digest=first.plan_digest)
+    assert launch.plan_digest == first.plan_digest
+    assert launch.decision_policy.policy_id == "strict-quality-dominance"
+    assert len(launch.runs) == 1
+    assert launch.runs[0].config.suite_id == "general-diagnostic-starter"
+    assert launch.runs[0].config.suite_version == first.benchmark_plan.suite.suite_version
 
-def test_workload_use_case_maps_to_its_own_versioned_benchmark_plan(tmp_path: Path) -> None:
+
+def test_launch_revalidates_the_exact_reviewed_digest(tmp_path: Path) -> None:
     queries = _queries(tmp_path)
     target = queries.campaign_planning_context().targets[0]
-
-    preview = queries.preview_campaign_plan(
-        CampaignPlanPreviewRequest(
-            use_case_id="structured-document-extraction",
-            target_id=target.target.target_id,
-            candidate_ids=(target.candidates[0].candidate_id,),
-        )
+    request = CampaignPlanPreviewRequest(
+        use_case_id="general-capability",
+        target_id=target.target.target_id,
+        candidate_ids=(target.candidates[0].candidate_id,),
     )
+
+    with pytest.raises(CampaignPlanDigestMismatchError):
+        queries.prepare_campaign_launch(request, expected_plan_digest="0" * 64)
+
+
+def test_workload_use_case_maps_to_its_own_versioned_executable_plan(tmp_path: Path) -> None:
+    queries = _queries(tmp_path)
+    target = queries.campaign_planning_context().targets[0]
+    request = CampaignPlanPreviewRequest(
+        use_case_id="structured-document-extraction",
+        target_id=target.target.target_id,
+        candidate_ids=(target.candidates[0].candidate_id,),
+    )
+
+    preview = queries.preview_campaign_plan(request)
 
     assert preview.can_plan
     assert preview.use_case is not None
@@ -119,6 +144,11 @@ def test_workload_use_case_maps_to_its_own_versioned_benchmark_plan(tmp_path: Pa
     assert preview.benchmark_plan.case_count_per_run == 12
     assert preview.estimate is not None
     assert preview.estimate.estimated_request_count == 12
+    assert preview.plan_digest is not None
+
+    launch = queries.prepare_campaign_launch(request, expected_plan_digest=preview.plan_digest)
+    assert launch.runs[0].config.suite_id == "workload-structured-document-extraction"
+    assert launch.runs[0].config.suite_version == preview.benchmark_plan.suite.suite_version
 
 
 def test_sweep_strategy_is_blocked_without_backend_owned_bounded_ranges(tmp_path: Path) -> None:
@@ -135,6 +165,7 @@ def test_sweep_strategy_is_blocked_without_backend_owned_bounded_ranges(tmp_path
     )
 
     assert not preview.can_plan
+    assert not preview.execution_available
     assert preview.issues[0].code == "configuration_strategy_unavailable"
     assert "will not invent sweep domains" in preview.issues[0].message
 

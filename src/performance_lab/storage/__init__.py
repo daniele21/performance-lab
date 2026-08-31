@@ -1,5 +1,11 @@
-"""Local run evidence storage, comparison and retention policies."""
+"""Local run/campaign evidence storage, comparison and retention policies."""
 
+from .campaign import (
+    CampaignNotFoundError,
+    CampaignStoreError,
+    ImmutableCampaignConflictError,
+    SQLiteCampaignStore,
+)
 from .comparison import (
     DimensionComparison,
     IdentityDifference,
@@ -26,8 +32,11 @@ from .sqlite import (
 
 __all__ = [
     "RETENTION_POLICY_VERSION",
+    "CampaignNotFoundError",
+    "CampaignStoreError",
     "DimensionComparison",
     "IdentityDifference",
+    "ImmutableCampaignConflictError",
     "ImmutableRunConflictError",
     "InvalidRunBundleError",
     "InvalidRunStateError",
@@ -38,6 +47,7 @@ __all__ = [
     "RunComparisonService",
     "RunNotFoundError",
     "RunStoreError",
+    "SQLiteCampaignStore",
     "SQLiteRunStore",
     "SampleEvidenceRetention",
     "compare_runs",
