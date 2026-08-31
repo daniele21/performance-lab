@@ -10,7 +10,7 @@
   "packageManager": "npm@11.17.0",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "format:check": "prettier --check . || (prettier --write src/api/campaign-types.ts src/api/client.ts src/pages/campaign/CampaignPage.tsx src/pages/find-best-setup/FindBestSetupPage.tsx && git diff -- src/api/campaign-types.ts src/api/client.ts src/pages/campaign/CampaignPage.tsx src/pages/find-best-setup/FindBestSetupPage.tsx && exit 1)",
+    "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc -b --pretty false",
     "check": "npm run format:check && npm run lint && npm run typecheck",
