@@ -3,6 +3,7 @@
   "source_head_sha": "1c37ec2447515a5d75b27c680d552ce232fb5bda",
   "workflow_run_id": 33445346076,
   "artifact_id": 9777817615,
+  "artifact_name": "pvr08-target-candidate-33445346076-1",
   "artifact_sha256": "d0aa52e49b64276dd1f6f8287e43bb89bb110c38c7cc455798176ffee31ff065",
   "files": {
     "benchmark-detail.png": "32335866e03f84fb46bf7e6ec36f693d00450515fba0ed5a7372e9f13ef740c5",
