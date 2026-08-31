@@ -1,0 +1,54 @@
+name: PVR-08 visual capture
+
+on:
+  push:
+    branches: [agent/pvr-08-visual-acceptance]
+    paths:
+      - ".github/workflows/pvr08-visual-capture.yml"
+      - "frontend/**"
+      - "design/**"
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Capture bounded v0.6 visual surfaces
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Pin npm
+        run: npm install --global npm@11.17.0
+      - name: Install frozen frontend dependencies
+        run: npm --prefix frontend ci
+      - name: Install Chromium
+        run: npm --prefix frontend exec -- playwright install --with-deps chromium
+      - name: Check frontend
+        run: npm --prefix frontend run check
+      - name: Capture all bounded visual surfaces without committing them
+        run: npm --prefix frontend exec -- playwright test e2e/visual-acceptance.spec.ts --update-snapshots
+      - name: Verify capture is bounded to the accepted five-surface set
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=$'design/reference/visual-goldens/desktop-standard/benchmark-detail.png\ndesign/reference/visual-goldens/desktop-standard/campaign-results.png\ndesign/reference/visual-goldens/desktop-standard/overview.png\ndesign/reference/visual-goldens/desktop-standard/sample-evidence-detail.png\ndesign/reference/visual-goldens/desktop-standard/test-a-model-review.png'
+          actual="$(git diff --name-only -- design/reference/visual-goldens/desktop-standard '*.png' | sort)"
+          printf 'Captured files:\n%s\n' "$actual"
+          test "$actual" = "$expected"
+      - name: Upload target-candidate capture
+        uses: actions/upload-artifact@v4
+        with:
+          name: pvr08-target-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            design/reference/visual-goldens/desktop-standard/overview.png
+            design/reference/visual-goldens/desktop-standard/test-a-model-review.png
+            design/reference/visual-goldens/desktop-standard/benchmark-detail.png
+            design/reference/visual-goldens/desktop-standard/sample-evidence-detail.png
+            design/reference/visual-goldens/desktop-standard/campaign-results.png
+          if-no-files-found: error
+          retention-days: 7
