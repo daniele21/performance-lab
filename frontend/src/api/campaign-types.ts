@@ -2,21 +2,10 @@ import type { CampaignPlanPreviewRequest, DecisionPolicyReadModel } from "./plan
 import type { IdentitySummary, MetricReadModel, UIModelIdentity } from "./types";
 
 export type CampaignStatus =
-  | "queued"
-  | "running"
-  | "cancelling"
-  | "succeeded"
-  | "failed"
-  | "cancelled"
-  | "interrupted";
+  "queued" | "running" | "cancelling" | "succeeded" | "failed" | "cancelled" | "interrupted";
 
 export type CampaignEntryStatus =
-  | "queued"
-  | "running"
-  | "succeeded"
-  | "failed"
-  | "cancelled"
-  | "interrupted";
+  "queued" | "running" | "succeeded" | "failed" | "cancelled" | "interrupted";
 
 export type CampaignComparisonDimension = "capability" | "runtime" | "resource";
 
