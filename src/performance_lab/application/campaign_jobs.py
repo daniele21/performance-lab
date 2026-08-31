@@ -224,10 +224,8 @@ class CampaignJobManager:
                 task.cancel()
 
         if task is not None:
-            try:
+            with suppress(asyncio.CancelledError, TimeoutError):
                 await asyncio.wait_for(asyncio.shield(task), timeout=timeout_seconds)
-            except (asyncio.CancelledError, TimeoutError):
-                pass
 
     async def _execute(
         self,
