@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { getCampaignPlanning, previewCampaignPlan } from "../../api";
+import { getCampaignPlanning, launchCampaign, previewCampaignPlan } from "../../api";
 import type {
   CampaignPlanPreviewReadModel,
+  CampaignPlanPreviewRequest,
   CampaignPlanningContextReadModel,
   CampaignSearchStrategy,
 } from "../../api";
@@ -30,6 +31,7 @@ const CAMPAIGN_STEPS = [
 
 interface FindBestSetupPageProps {
   onManualTest?: () => void;
+  onCampaignStarted?: (campaignId: string) => void;
 }
 
 interface FindBestSetupViewProps extends FindBestSetupPageProps {
@@ -40,7 +42,11 @@ function unknown(value: string | null) {
   return value ?? "Unknown";
 }
 
-export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewProps) {
+export function FindBestSetupView({
+  context,
+  onManualTest,
+  onCampaignStarted,
+}: FindBestSetupViewProps) {
   const firstTarget =
     context.targets.find((item) => item.candidates.length > 0) ?? context.targets[0];
   const [step, setStep] = useState(0);
@@ -53,6 +59,8 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
   const [preview, setPreview] = useState<CampaignPlanPreviewReadModel | null>(null);
   const [previewState, setPreviewState] = useState<"idle" | "loading" | "error">("idle");
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [launchState, setLaunchState] = useState<"idle" | "loading" | "error">("idle");
+  const [launchError, setLaunchError] = useState<string | null>(null);
 
   const target = useMemo(
     () => context.targets.find((item) => item.target.target_id === targetId) ?? null,
@@ -63,10 +71,19 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
     [context.use_cases, useCaseId],
   );
 
+  const currentPlanRequest = (): CampaignPlanPreviewRequest => ({
+    use_case_id: useCaseId,
+    target_id: targetId,
+    candidate_ids: candidateIds,
+    configuration_strategy: strategy,
+  });
+
   const invalidatePreview = () => {
     setPreview(null);
     setPreviewState("idle");
     setPreviewError(null);
+    setLaunchState("idle");
+    setLaunchError(null);
   };
 
   const selectTarget = (nextTargetId: string) => {
@@ -91,12 +108,7 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
     setPreviewState("loading");
     setPreviewError(null);
     try {
-      const result = await previewCampaignPlan({
-        use_case_id: useCase.use_case_id,
-        target_id: target.target.target_id,
-        candidate_ids: candidateIds,
-        configuration_strategy: strategy,
-      });
+      const result = await previewCampaignPlan(currentPlanRequest());
       if (!result.can_plan) {
         setPreview(null);
         setPreviewState("error");
@@ -110,6 +122,25 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
       setPreview(null);
       setPreviewState("error");
       setPreviewError(error instanceof Error ? error.message : "Campaign plan could not be built.");
+    }
+  };
+
+  const startCampaign = async () => {
+    if (!preview?.execution_available || !preview.plan_digest) return;
+    setLaunchState("loading");
+    setLaunchError(null);
+    try {
+      const campaign = await launchCampaign({
+        plan: currentPlanRequest(),
+        plan_digest: preview.plan_digest,
+      });
+      setLaunchState("idle");
+      onCampaignStarted?.(campaign.campaign_id);
+    } catch (error: unknown) {
+      setLaunchState("error");
+      setLaunchError(
+        error instanceof Error ? error.message : "The evaluation campaign could not be started.",
+      );
     }
   };
 
@@ -142,7 +173,7 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
         <PageHeader
           eyebrow="Use-case optimization"
           title="Find best setup"
-          description="Choose the workload first, select model candidates on one target, then review the exact benchmark plan Performance Lab would execute."
+          description="Choose the workload first, select model candidates on one target, then review and run the exact evidence campaign."
           actions={
             <Button variant="quiet" onClick={onManualTest}>
               Manual test
@@ -212,7 +243,7 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
             <>
               <SectionHeader
                 title="Choose candidate models"
-                description="Candidates are scoped to one endpoint/device target. Different quantizations remain distinct only when the runtime reports them as distinct identity."
+                description="Candidates are scoped to one endpoint/device target. Identity such as quantization stays unknown unless the runtime reports it."
               />
               <label className="best-setup-field">
                 <span>Target / device</span>
@@ -390,14 +421,16 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
             <>
               <SectionHeader
                 title="Campaign review / estimate"
-                description="Review the frozen planning identity before execution. Duration stays unavailable until Performance Lab has an evidence-backed timing model for this target."
+                description="Review the frozen planning identity and decision policy before execution. The server revalidates this exact digest again when you start."
               />
               <div className="best-setup-status">
                 <div>
                   <strong>Plan frozen</strong>
                   <p className="best-setup-digest">{preview.plan_digest}</p>
                 </div>
-                <Status tone="warning">Engine pending</Status>
+                <Status tone={preview.execution_available ? "success" : "warning"}>
+                  {preview.execution_available ? "Ready to run" : "Execution blocked"}
+                </Status>
               </div>
               <div className="best-setup-summary-grid">
                 <article>
@@ -423,14 +456,33 @@ export function FindBestSetupView({ context, onManualTest }: FindBestSetupViewPr
                   <small>{preview.estimate.duration_reason}</small>
                 </article>
               </div>
+              {preview.decision_policy ? (
+                <div className="best-setup-parameter-note">
+                  <strong>
+                    Decision policy · {preview.decision_policy.policy_id}@
+                    {preview.decision_policy.policy_version}
+                  </strong>
+                  <p>{preview.decision_policy.description}</p>
+                  <p>No hidden metric weights or universal score.</p>
+                </div>
+              ) : null}
+              {launchState === "error" && launchError ? (
+                <div className="best-setup-inline-error" role="alert">
+                  {launchError}
+                </div>
+              ) : null}
               <div className="best-setup-actions">
                 <Button variant="quiet" onClick={() => setStep(3)}>
                   Back
                 </Button>
-                <Button variant="primary" disabled>
-                  Start evaluation campaign
+                <Button
+                  variant="primary"
+                  disabled={!preview.execution_available || launchState === "loading"}
+                  onClick={() => void startCampaign()}
+                >
+                  {launchState === "loading" ? "Starting campaign…" : "Start evaluation campaign"}
                 </Button>
-                <p>{preview.execution_blocked_reason}</p>
+                {preview.execution_blocked_reason ? <p>{preview.execution_blocked_reason}</p> : null}
               </div>
             </>
           ) : null}
@@ -445,7 +497,10 @@ type LoadState =
   | { status: "ready"; context: CampaignPlanningContextReadModel }
   | { status: "error"; message: string };
 
-export function FindBestSetupPage({ onManualTest }: FindBestSetupPageProps) {
+export function FindBestSetupPage({
+  onManualTest,
+  onCampaignStarted,
+}: FindBestSetupPageProps) {
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
 
@@ -488,5 +543,11 @@ export function FindBestSetupPage({ onManualTest }: FindBestSetupPageProps) {
     );
   }
 
-  return <FindBestSetupView context={state.context} onManualTest={onManualTest} />;
+  return (
+    <FindBestSetupView
+      context={state.context}
+      onManualTest={onManualTest}
+      onCampaignStarted={onCampaignStarted}
+    />
+  );
 }
