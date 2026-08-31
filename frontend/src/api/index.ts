@@ -5,6 +5,7 @@ export {
   compareRuns,
   getBenchmark,
   getCampaign,
+  getCampaignCaseComparison,
   getCampaignPlanning,
   getRun,
   getRunJob,
@@ -13,6 +14,7 @@ export {
   launchRunJob,
   listBaselines,
   listBenchmarks,
+  listCampaignCases,
   listCampaigns,
   listDatasets,
   listEvaluators,
@@ -30,6 +32,9 @@ export {
   subscribeRunJob,
 } from "./client";
 export type {
+  CampaignCaseCandidateReadModel,
+  CampaignCaseComparisonReadModel,
+  CampaignCaseSummaryReadModel,
   CampaignCompatibilityReasonReadModel,
   CampaignComparisonDimension,
   CampaignDimensionReadModel,
