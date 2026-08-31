@@ -77,7 +77,10 @@ def main() -> int:
 
     browser = layer_map.get("browser-emulated-journeys", {})
     packaged = layer_map.get("packaged-product-journeys", {})
-    for layer_id, layer in (("browser-emulated-journeys", browser), ("packaged-product-journeys", packaged)):
+    for layer_id, layer in (
+        ("browser-emulated-journeys", browser),
+        ("packaged-product-journeys", packaged),
+    ):
         environment_ref = layer.get("execution_environment_ref")
         environment = environments.get(environment_ref)
         if environment is None:
@@ -109,7 +112,9 @@ def main() -> int:
     retention = gate.get("evidence_retention_days")
     configured_retention = commands.get("artifact_lifecycle", {}).get("ci_retention_days")
     if retention != configured_retention:
-        errors.append("evidence_retention_days must match commands artifact_lifecycle.ci_retention_days")
+        errors.append(
+            "evidence_retention_days must match commands artifact_lifecycle.ci_retention_days"
+        )
 
     command = commands.get("commands", {}).get("pre_real_e2e")
     if not isinstance(command, dict) or command.get("status") != "required":
