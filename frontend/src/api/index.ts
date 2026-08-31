@@ -1,15 +1,19 @@
 export {
   ApiError,
+  cancelCampaign,
   cancelRunJob,
   compareRuns,
   getBenchmark,
+  getCampaign,
   getCampaignPlanning,
   getRun,
   getRunJob,
   getSampleEvidence,
+  launchCampaign,
   launchRunJob,
   listBaselines,
   listBenchmarks,
+  listCampaigns,
   listDatasets,
   listEvaluators,
   listRegressionPolicies,
@@ -22,8 +26,21 @@ export {
   preflightRun,
   previewCampaignPlan,
   probeEndpoint,
+  subscribeCampaign,
   subscribeRunJob,
 } from "./client";
+export type {
+  CampaignCompatibilityReasonReadModel,
+  CampaignComparisonDimension,
+  CampaignDimensionReadModel,
+  CampaignEntryReadModel,
+  CampaignEntryStatus,
+  CampaignLaunchRequest,
+  CampaignReadModel,
+  CampaignRecommendationReadModel,
+  CampaignResultsReadModel,
+  CampaignStatus,
+} from "./campaign-types";
 export type {
   BenchmarkPlanReadModel,
   CampaignEstimateReadModel,
@@ -36,6 +53,7 @@ export type {
   CandidateModelReadModel,
   ConfigurationSearchOptionReadModel,
   ConfigurationSearchPlanReadModel,
+  DecisionPolicyReadModel,
   UseCaseReadModel,
 } from "./planning-types";
 export type {
