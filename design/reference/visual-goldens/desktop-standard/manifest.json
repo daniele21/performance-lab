@@ -29,6 +29,7 @@
     "human_reference_grade_claim": false
   },
   "source_of_truth": "design/ux-contract.json",
+  "ux_contract_version": "0.5.0",
   "design_target_root": "design/reference/visual-targets/desktop-standard",
   "goldens": {
     "overview": {
