@@ -10,8 +10,9 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "build" / "pre-real-e2e"
@@ -218,7 +219,12 @@ def write_summary(path: Path, manifest: dict[str, Any]) -> None:
     lines.extend(
         [
             "",
-            "This layer runs every declared browser journey in an emulated desktop Chromium context. The Python API/persistence remain mocked, so the overall environment keeps its canonical host_or_fake fidelity. Packaged-product evidence is a separate required layer before RUNTIME-1.",
+            (
+                "This layer runs every declared browser journey in an emulated desktop Chromium "
+                "context. The Python API/persistence remain mocked, so the overall environment "
+                "keeps its canonical host_or_fake fidelity. Packaged-product evidence is a "
+                "separate required layer before RUNTIME-1."
+            ),
             "",
         ]
     )
