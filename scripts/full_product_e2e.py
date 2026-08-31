@@ -205,6 +205,9 @@ def run_full_product_e2e(artifact: Path) -> None:
 
             environment = os.environ.copy()
             environment["PERFORMANCE_LAB_E2E_BASE_URL"] = f"http://{HOST}:{ui_port}"
+            environment["PERFORMANCE_LAB_E2E_INFERENCE_BASE_URL"] = (
+                f"http://{HOST}:{fixture_port}/v1/"
+            )
             subprocess.run(
                 ["npm", "--prefix", "frontend", "run", "test:e2e:full-product"],
                 cwd=ROOT,
