@@ -311,10 +311,14 @@ class CampaignJobManager:
             error_message = None
         elif result.run.status == RunStatus.CANCELLED:
             interrupted = campaign_id in self._shutdown_requested
-            status = CampaignEntryStatus.INTERRUPTED if interrupted else CampaignEntryStatus.CANCELLED
+            status = (
+                CampaignEntryStatus.INTERRUPTED if interrupted else CampaignEntryStatus.CANCELLED
+            )
             error_code = "process_shutdown" if interrupted else None
             error_message = (
-                "campaign execution was interrupted by local process shutdown" if interrupted else None
+                "campaign execution was interrupted by local process shutdown"
+                if interrupted
+                else None
             )
         else:
             status = CampaignEntryStatus.FAILED
@@ -326,7 +330,9 @@ class CampaignJobManager:
             status=status,
             run_id=result.run.run_id,
             completed_samples=len(result.run.samples),
-            total_samples=max(len(result.run.samples), result.run.fingerprint.load_profile.request_count),
+            total_samples=max(
+                len(result.run.samples), result.run.fingerprint.load_profile.request_count
+            ),
             error_code=error_code,
             error_message=error_message,
         )
@@ -363,7 +369,9 @@ class CampaignJobManager:
             error_message = None
         else:
             entry_status = CampaignEntryStatus.CANCELLED
-            failed = any(entry.status != CampaignEntryStatus.SUCCEEDED for entry in campaign.entries)
+            failed = any(
+                entry.status != CampaignEntryStatus.SUCCEEDED for entry in campaign.entries
+            )
             campaign_status = CampaignStatus.FAILED if failed else CampaignStatus.SUCCEEDED
             error_code = "one_or_more_runs_failed" if failed else None
             error_message = (
