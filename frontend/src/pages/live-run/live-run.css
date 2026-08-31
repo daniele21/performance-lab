@@ -1,7 +1,7 @@
 .live-run-page {
   display: grid;
-  gap: var(--space-6);
-  max-width: 68rem;
+  gap: var(--space-5);
+  max-width: 64rem;
 }
 
 .live-run-status-row,
@@ -13,6 +13,11 @@
   align-items: center;
 }
 
+.live-run-status-row {
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
 .live-run-identity,
 .live-run-diagnostics {
   display: grid;
@@ -20,9 +25,9 @@
   gap: 1px;
   margin: 0;
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-panel);
-  background: var(--color-border);
+  background: var(--color-border-subtle);
 }
 
 .live-run-identity > div,
@@ -31,12 +36,12 @@
   gap: var(--space-1);
   min-width: 0;
   padding: var(--space-3);
-  background: var(--color-surface-elevated);
+  background: var(--color-surface);
 }
 
 .live-run-identity dt,
 .live-run-diagnostics dt {
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font-size: 0.75rem;
 }
 
@@ -50,16 +55,20 @@
 .live-run-progress-section {
   display: grid;
   gap: var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-panel);
+  padding: var(--space-4);
+  background: var(--color-surface-subtle);
 }
 
 .live-run-actions {
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--space-3);
 }
 
 .live-run-actions > span {
-  color: var(--color-text-secondary);
-  font-size: 0.86rem;
+  color: var(--color-text-tertiary);
+  font-size: 0.82rem;
 }
 
 .live-run-error {

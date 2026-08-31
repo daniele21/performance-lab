@@ -169,7 +169,7 @@ export function OverviewView({ models, runs, onFindBestSetup, onTestModel }: Ove
         <PageHeader
           eyebrow="Local evidence"
           title="Your tested models"
-          description="Models are grouped by model, runtime and hardware identity. Quality, performance and resource evidence stay separate so different trade-offs remain visible."
+          description="Latest evidence by model, runtime and device. Quality, performance and resources remain separate."
           actions={
             <div className="overview-page__actions">
               <Button variant="quiet" onClick={onTestModel}>
@@ -193,10 +193,10 @@ export function OverviewView({ models, runs, onFindBestSetup, onTestModel }: Ove
             }
           />
         ) : (
-          <section className="overview-page__section">
+          <section className="overview-page__section overview-page__section--primary">
             <SectionHeader
               title="Tested models"
-              description="Latest evidence for each model/runtime/hardware cohort. No cross-cohort recommendation is shown unless comparability has been established explicitly."
+              description="Latest evidence for each model/runtime/device cohort. Recommendations require explicit comparability."
             />
             <DataTable
               caption="Tested model evidence"
@@ -207,11 +207,8 @@ export function OverviewView({ models, runs, onFindBestSetup, onTestModel }: Ove
           </section>
         )}
 
-        <section className="overview-page__section">
-          <SectionHeader
-            title="Recent runs"
-            description="Immutable completed evidence, newest first."
-          />
+        <section className="overview-page__section overview-page__section--secondary">
+          <SectionHeader title="Recent runs" description="Immutable evidence, newest first." />
           <DataTable
             caption="Recent evaluation runs"
             columns={RUN_COLUMNS}

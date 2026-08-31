@@ -1,24 +1,31 @@
 .runs-page {
   display: grid;
-  gap: var(--space-8);
+  max-width: 76rem;
+  gap: var(--space-6);
 }
 
 .runs-page__run-link {
   display: grid;
-  gap: var(--space-1);
+  gap: 2px;
   width: fit-content;
   color: var(--color-text-primary);
   text-decoration: none;
 }
 
+.runs-page__run-link strong {
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+}
+
 .runs-page__run-link:hover strong {
-  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .runs-page__run-link code {
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
 }
 
 .runs-page__pagination {
@@ -26,11 +33,13 @@
   gap: var(--space-3);
   align-items: center;
   justify-content: flex-end;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--space-3);
 }
 
 .runs-page__pagination span {
-  color: var(--color-text-secondary);
-  font-size: 0.85rem;
+  color: var(--color-text-tertiary);
+  font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
 }
 

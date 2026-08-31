@@ -82,7 +82,7 @@ export function RunsView({ runs, offset, canLoadMore, onPrevious, onNext }: Runs
         <PageHeader
           eyebrow="Immutable evidence"
           title="Runs"
-          description="Every completed run is an immutable evidence record. Open a run to inspect quality, performance, resources and the exact execution fingerprint."
+          description="Completed evaluations with their exact model, target, suite and execution identity."
         />
 
         {runs.length === 0 && offset === 0 ? (

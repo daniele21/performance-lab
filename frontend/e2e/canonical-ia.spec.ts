@@ -34,9 +34,7 @@ async function installEmptyProductFixture(page: Page) {
   });
 }
 
-test("canonical desktop IA preserves converged and staged secondary navigation", async ({
-  page,
-}) => {
+test("canonical IA progressively discloses secondary navigation", async ({ page }) => {
   await page.setViewportSize({ width: 1536, height: 960 });
   await installEmptyProductFixture(page);
   await page.goto("/#overview");
@@ -52,28 +50,42 @@ test("canonical desktop IA preserves converged and staged secondary navigation",
 
   const library = page.getByRole("navigation", { name: "Library" });
   const settings = page.getByRole("navigation", { name: "Settings" });
+  const librarySummary = page.locator("summary").filter({ hasText: /^Library$/ });
+  const settingsSummary = page.locator("summary").filter({ hasText: /^Settings$/ });
+
+  await expect(librarySummary).toBeVisible();
+  await expect(settingsSummary).toBeVisible();
+  await expect(library).toBeHidden();
+  await expect(settings).toBeHidden();
+
+  await librarySummary.click();
+  await expect(library).toBeVisible();
+
   const benchmarks = library.getByRole("link", { name: "Benchmarks" });
   const evaluators = library.getByRole("link", { name: "Evaluators" });
-  const modelConnections = settings.getByRole("link", { name: "Model connections" });
-  await expect(library).toBeVisible();
-  await expect(settings).toBeVisible();
+  await expect(library.locator('[aria-disabled="true"]', { hasText: "Models" })).toBeVisible();
+  await expect(library.locator('[aria-disabled="true"]', { hasText: "Evidence" })).toBeVisible();
+  await expect(library.getByRole("link", { name: "Models" })).toHaveCount(0);
+  await expect(library.getByRole("link", { name: "Evidence" })).toHaveCount(0);
 
-  for (const pendingLabel of ["Models", "Evidence"]) {
-    await expect(library.getByText(pendingLabel, { exact: true })).toBeVisible();
-    await expect(library.getByRole("link", { name: pendingLabel })).toHaveCount(0);
-  }
-  for (const pendingLabel of ["Evidence retention", "Accessibility"]) {
-    await expect(settings.getByText(pendingLabel, { exact: true })).toBeVisible();
-    await expect(settings.getByRole("link", { name: pendingLabel })).toHaveCount(0);
-  }
-  await expect(library.getByText("Pending", { exact: true })).toHaveCount(2);
-  await expect(settings.getByText("Pending", { exact: true })).toHaveCount(2);
+  await settingsSummary.click();
+  await expect(settings).toBeVisible();
+  await expect(
+    settings.locator('[aria-disabled="true"]', { hasText: "Evidence retention" }),
+  ).toBeVisible();
+  await expect(
+    settings.locator('[aria-disabled="true"]', { hasText: "Accessibility" }),
+  ).toBeVisible();
+  await expect(settings.getByRole("link", { name: "Evidence retention" })).toHaveCount(0);
+  await expect(settings.getByRole("link", { name: "Accessibility" })).toHaveCount(0);
+  await expect(page.getByText("Pending", { exact: true })).toHaveCount(0);
 
   await benchmarks.click();
   await expect(page).toHaveURL(/#benchmarks$/);
   await expect(
     page.getByRole("heading", { name: "Benchmarks", exact: true, level: 1 }),
   ).toBeVisible();
+  await expect(library).toBeVisible();
   await expect(benchmarks).toHaveAttribute("aria-current", "page");
 
   await evaluators.click();
@@ -83,22 +95,27 @@ test("canonical desktop IA preserves converged and staged secondary navigation",
   ).toBeVisible();
   await expect(evaluators).toHaveAttribute("aria-current", "page");
 
+  await settingsSummary.click();
+  const modelConnections = settings.getByRole("link", { name: "Model connections" });
   await modelConnections.click();
   await expect(page).toHaveURL(/#model-connections$/);
   await expect(
     page.getByRole("heading", { name: "Model connections", exact: true, level: 1 }),
   ).toBeVisible();
+  await expect(settings).toBeVisible();
   await expect(modelConnections).toHaveAttribute("aria-current", "page");
 
   await page.goto("/#test-suites");
   await expect(
     page.getByRole("heading", { name: "Benchmarks", exact: true, level: 1 }),
   ).toBeVisible();
+  await expect(library).toBeVisible();
   await expect(benchmarks).toHaveAttribute("aria-current", "page");
 
   await page.goto("/#endpoints");
   await expect(
     page.getByRole("heading", { name: "Model connections", exact: true, level: 1 }),
   ).toBeVisible();
+  await expect(settings).toBeVisible();
   await expect(modelConnections).toHaveAttribute("aria-current", "page");
 });
