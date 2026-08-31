@@ -9,6 +9,8 @@ Rules:
 - link to the canonical owner instead of copying architecture, evidence or design-system truth;
 - active implementation plans belong in `../workstreams/`, not here;
 - completed workstream history belongs in Git history, not feature docs;
-- update or delete a feature document when shipped behavior changes or the document no longer has an independent purpose.
+- update a feature document in the same change when the shipped behavior it describes changes;
+- create a new feature document only when durable non-obvious behavior is not sufficiently discoverable from code, public contracts, tests, architecture or focused operational references;
+- delete a feature document when it no longer has an independent durable purpose.
 
 Current operational references at `docs/` root remain canonical for CLI/config/evidence topics until a feature-specific split is justified.
