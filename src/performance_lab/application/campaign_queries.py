@@ -31,16 +31,13 @@ from .campaign_policy import (
     recommend_strict_quality_dominance,
 )
 from .ui_models import RunDetailReadModel
+from .ui_queries import CompletedRunReader
 
 
 class CampaignReader(Protocol):
     def get(self, campaign_id: str) -> Campaign: ...
 
     def list_all(self) -> tuple[Campaign, ...]: ...
-
-
-class CompletedRunReader(Protocol):
-    def get_completed(self, run_id: str, *, required: bool = True) -> Run | None: ...
 
 
 class RunProjectionQueries(Protocol):
