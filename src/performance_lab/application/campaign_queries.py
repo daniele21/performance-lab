@@ -240,8 +240,7 @@ def _has_dimension_evidence(run: Run, dimension: ComparisonDimension) -> bool:
         return bool(run.aggregate_scores)
     if dimension == ComparisonDimension.RUNTIME:
         return any(
-            item.provenance == MeasurementProvenance.CLIENT
-            for item in run.aggregate_measurements
+            item.provenance == MeasurementProvenance.CLIENT for item in run.aggregate_measurements
         )
     return any(
         item.provenance in {MeasurementProvenance.HOST, MeasurementProvenance.RUNTIME}
