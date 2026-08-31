@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { cancelCampaign, getCampaign, subscribeCampaign } from "../../api";
-import type { CampaignReadModel, MetricDimension } from "../../api";
+import { cancelCampaign, getCampaign, listCampaignCases, subscribeCampaign } from "../../api";
+import type {
+  CampaignCaseSummaryReadModel,
+  CampaignReadModel,
+  MetricDimension,
+} from "../../api";
 import {
   AppShell,
   Button,
+  EmptyState,
   ErrorState,
   LoadingState,
   PageHeader,
@@ -17,6 +22,7 @@ import "./campaign.css";
 interface CampaignPageProps {
   campaignId: string;
   onOpenRun?: (runId: string) => void;
+  onOpenCase?: (taskId: string, sampleId: string) => void;
   onNewCampaign?: () => void;
 }
 
@@ -53,7 +59,12 @@ function metricValue(value: number | null, unit: string | null) {
   return unit ? `${rendered} ${unit}` : rendered;
 }
 
-export function CampaignPage({ campaignId, onOpenRun, onNewCampaign }: CampaignPageProps) {
+export function CampaignPage({
+  campaignId,
+  onOpenRun,
+  onOpenCase,
+  onNewCampaign,
+}: CampaignPageProps) {
   const [campaign, setCampaign] = useState<CampaignReadModel | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadAttempt, setReloadAttempt] = useState(0);
@@ -254,7 +265,7 @@ export function CampaignPage({ campaignId, onOpenRun, onNewCampaign }: CampaignP
         </section>
 
         {isTerminal(campaign) ? (
-          <CampaignResults campaign={campaign} onOpenRun={onOpenRun} />
+          <CampaignResults campaign={campaign} onOpenRun={onOpenRun} onOpenCase={onOpenCase} />
         ) : null}
       </div>
     </AppShell>
@@ -264,9 +275,11 @@ export function CampaignPage({ campaignId, onOpenRun, onNewCampaign }: CampaignP
 function CampaignResults({
   campaign,
   onOpenRun,
+  onOpenCase,
 }: {
   campaign: CampaignReadModel;
   onOpenRun?: (runId: string) => void;
+  onOpenCase?: (taskId: string, sampleId: string) => void;
 }) {
   const { results } = campaign;
   return (
@@ -364,6 +377,82 @@ function CampaignResults({
           </article>
         ))}
       </div>
+
+      <CampaignCaseExplorer campaignId={campaign.campaign_id} onOpenCase={onOpenCase} />
     </section>
+  );
+}
+
+type CampaignCasesLoadState =
+  | { status: "loading" }
+  | { status: "ready"; cases: CampaignCaseSummaryReadModel[] }
+  | { status: "error"; message: string };
+
+function CampaignCaseExplorer({
+  campaignId,
+  onOpenCase,
+}: {
+  campaignId: string;
+  onOpenCase?: (taskId: string, sampleId: string) => void;
+}) {
+  const [attempt, setAttempt] = useState(0);
+  const [state, setState] = useState<CampaignCasesLoadState>({ status: "loading" });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setState({ status: "loading" });
+    listCampaignCases(campaignId, { signal: controller.signal })
+      .then((cases) => setState({ status: "ready", cases }))
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setState({
+          status: "error",
+          message: error instanceof Error ? error.message : "Campaign cases could not be loaded.",
+        });
+      });
+    return () => controller.abort();
+  }, [attempt, campaignId]);
+
+  return (
+    <div className="campaign-case-explorer">
+      <SectionHeader
+        title="Compare exact benchmark cases"
+        description="Choose one retained task/sample identity. Performance Lab will establish protocol compatibility before placing candidate evidence side by side."
+      />
+      {state.status === "loading" ? (
+        <LoadingState
+          title="Loading retained cases"
+          description="Reading case identities from immutable campaign Runs."
+        />
+      ) : state.status === "error" ? (
+        <ErrorState
+          title="Could not load campaign cases"
+          description={state.message}
+          action={<Button onClick={() => setAttempt((value) => value + 1)}>Try again</Button>}
+        />
+      ) : state.cases.length ? (
+        <div className="campaign-case-list">
+          {state.cases.map((item) => (
+            <article key={`${item.task_id}:${item.sample_id}`}>
+              <div>
+                <strong>{item.case_id ?? item.sample_id}</strong>
+                <span>{item.task_id}</span>
+                <small>
+                  Retained in {item.available_candidate_count} of {item.candidate_count} candidate Runs
+                </small>
+              </div>
+              <Button variant="quiet" onClick={() => onOpenCase?.(item.task_id, item.sample_id)}>
+                Compare across candidates
+              </Button>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No retained benchmark cases"
+          description="Campaign Runs exist, but no sample identities are retained for same-case comparison."
+        />
+      )}
+    </div>
   );
 }
