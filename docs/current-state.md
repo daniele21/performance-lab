@@ -10,7 +10,7 @@ Short operational ledger only. Durable behavior belongs in architecture/ADR/desi
 
 ## Current phase
 
-The browser product now covers use-case-first planning, executable Campaign/results, benchmark/sample drill-down, same-case cross-candidate comparison and whole-product interaction hardening. Five implementation screenshots are versioned as provenance-bound browser goldens; Product UX/UI convergence remains active for final manual accessibility/usability and representative-user review. Representative-hardware evidence is blocked behind the automated `PRE_REAL_E2E` acceptance prerequisite so the real device run confirms only residual runtime/hardware fidelity gaps.
+The desktop browser product covers use-case-first planning/results, evidence drill-down, same-case comparison and product hardening. Product UX/UI convergence remains active for final human accessibility/usability review. Representative-hardware evidence is blocked behind `PRE_REAL_E2E` so real-device work confirms residual runtime/hardware gaps rather than ordinary product-flow defects.
 
 Primary product question:
 
@@ -18,41 +18,37 @@ Primary product question:
 
 ## Integrated baseline
 
-`dev` contains Overview; Find best setup through frozen campaign review, execution, Results and exact-case comparison; Test a model; Live Run recovery; Runs/Run Detail; Compare; Library/Settings; Benchmark Detail; and Run -> Samples -> Sample Evidence.
+`dev` contains Overview; Find best setup through frozen Campaign review/execution/Results/exact-case comparison; Test a model; Live Run recovery; Runs/Run Detail; Compare; Library/Settings; Benchmark Detail; and Run -> Samples -> Sample Evidence.
 
-Campaign launch revalidates the frozen plan digest, persists reconnectable lifecycle separately from immutable Runs and shares bounded evaluation capacity with manual runs. Results establish dimension-specific compatibility before `strict-quality-dominance@1.0.0`; no single winner is produced unless one candidate uniquely dominates comparable quality evidence.
+Campaigns revalidate frozen plan digests, persist reconnectable lifecycle separately from immutable Runs and apply compatibility before `strict-quality-dominance@1.0.0`. Same-case comparison stays tied to candidate/config/Run/sample-attempt identity; missing, incompatible and not-retained evidence remain explicit.
 
-Campaign Results enumerate retained task/sample identities. Same-case comparison projects candidate/config/Run/sample-attempt evidence in Python and reuses canonical capability compatibility. Missing, incompatible and not-retained evidence remain explicit; no case-level winner or cross-case delta is invented.
+Product hardening covers keyboard/focus semantics, assistive loading/error feedback, reduced motion, long-content containment and 1024/1280/1600 desktop widths. Five provenance-bound 1536x960 browser goldens protect selected high-value surfaces.
 
-Shared product hardening provides keyboard skip navigation, route-change focus restoration, assistive loading/error semantics, reduced motion and long-content containment. Browser evidence exercises recoverable failure, supported 1024/1280/1600 desktop widths and dense technical evidence without recreating backend semantics. A separate 1536x960 golden gate protects Overview, frozen manual review, Benchmark Detail, Sample Evidence Detail and Campaign Results against unintended visual drift.
+Browser J0-J9 acceptance is executable; packaged-product evidence covers J0/J1/J8/J9 through the installed wheel, built frontend, loopback API, SQLite and deterministic inference fixture. `PRE_REAL_E2E` requires screenshots plus Playwright traces for every browser journey and the declared packaged journeys before `RUNTIME-1`. Exact-head evidence for the new gate is pending integration.
 
-Browser J0-J9 acceptance is executable; packaged-product evidence covers J0, J1, J8 and J9 through the installed wheel, built frontend, loopback API, SQLite and deterministic inference fixture. `PRE_REAL_E2E` now requires retained final screenshots plus Playwright traces for every J0-J9 browser journey and for the declared packaged-product journeys before `RUNTIME-1` can become the next acceptance step. Exact-head CI evidence for this new gate is pending until the change is validated and integrated.
-
-Hosted CI/fixtures do not prove representative hardware/runtime behavior; `RUNTIME-1` remains real-environment evidence.
+Hosted fixtures never prove representative hardware/runtime behavior; `RUNTIME-1` remains real-environment evidence.
 
 ## Active work
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
-| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | ACTIVE | UXUI-10 maintains goldens while completing manual compact/standard/wide accessibility and representative-user review |
-| [Representative device evidence](workstreams/representative-device-evidence.md) | BLOCKED | `PRE_REAL_E2E = PASS` / `READY_FOR_REAL_ENVIRONMENT: YES`, then first real LLS/model/device run with retained fingerprint/bundle |
-| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 EVIDENCE BLOCKED / MIG-003 BLOCKED | retain EV-3 + pre-real acceptance + real PL replacement run, then remove redundant evaluation paths and smoke |
+| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | ACTIVE | UXUI-10 manual compact/standard/wide accessibility and representative-user review |
+| [Representative device evidence](workstreams/representative-device-evidence.md) | BLOCKED | `PRE_REAL_E2E = PASS` / `READY_FOR_REAL_ENVIRONMENT: YES`, then first real LLS/model/device run |
+| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 EVIDENCE BLOCKED / MIG-003 BLOCKED | EV-3 + pre-real acceptance + real PL replacement run, then redundant-path removal/smoke |
 
 ## UX/UI baseline
 
-`design/ux-contract.json` and `design/brand-kit.json` own durable experience truth. Approved desktop targets under `design/reference/visual-targets/desktop-standard/` remain design intent; accepted implementation baselines under `design/reference/visual-goldens/desktop-standard/` are the limited pixel-regression truth and carry exact source/build provenance.
+`design/ux-contract.json` and `design/brand-kit.json` own experience truth. Approved design targets and the bounded implementation-golden set remain separate owners.
 
-Find best setup consumes backend-owned use-case relevance, candidate inventory and deterministic planning. Parameter sweeps remain unavailable without runtime-supplied bounded ranges. Campaign entries resolve to immutable Runs; compatibility and missing evidence appear before recommendation.
+Find best setup consumes backend-owned relevance, candidate inventory and planning; Performance Lab does not invent parameter sweep ranges. Campaign compatibility/missing evidence precede recommendation. Same-case comparison preserves exact attempt/evaluator/retention identity.
 
-Same-case comparison reuses Campaign/Run/sample identity and Python-owned compatibility. Zero matches are unavailable, multiple attempts are not silently chosen, and evaluator/retention state stays attached to the exact attempt.
-
-UXUI-09 hardening is integrated at shared shell/state/foundation owners: keyboard focus remains visible and recoverable, loading/error feedback is announced semantically, reduced motion is respected and long evidence remains contained across compact/standard/wide desktop contexts. UXUI-10 now has automated implementation-golden evidence; manual assistive-technology/contrast review and representative-user/reference-grade acceptance remain explicit human evidence rather than automated claims.
+UXUI-10 has automated implementation-golden evidence; manual assistive-technology/contrast and representative-user/reference-grade acceptance remain explicit human evidence.
 
 ## Evaluation migration
 
-Post-cutover evaluation evidence belongs to Performance Lab under PL-native identities. Existing LLS `general-purpose@1.0.0` evidence remains legacy. Serving, residency, runtime identity/status, provider metrics and hardware/resource correctness remain LLS-owned.
+Post-cutover evaluation evidence belongs to Performance Lab under PL-native identities; existing LLS `general-purpose@1.0.0` evidence remains legacy. Serving, residency, runtime identity/status, provider metrics and hardware/resource correctness remain LLS-owned.
 
-MIG-003 still requires EV-3 evidence, `PRE_REAL_E2E = PASS`, a real PL run against LLS and post-disable serving/runtime smoke.
+MIG-003 still requires EV-3, `PRE_REAL_E2E = PASS`, a real PL run against LLS and post-disable serving/runtime smoke.
 
 ## Integration lines
 
@@ -61,8 +57,8 @@ MIG-003 still requires EV-3 evidence, `PRE_REAL_E2E = PASS`, a real PL run again
 
 ## Evidence still required
 
-- exact-head `PRE_REAL_E2E` evidence bundle with J0-J9 browser screenshots/traces plus packaged-product evidence for J0/J1/J8/J9;
-- UXUI-10 manual compact/standard/wide assistive-technology/contrast and representative-user/reference-grade acceptance;
+- exact-head `PRE_REAL_E2E` bundle: J0-J9 browser screenshots/traces plus packaged J0/J1/J8/J9 evidence;
+- UXUI-10 manual accessibility/representative-user acceptance;
 - representative resident-model identity/resource/telemetry/repeated-load evidence after pre-real acceptance;
 - LLS EV-3, real PL replacement run and post-disable cross-repository smoke;
 - human acceptance where release claims depend on usability.
