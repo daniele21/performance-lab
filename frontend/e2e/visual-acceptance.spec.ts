@@ -475,7 +475,9 @@ test("UXUI-10 bootstrap captures the accepted implementation candidates", async 
 
   await page.goto("/#campaigns/campaign-visual");
   await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
-  await page.getByRole("heading", { name: "Results" }).scrollIntoViewIfNeeded();
+  await page.locator(".campaign-results").evaluate((element) => {
+    element.scrollIntoView({ block: "start" });
+  });
   await capture(page, testInfo, "campaign-results");
 
   throw new Error(
