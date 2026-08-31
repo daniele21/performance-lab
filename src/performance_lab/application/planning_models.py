@@ -133,6 +133,15 @@ class CampaignEstimateReadModel(UIModel):
     duration_reason: str = Field(min_length=1)
 
 
+class DecisionPolicyReadModel(UIModel):
+    policy_id: str = Field(min_length=1)
+    policy_version: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    method: Literal["strict_quality_dominance"] = "strict_quality_dominance"
+    description: str = Field(min_length=1)
+    no_hidden_weights: Literal[True] = True
+
+
 class CampaignPlanPreviewReadModel(UIModel):
     can_plan: bool
     issues: tuple[CampaignPlanIssueReadModel, ...] = ()
@@ -143,14 +152,9 @@ class CampaignPlanPreviewReadModel(UIModel):
     configuration_search: ConfigurationSearchPlanReadModel | None = None
     benchmark_plan: BenchmarkPlanReadModel | None = None
     estimate: CampaignEstimateReadModel | None = None
-    execution_available: Literal[False] = False
-    execution_blocked_reason: str = Field(
-        default=(
-            "Campaign execution is not implemented yet; "
-            "this preview only freezes the intended plan."
-        ),
-        min_length=1,
-    )
+    decision_policy: DecisionPolicyReadModel | None = None
+    execution_available: bool = False
+    execution_blocked_reason: str | None = None
 
     @model_validator(mode="after")
     def validate_preview_shape(self) -> CampaignPlanPreviewReadModel:
@@ -163,10 +167,17 @@ class CampaignPlanPreviewReadModel(UIModel):
                 self.configuration_search,
                 self.benchmark_plan,
                 self.estimate,
+                self.decision_policy,
             )
         ) and bool(self.candidates)
         if self.can_plan and (self.issues or not complete):
             raise ValueError("plannable previews require a complete frozen plan")
         if not self.can_plan and not self.issues:
             raise ValueError("blocked planning previews require at least one issue")
+        if self.execution_available and not self.can_plan:
+            raise ValueError("only complete plans can be executable")
+        if self.execution_available and self.execution_blocked_reason is not None:
+            raise ValueError("executable plans cannot have an execution blocked reason")
+        if not self.execution_available and self.execution_blocked_reason is None:
+            raise ValueError("non-executable plans require an execution blocked reason")
         return self
