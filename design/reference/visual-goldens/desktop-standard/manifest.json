@@ -23,6 +23,11 @@
     "color_scheme": "dark",
     "reduced_motion": "reduce"
   },
+  "review": {
+    "method": "manual visual inspection of the exact CI artifact against the approved design targets and UX/brand contracts",
+    "decision": "accepted for bounded automated visual regression",
+    "human_reference_grade_claim": false
+  },
   "source_of_truth": "design/ux-contract.json",
   "design_target_root": "design/reference/visual-targets/desktop-standard",
   "goldens": {
