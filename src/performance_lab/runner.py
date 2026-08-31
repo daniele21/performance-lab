@@ -142,15 +142,18 @@ async def execute_starter_run(
 
 def _resolve_execution_bundle(config: StarterRunConfig) -> _ExecutionBundle:
     if config.suite_id == "general-diagnostic-starter":
-        source = build_general_starter_suite()
-        if config.suite_version is not None and config.suite_version != source.suite.suite_version:
+        starter_bundle = build_general_starter_suite()
+        if (
+            config.suite_version is not None
+            and config.suite_version != starter_bundle.suite.suite_version
+        ):
             raise RunExecutionError(
                 f"unsupported suite version: {config.suite_id}@{config.suite_version}"
             )
         return _ExecutionBundle(
-            suite=source.suite,
-            datasets=source.datasets,
-            evaluators=source.evaluators,
+            suite=starter_bundle.suite,
+            datasets=starter_bundle.datasets,
+            evaluators=starter_bundle.evaluators,
             benchmark_protocol_version="starter-quality-v1",
         )
 
@@ -161,15 +164,15 @@ def _resolve_execution_bundle(config: StarterRunConfig) -> _ExecutionBundle:
     if definition is None:
         raise RunExecutionError(f"unsupported suite: {config.suite_id}")
     try:
-        source = build_workload_pack(definition.pack_id, version=config.suite_version)
+        workload_bundle = build_workload_pack(definition.pack_id, version=config.suite_version)
     except KeyError as exc:
         raise RunExecutionError(
             f"unsupported suite version: {config.suite_id}@{config.suite_version}"
         ) from exc
     return _ExecutionBundle(
-        suite=source.suite,
-        datasets=source.datasets,
-        evaluators=source.evaluators,
+        suite=workload_bundle.suite,
+        datasets=workload_bundle.datasets,
+        evaluators=workload_bundle.evaluators,
         benchmark_protocol_version="workload-quality-v1",
     )
 
