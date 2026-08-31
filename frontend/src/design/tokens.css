@@ -1,6 +1,4 @@
-/* Executable semantic tokens synchronized with design/brand-kit.json contract 0.6.0.
-   Existing semantic variable names remain stable while v0.6 adds explicit depth/border roles,
-   so page CSS can migrate without becoming a second visual source of truth. */
+/* Executable semantic tokens synchronized with design/brand-kit.json contract 0.6.0. */
 :root {
   --color-surface: #080a0d;
   --color-surface-elevated: #0e1116;
