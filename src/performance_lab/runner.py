@@ -90,7 +90,9 @@ async def execute_starter_run(
         telemetry_descriptor, telemetry_session = _build_telemetry(config)
 
         evaluator_versions = _unique_evaluators(bundle.suite.tasks)
-        snapshots = tuple(bundle.datasets[dataset_id].snapshot for dataset_id in sorted(bundle.datasets))
+        snapshots = tuple(
+            bundle.datasets[dataset_id].snapshot for dataset_id in sorted(bundle.datasets)
+        )
         total_samples = sum(
             min(len(bundle.datasets[task.dataset_snapshot_id].records), task.sample_limit)
             if task.sample_limit is not None
@@ -133,11 +135,7 @@ async def execute_starter_run(
         )
         bundle_path = config.store_path.parent / "artifacts" / f"{run_id}.plab.zip"
         store.export_bundle(run_id, bundle_path)
-        return RunExecutionResult(
-            run=run,
-            store_path=config.store_path,
-            bundle_path=bundle_path,
-        )
+        return RunExecutionResult(run=run, store_path=config.store_path, bundle_path=bundle_path)
     finally:
         await adapter.aclose()
 
