@@ -1,6 +1,10 @@
 import { defineConfig } from "@playwright/test";
 
 const baseURL = process.env.PERFORMANCE_LAB_E2E_BASE_URL;
+const outputDir =
+  process.env.PERFORMANCE_LAB_PACKAGED_E2E_OUTPUT_DIR ?? "test-results-full-product/artifacts";
+const reportFile =
+  process.env.PERFORMANCE_LAB_PACKAGED_E2E_REPORT ?? "test-results-full-product/report.json";
 
 if (!baseURL) {
   throw new Error("PERFORMANCE_LAB_E2E_BASE_URL is required for packaged full-product E2E");
@@ -14,13 +18,13 @@ export default defineConfig({
   retries: 0,
   timeout: 120_000,
   expect: { timeout: 15_000 },
-  reporter: [["line"]],
-  outputDir: "test-results-full-product",
+  reporter: [["line"], ["json", { outputFile: reportFile }]],
+  outputDir,
   use: {
     baseURL,
     browserName: "chromium",
-    trace: "retain-on-failure",
-    screenshot: "only-on-failure",
+    trace: "on",
+    screenshot: "on",
     video: "off",
   },
 });
