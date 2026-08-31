@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { cancelCampaign, getCampaign, listCampaignCases, subscribeCampaign } from "../../api";
-import type {
-  CampaignCaseSummaryReadModel,
-  CampaignReadModel,
-  MetricDimension,
-} from "../../api";
+import type { CampaignCaseSummaryReadModel, CampaignReadModel, MetricDimension } from "../../api";
 import {
   AppShell,
   Button,
@@ -438,7 +434,8 @@ function CampaignCaseExplorer({
                 <strong>{item.case_id ?? item.sample_id}</strong>
                 <span>{item.task_id}</span>
                 <small>
-                  Retained in {item.available_candidate_count} of {item.candidate_count} candidate Runs
+                  Retained in {item.available_candidate_count} of {item.candidate_count} candidate
+                  Runs
                 </small>
               </div>
               <Button variant="quiet" onClick={() => onOpenCase?.(item.task_id, item.sample_id)}>
