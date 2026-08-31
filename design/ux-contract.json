@@ -398,7 +398,7 @@
     }
   },
   "automatic_campaign": {
-    "status": "campaign_engine_integrated_case_comparison_pending",
+    "status": "campaign_engine_and_same_case_comparison_integrated",
     "use_case_first": true,
     "use_case_mapping_owner": "Python application/evaluation contracts",
     "candidate_identity": [
@@ -758,8 +758,8 @@
     "visual_regression": "use stable high-value implementation screenshots only after the corresponding design target is approved",
     "manual_accessibility": "keyboard/focus/contrast review at compact, standard and wide desktop sizes",
     "usability_evidence": "representative-user review before reference-grade UI claim",
-    "sample_traceability": "when implemented, verify aggregate -> sample -> evaluator-evidence navigation and aggregate-safe/content-not-retained states",
-    "cross_candidate_case_comparison": "when implemented, verify same-case identity and comparability before candidate-level response/metric comparison",
+    "sample_traceability": "verify aggregate -> sample -> evaluator-evidence navigation and aggregate-safe/content-not-retained states",
+    "cross_candidate_case_comparison": "verify same-case identity and comparability before candidate-level response/metric comparison",
     "surface_semantics": "verify Run Detail contains one run identity, Benchmark Detail contains definition not execution outcome, evaluator weights are contextual, and model status never substitutes for evidence comparability"
   },
   "evidence": {
