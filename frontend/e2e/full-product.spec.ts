@@ -19,10 +19,7 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
   });
   expect(probe.ok()).toBeTruthy();
   const discovered = (await probe.json()) as { models: Array<{ model_id: string }> };
-  expect(discovered.models.map((model) => model.model_id)).toEqual([
-    "fixture-good",
-    "fixture-bad",
-  ]);
+  expect(discovered.models.map((model) => model.model_id)).toEqual(["fixture-good", "fixture-bad"]);
 
   await page.goto("/#find-best-setup");
   await expect(page.getByRole("heading", { name: "Find best setup" })).toBeVisible();
