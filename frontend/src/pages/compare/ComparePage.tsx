@@ -161,10 +161,10 @@ export function CompareView({
         <PageHeader
           eyebrow="Evidence comparison"
           title="Compare runs"
-          description="Choose a baseline and candidate. Performance Lab establishes compatibility from the frozen execution evidence before showing any metric delta."
+          description="Choose a baseline and candidate. Compatibility is established from frozen execution evidence before metric deltas appear."
         />
 
-        <section className="compare-selection" aria-labelledby="compare-selection-title">
+        <section className="compare-selection" aria-label="Evidence selection">
           <SectionHeader
             title="Choose evidence"
             description="Baseline and candidate must be two different immutable completed runs."
@@ -215,10 +215,10 @@ export function CompareView({
 
         {comparison ? (
           <div className="compare-results">
-            <section className="compare-identity" aria-labelledby="compare-identity-title">
+            <section className="compare-identity" aria-label="Identity differences">
               <SectionHeader
                 title="Identity differences"
-                description="Differences are shown before compatibility or deltas. Model/runtime differences may be intentional; dimension-specific rules decide whether each delta is interpretable."
+                description="Inspect the frozen identity differences that govern whether each dimension can be compared."
               />
               <IdentityDiff differences={comparison.identity_differences} />
             </section>
