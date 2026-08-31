@@ -86,7 +86,9 @@ def _run(
     )
 
 
-def _service(tmp_path: Path, second_prompt_template: str = "direct-user-v1") -> CampaignQueryService:
+def _service(
+    tmp_path: Path, second_prompt_template: str = "direct-user-v1"
+) -> CampaignQueryService:
     bundle = build_general_starter_suite()
     run_store = SQLiteRunStore(tmp_path / "runs.sqlite3")
     first = _run("model-a", score_value=1.0)
@@ -168,8 +170,16 @@ def test_campaign_case_comparison_projects_exact_retained_case_across_candidates
     assert [candidate.model_id for candidate in comparison.candidates] == ["model-a", "model-b"]
     assert all(candidate.comparable_to_reference for candidate in comparison.candidates)
     assert all(candidate.evidence is not None for candidate in comparison.candidates)
-    assert all(candidate.evidence.response.state == "not_retained" for candidate in comparison.candidates if candidate.evidence is not None)
-    assert all(candidate.evidence.scores for candidate in comparison.candidates if candidate.evidence is not None)
+    assert all(
+        candidate.evidence.response.state == "not_retained"
+        for candidate in comparison.candidates
+        if candidate.evidence is not None
+    )
+    assert all(
+        candidate.evidence.scores
+        for candidate in comparison.candidates
+        if candidate.evidence is not None
+    )
 
 
 def test_campaign_case_comparison_explains_incompatible_protocol_without_a_conclusion(
