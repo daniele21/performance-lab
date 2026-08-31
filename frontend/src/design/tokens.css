@@ -51,12 +51,8 @@
   --radius-major: 14px;
   --radius-lg: var(--radius-panel);
 
-  --shadow-raised:
-    0 1px 1px rgb(0 0 0 / 28%),
-    0 8px 24px rgb(0 0 0 / 16%);
-  --shadow-overlay:
-    0 2px 4px rgb(0 0 0 / 28%),
-    0 20px 64px rgb(0 0 0 / 44%);
+  --shadow-raised: 0 1px 1px rgb(0 0 0 / 28%), 0 8px 24px rgb(0 0 0 / 16%);
+  --shadow-overlay: 0 2px 4px rgb(0 0 0 / 28%), 0 20px 64px rgb(0 0 0 / 44%);
 
   --motion-instant: 0ms;
   --motion-fast: 100ms;
