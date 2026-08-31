@@ -478,5 +478,4 @@ test("UXUI-10: stable target-backed surfaces match accepted implementation golde
     element.scrollIntoView({ block: "start" });
   });
   await matchGolden(page, "campaign-results");
-
 });
