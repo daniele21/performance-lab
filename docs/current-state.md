@@ -10,7 +10,7 @@ Short operational ledger only. Durable behavior belongs in architecture/ADR/desi
 
 ## Current phase
 
-The browser product now covers use-case-first planning, executable Campaign/results, benchmark/sample drill-down, same-case cross-candidate comparison and whole-product interaction hardening. Five stable high-value implementation screenshots are now versioned as provenance-bound browser goldens; Product UX/UI convergence remains active for the final manual accessibility/usability and representative-user review. Representative-hardware evidence and the evidence-gated Local LLM Server evaluation cutover remain separate active work.
+The browser product now covers use-case-first planning, executable Campaign/results, benchmark/sample drill-down, same-case cross-candidate comparison and whole-product interaction hardening. Five implementation screenshots are versioned as provenance-bound browser goldens; Product UX/UI convergence remains active for final manual accessibility/usability and representative-user review. Representative-hardware evidence and the evidence-gated Local LLM Server evaluation cutover remain separate active work.
 
 Primary product question:
 
@@ -24,7 +24,7 @@ Campaign launch revalidates the frozen plan digest, persists reconnectable lifec
 
 Campaign Results enumerate retained task/sample identities. Same-case comparison projects candidate/config/Run/sample-attempt evidence in Python and reuses canonical capability compatibility. Missing, incompatible and not-retained evidence remain explicit; no case-level winner or cross-case delta is invented.
 
-Shared product hardening now provides keyboard skip navigation, route-change focus restoration, assistive semantics for loading/error states, reduced-motion behavior and long technical-content containment. Browser evidence exercises recoverable failure, the supported 1024/1280/1600 desktop widths, extreme model/run/case identities, long case content and dense evaluator evidence without recreating backend semantics. A separate 1536x960 golden gate protects Overview, frozen manual review, Benchmark Detail, Sample Evidence Detail and Campaign Results against unintended visual drift.
+Shared product hardening provides keyboard skip navigation, route-change focus restoration, assistive loading/error semantics, reduced motion and long-content containment. Browser evidence exercises recoverable failure, supported 1024/1280/1600 desktop widths and dense technical evidence without recreating backend semantics. A separate 1536x960 golden gate protects Overview, frozen manual review, Benchmark Detail, Sample Evidence Detail and Campaign Results against unintended visual drift.
 
 Browser J0-J9 acceptance is executable; packaged-product evidence covers J0, J1, J8 and J9 through the installed wheel, built frontend, loopback API, SQLite and deterministic inference fixture. The repository adopts `repo-template-sw` 0.8.0 at L2 with Python, TypeScript and product-ui profiles.
 
@@ -34,7 +34,7 @@ Hosted CI/fixtures do not prove representative hardware/runtime behavior; `RUNTI
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
-| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | ACTIVE | UXUI-10 keeps built-product/browser goldens green while completing manual compact/standard/wide accessibility and representative-user review |
+| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | ACTIVE | UXUI-10 maintains goldens while completing manual compact/standard/wide accessibility and representative-user review |
 | [Representative device evidence](workstreams/representative-device-evidence.md) | READY | first real LLS/model/device run with retained fingerprint/bundle |
 | [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 EVIDENCE BLOCKED / MIG-003 BLOCKED | retain EV-3 + real PL replacement run, then remove redundant evaluation paths and smoke |
 
