@@ -359,11 +359,9 @@ test("J0 campaign: reviewed plan executes and produces policy-backed results", a
   const resultsLeadTerminalProgress = await page.locator(".campaign-page").evaluate((root) => {
     const results = root.querySelector(".campaign-results");
     const progress = root.querySelector(".campaign-progress-section");
-    return Boolean(
-      results &&
-        progress &&
-        results.compareDocumentPosition(progress) & Node.DOCUMENT_POSITION_FOLLOWING,
-    );
+    if (!results || !progress) return false;
+    const position = results.compareDocumentPosition(progress);
+    return (position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   });
   expect(resultsLeadTerminalProgress).toBe(true);
 });
