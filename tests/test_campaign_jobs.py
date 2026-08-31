@@ -56,9 +56,7 @@ def _run(config: StarterRunConfig) -> Run:
             generation=bundle.suite.generation,
             prompt_template_version="direct-user-v1",
             dataset_snapshots=tuple(dataset.snapshot for dataset in bundle.datasets.values()),
-            evaluator_versions=tuple(
-                dict.fromkeys(task.evaluator for task in bundle.suite.tasks)
-            ),
+            evaluator_versions=tuple(dict.fromkeys(task.evaluator for task in bundle.suite.tasks)),
             benchmark_protocol_version="starter-quality-v1",
             load_profile=LoadProfile(concurrency=1, request_count=23, streaming=False),
         ),
