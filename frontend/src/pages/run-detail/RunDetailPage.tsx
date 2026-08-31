@@ -55,8 +55,11 @@ function Metrics({
 }) {
   const selected = metrics.filter((metric) => metric.dimension === dimension);
   return (
-    <section className="run-detail__metric-section">
-      <SectionHeader title={title} description={description} />
+    <article className="run-detail__metric-dimension" data-dimension={dimension}>
+      <header className="run-detail__metric-heading">
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </header>
       {selected.length ? (
         <MetricGroup label={`${title} evidence`}>
           {selected.map((metric) => (
@@ -75,7 +78,7 @@ function Metrics({
           <Metric label={title} value={null} dimension={dimension} availability="not_evaluated" />
         </MetricGroup>
       )}
-    </section>
+    </article>
   );
 }
 
@@ -220,24 +223,32 @@ export function RunDetailView({ run, onCompare }: RunDetailViewProps) {
           <code>{summary.run_id}</code>
         </div>
 
-        <Metrics
-          title="Quality"
-          description="Evaluator-owned quality scores. No generic good/bad label is inferred without an explicit policy."
-          dimension="quality"
-          metrics={summary.metrics}
-        />
-        <Metrics
-          title="Performance"
-          description="Client-observed latency and throughput evidence for this exact execution identity."
-          dimension="performance"
-          metrics={summary.metrics}
-        />
-        <Metrics
-          title="Resources"
-          description="Host/runtime resource evidence. Missing telemetry remains explicitly not evaluated."
-          dimension="resources"
-          metrics={summary.metrics}
-        />
+        <section className="run-detail__metric-panel" aria-label="Run evidence">
+          <SectionHeader
+            title="Run evidence"
+            description="Exact quality, performance and resource evidence for this execution identity."
+          />
+          <div className="run-detail__metric-grid">
+            <Metrics
+              title="Quality"
+              description="Evaluator-owned scores."
+              dimension="quality"
+              metrics={summary.metrics}
+            />
+            <Metrics
+              title="Performance"
+              description="Latency and throughput for this execution."
+              dimension="performance"
+              metrics={summary.metrics}
+            />
+            <Metrics
+              title="Resources"
+              description="Observed resources; missing telemetry stays not evaluated."
+              dimension="resources"
+              metrics={summary.metrics}
+            />
+          </div>
+        </section>
 
         <RunSamplesSection runId={summary.run_id} />
 

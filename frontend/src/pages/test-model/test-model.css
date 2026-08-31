@@ -1,6 +1,6 @@
 .test-model-page {
   display: grid;
-  gap: var(--space-8);
+  gap: var(--space-6);
   max-width: 68rem;
 }
 
@@ -11,9 +11,9 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-panel);
-  background: var(--color-border);
+  background: var(--color-border-subtle);
   list-style: none;
 }
 
@@ -21,13 +21,14 @@
   display: flex;
   gap: var(--space-2);
   align-items: center;
-  padding: var(--space-3);
-  color: var(--color-text-secondary);
-  background: var(--color-surface-elevated);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-tertiary);
+  background: var(--color-surface);
 }
 
 .test-model-steps li[data-active="true"] {
   color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
   box-shadow: inset 0 -2px 0 var(--color-primary);
 }
 
@@ -43,8 +44,8 @@
 
 .test-model-panel {
   display: grid;
-  gap: var(--space-6);
-  min-height: 22rem;
+  gap: var(--space-5);
+  min-height: 20rem;
 }
 
 .test-model-fields,
@@ -57,10 +58,10 @@
 .test-model-connection {
   display: grid;
   gap: var(--space-4);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-panel);
   padding: var(--space-4);
-  background: var(--color-surface-elevated);
+  background: var(--color-surface);
 }
 
 .test-model-connect-action,
@@ -89,7 +90,7 @@
 .test-model-discovery {
   display: grid;
   gap: var(--space-4);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border-subtle);
   padding-top: var(--space-4);
 }
 
@@ -99,7 +100,7 @@
 }
 
 .test-model-discovery-heading span {
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font-family: var(--font-mono);
   font-size: 0.78rem;
 }
@@ -116,7 +117,7 @@
   align-items: center;
   justify-content: space-between;
   min-width: 0;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-control);
   padding: var(--space-2) var(--space-3);
   background: var(--color-surface);
@@ -138,7 +139,7 @@
 }
 
 .test-model-parameter-tags code {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-control);
   padding: var(--space-1) var(--space-2);
   color: var(--color-text-secondary);
@@ -153,9 +154,9 @@
   gap: 1px;
   margin: 0 0 var(--space-3);
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-control);
-  background: var(--color-border);
+  background: var(--color-border-subtle);
 }
 
 .test-model-runtime-parameters > div {
@@ -168,7 +169,7 @@
 }
 
 .test-model-runtime-parameters dt {
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font-family: var(--font-mono);
   font-size: 0.78rem;
 }
@@ -188,12 +189,12 @@
 .test-model-scenario {
   display: grid;
   gap: var(--space-2);
-  min-height: 9rem;
-  border: 1px solid var(--color-border);
+  min-height: 7rem;
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-panel);
   padding: var(--space-4);
   color: var(--color-text-primary);
-  background: var(--color-surface-elevated);
+  background: var(--color-surface);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -206,8 +207,9 @@
 }
 
 .test-model-scenario[data-selected="true"] {
-  border-color: var(--color-primary);
-  box-shadow: inset 0 0 0 1px var(--color-primary);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-subtle);
+  box-shadow: inset 2px 0 0 var(--color-primary);
 }
 
 .test-model-scenario:disabled {
@@ -219,7 +221,7 @@
   display: flex;
   gap: var(--space-3);
   justify-content: space-between;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border-subtle);
   padding-top: var(--space-4);
 }
 
@@ -234,21 +236,21 @@
   gap: 1px;
   margin: 0;
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-panel);
-  background: var(--color-border);
+  background: var(--color-border-subtle);
 }
 
 .test-model-review-grid > div {
   display: grid;
   gap: var(--space-1);
   padding: var(--space-3);
-  background: var(--color-surface-elevated);
+  background: var(--color-surface);
 }
 
 .test-model-review-grid dt,
 .test-model-digest span {
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font-size: 0.75rem;
 }
 
@@ -279,7 +281,7 @@
 .test-model-config {
   max-height: 24rem;
   overflow: auto;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-control);
   padding: var(--space-4);
   background: var(--color-surface);
