@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Validate the adopted repo-template-sw 0.5 product-ui contract."""
+"""Validate the adopted product-ui contracts."""
 
 from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
+
+UX_CONTRACT_VERSION = "0.5.0"
+BRAND_CONTRACT_VERSION = "0.6.0"
 
 REQUIRED_STATES = {"loading", "empty", "error", "disabled"}
 REQUIRED_PRINCIPLES = {
@@ -139,8 +142,8 @@ def main() -> int:
     if ux:
         if ux.get("schema_version") != 1:
             errors.append("ux-contract.schema_version must be 1")
-        if ux.get("contract_version") != "0.5.0":
-            errors.append("ux-contract.contract_version must be 0.5.0")
+        if ux.get("contract_version") != UX_CONTRACT_VERSION:
+            errors.append(f"ux-contract.contract_version must be {UX_CONTRACT_VERSION}")
         if ux.get("applicable") is not True:
             errors.append("ux-contract.applicable must be true")
 
@@ -182,8 +185,8 @@ def main() -> int:
     if brand:
         if brand.get("schema_version") != 1:
             errors.append("brand-kit.schema_version must be 1")
-        if brand.get("contract_version") != "0.5.0":
-            errors.append("brand-kit.contract_version must be 0.5.0")
+        if brand.get("contract_version") != BRAND_CONTRACT_VERSION:
+            errors.append(f"brand-kit.contract_version must be {BRAND_CONTRACT_VERSION}")
 
         tokens = brand.get("tokens") if isinstance(brand.get("tokens"), dict) else {}
         colors = tokens.get("colors") if isinstance(tokens.get("colors"), dict) else {}
