@@ -1,15 +1,21 @@
-"""Executable wiring for the first complete starter-suite evaluation path."""
+"""Executable wiring for native Performance Lab evaluation suites."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
 from performance_lab.adapters import OpenAICompatibleAdapter
-from performance_lab.datasets import build_general_starter_suite
+from performance_lab.datasets import (
+    MaterializedDataset,
+    available_workload_packs,
+    build_general_starter_suite,
+    build_workload_pack,
+)
 from performance_lab.domain import (
+    EvaluationSuite,
     EvaluatorRef,
     ExecutionFingerprint,
     HardwareIdentity,
@@ -25,7 +31,7 @@ from performance_lab.integrations import (
     LocalLLMServerIdentityClient,
     LocalLLMServerIdentityError,
 )
-from performance_lab.plugins import TelemetryCollector
+from performance_lab.plugins import Evaluator, TelemetryCollector
 from performance_lab.run_config import StarterRunConfig
 from performance_lab.storage import SQLiteRunStore
 from performance_lab.telemetry import (
@@ -53,14 +59,26 @@ class _ResolvedExecutionIdentity:
     hardware: HardwareIdentity
 
 
+@dataclass(frozen=True, slots=True)
+class _ExecutionBundle:
+    suite: EvaluationSuite
+    datasets: Mapping[str, MaterializedDataset]
+    evaluators: Mapping[str, Evaluator]
+    benchmark_protocol_version: str
+
+
 async def execute_starter_run(
     config: StarterRunConfig,
     *,
     progress_sink: Callable[[ProgressEvent], None] | None = None,
 ) -> RunExecutionResult:
-    """Wire endpoint -> frozen starter suite -> orchestrator -> immutable local evidence."""
+    """Wire endpoint -> frozen native suite -> orchestrator -> immutable local evidence.
 
-    bundle = build_general_starter_suite()
+    The historical function name remains for compatibility. ``suite_id``/``suite_version`` now
+    select either the general diagnostic suite or a registered versioned workload pack.
+    """
+
+    bundle = _resolve_execution_bundle(config)
     adapter = OpenAICompatibleAdapter(config.endpoint, model=config.model_id)
     try:
         probe = await adapter.probe()
@@ -72,9 +90,7 @@ async def execute_starter_run(
         telemetry_descriptor, telemetry_session = _build_telemetry(config)
 
         evaluator_versions = _unique_evaluators(bundle.suite.tasks)
-        snapshots = tuple(
-            bundle.datasets[dataset_id].snapshot for dataset_id in sorted(bundle.datasets)
-        )
+        snapshots = tuple(bundle.datasets[dataset_id].snapshot for dataset_id in sorted(bundle.datasets))
         total_samples = sum(
             min(len(bundle.datasets[task.dataset_snapshot_id].records), task.sample_limit)
             if task.sample_limit is not None
@@ -92,7 +108,7 @@ async def execute_starter_run(
             prompt_template_version="direct-user-v1",
             dataset_snapshots=snapshots,
             evaluator_versions=evaluator_versions,
-            benchmark_protocol_version="starter-quality-v1",
+            benchmark_protocol_version=bundle.benchmark_protocol_version,
             load_profile=LoadProfile(
                 concurrency=1,
                 request_count=total_samples,
@@ -124,6 +140,40 @@ async def execute_starter_run(
         )
     finally:
         await adapter.aclose()
+
+
+def _resolve_execution_bundle(config: StarterRunConfig) -> _ExecutionBundle:
+    if config.suite_id == "general-diagnostic-starter":
+        source = build_general_starter_suite()
+        if config.suite_version is not None and config.suite_version != source.suite.suite_version:
+            raise RunExecutionError(
+                f"unsupported suite version: {config.suite_id}@{config.suite_version}"
+            )
+        return _ExecutionBundle(
+            suite=source.suite,
+            datasets=source.datasets,
+            evaluators=source.evaluators,
+            benchmark_protocol_version="starter-quality-v1",
+        )
+
+    definition = next(
+        (item for item in available_workload_packs() if item.suite_id == config.suite_id),
+        None,
+    )
+    if definition is None:
+        raise RunExecutionError(f"unsupported suite: {config.suite_id}")
+    try:
+        source = build_workload_pack(definition.pack_id, version=config.suite_version)
+    except KeyError as exc:
+        raise RunExecutionError(
+            f"unsupported suite version: {config.suite_id}@{config.suite_version}"
+        ) from exc
+    return _ExecutionBundle(
+        suite=source.suite,
+        datasets=source.datasets,
+        evaluators=source.evaluators,
+        benchmark_protocol_version="workload-quality-v1",
+    )
 
 
 async def _resolve_execution_identity(config: StarterRunConfig) -> _ResolvedExecutionIdentity:
@@ -222,7 +272,7 @@ def _unique_evaluators(tasks: tuple[object, ...]) -> tuple[EvaluatorRef, ...]:
     for task in tasks:
         evaluator = getattr(task, "evaluator", None)
         if not isinstance(evaluator, EvaluatorRef):
-            raise RunExecutionError("starter suite contains an invalid evaluator reference")
+            raise RunExecutionError("suite contains an invalid evaluator reference")
         key = (evaluator.evaluator_id, evaluator.version)
         if key not in seen:
             refs.append(evaluator)
