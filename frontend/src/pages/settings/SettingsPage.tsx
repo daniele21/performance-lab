@@ -25,6 +25,15 @@ const SECTION_LABEL: Record<
   advanced: "Advanced",
 };
 
+const SECTION_DESCRIPTION: Record<SettingsSection, string> = {
+  "model-connections":
+    "Performance Lab evaluates external serving runtimes without taking ownership of model loading or runtime lifecycle.",
+  "devices-targets":
+    "Configured evaluation targets identify where requests run and which backend-reported capabilities are available.",
+  advanced:
+    "Inspect runtime ownership and target capability boundaries without promoting backend configuration into browser-owned state.",
+};
+
 const CONNECTION_COLUMNS: readonly DataColumn<TargetSummaryReadModel>[] = [
   { id: "profile", header: "Connection profile", render: (item) => item.endpoint_profile_id },
   { id: "adapter", header: "Adapter", render: (item) => item.adapter_type },
@@ -58,11 +67,7 @@ export function SettingsView({ section, targets }: SettingsViewProps) {
   return (
     <AppShell activeSecondary={label}>
       <div className="secondary-page">
-        <PageHeader
-          eyebrow="Settings"
-          title={label}
-          description="Performance Lab evaluates external serving runtimes without taking ownership of model loading or runtime lifecycle."
-        />
+        <PageHeader eyebrow="Settings" title={label} description={SECTION_DESCRIPTION[section]} />
 
         {section === "model-connections" &&
           (targets.length ? (
