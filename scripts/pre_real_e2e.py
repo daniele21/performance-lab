@@ -40,14 +40,22 @@ def load_json_object(path: Path, label: str) -> dict[str, Any]:
 def load_gate_contract() -> dict[str, Any]:
     contract = load_json_object(CONTRACT_PATH, "pre-real E2E contract")
     if contract.get("schema_version") != 1 or contract.get("gate_id") != "PRE_REAL_E2E":
-        raise RuntimeError("pre-real E2E contract must declare schema_version=1 and gate_id=PRE_REAL_E2E")
+        raise RuntimeError(
+            "pre-real E2E contract must declare schema_version=1 and gate_id=PRE_REAL_E2E"
+        )
     if contract.get("source_of_truth") != ".engineering/e2e.json":
         raise RuntimeError("pre-real E2E contract source_of_truth must be .engineering/e2e.json")
     if contract.get("blocks_real_environment") is not True:
         raise RuntimeError("pre-real E2E contract must block real environment until PASS")
     required = contract.get("required_journeys")
-    if not isinstance(required, list) or not required or not all(isinstance(item, str) for item in required):
-        raise RuntimeError("pre-real E2E contract required_journeys must be a non-empty string list")
+    if (
+        not isinstance(required, list)
+        or not required
+        or not all(isinstance(item, str) for item in required)
+    ):
+        raise RuntimeError(
+            "pre-real E2E contract required_journeys must be a non-empty string list"
+        )
     layers = contract.get("layers")
     if not isinstance(layers, list) or not layers:
         raise RuntimeError("pre-real E2E contract layers must be a non-empty list")
