@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("J0 campaign: packaged product executes the reviewed frozen plan", async ({ page }) => {
+test("J0/J9 campaign: packaged product executes the plan and compares one exact case", async ({
+  page,
+}) => {
   await page.goto("/#find-best-setup");
   await expect(page.getByRole("heading", { name: "Find best setup" })).toBeVisible();
   await expect(page.getByText("Structured document extraction")).toBeVisible();
@@ -32,6 +34,18 @@ test("J0 campaign: packaged product executes the reviewed frozen plan", async ({
   await expect(page).toHaveURL(campaignUrl);
   await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
 
+  const compareCase = page.getByRole("button", { name: "Compare across candidates" }).first();
+  await expect(compareCase).toBeVisible();
+  await compareCase.click();
+  await expect(page).toHaveURL(/#campaigns\/[^/]+\/cases\//);
+  await expect(page.getByRole("heading", { name: "Candidate evidence" })).toBeVisible();
+  await expect(page.getByText("fixture-good", { exact: true })).toBeVisible();
+  await expect(page.getByText("fixture-bad", { exact: true })).toBeVisible();
+  await expect(page.getByText("Content not retained").first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open exact sample evidence" }).first()).toBeVisible();
+
+  await page.getByRole("link", { name: /Back to campaign results/ }).click();
+  await expect(page).toHaveURL(campaignUrl);
   const runLink = page.getByRole("button", { name: "Open immutable Run" }).first();
   await expect(runLink).toBeVisible();
   await runLink.click();
