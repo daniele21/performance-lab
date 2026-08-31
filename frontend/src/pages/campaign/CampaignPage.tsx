@@ -47,7 +47,9 @@ function label(value: string) {
 
 function metricValue(value: number | null, unit: string | null) {
   if (value === null) return "Unavailable";
-  const rendered = Number.isInteger(value) ? String(value) : value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+  const rendered = Number.isInteger(value)
+    ? String(value)
+    : value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
   return unit ? `${rendered} ${unit}` : rendered;
 }
 
@@ -91,7 +93,9 @@ export function CampaignPage({ campaignId, onOpenRun, onNewCampaign }: CampaignP
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted || disposed) return;
-        setLoadError(error instanceof Error ? error.message : "Campaign state could not be loaded.");
+        setLoadError(
+          error instanceof Error ? error.message : "Campaign state could not be loaded.",
+        );
       });
 
     return () => {
