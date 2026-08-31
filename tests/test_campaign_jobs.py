@@ -77,7 +77,10 @@ def _run(config: StarterRunConfig) -> Run:
     )
 
 
-def _launch_plan(tmp_path: Path) -> CampaignLaunchPlan:
+def _launch_plan(
+    tmp_path: Path,
+    candidates: tuple[tuple[str, str], ...] = (("candidate-a", "model-a"),),
+) -> CampaignLaunchPlan:
     return CampaignLaunchPlan(
         plan_digest="a" * 64,
         use_case_id="general-capability",
@@ -89,7 +92,10 @@ def _launch_plan(tmp_path: Path) -> CampaignLaunchPlan:
             policy_id="strict-quality-dominance",
             policy_version="1.0.0",
         ),
-        runs=(CampaignRunSpec("candidate-a", "model-a", _config(tmp_path, "model-a")),),
+        runs=tuple(
+            CampaignRunSpec(candidate_id, model_id, _config(tmp_path, model_id))
+            for candidate_id, model_id in candidates
+        ),
     )
 
 
@@ -128,16 +134,10 @@ def test_campaign_executes_bounded_run_specs_sequentially_and_persists_terminal_
             capacity=EvaluationCapacity(),
             executor=executor,
         )
-        plan = _launch_plan(tmp_path)
         campaign = await manager.launch(
-            CampaignLaunchPlan(
-                **{
-                    **plan.__dict__,
-                    "runs": (
-                        CampaignRunSpec("candidate-a", "model-a", _config(tmp_path, "model-a")),
-                        CampaignRunSpec("candidate-b", "model-b", _config(tmp_path, "model-b")),
-                    ),
-                }
+            _launch_plan(
+                tmp_path,
+                (("candidate-a", "model-a"), ("candidate-b", "model-b")),
             )
         )
         async for _ in manager.stream(campaign.campaign_id):
@@ -161,7 +161,19 @@ def test_campaign_cancel_releases_shared_capacity_for_manual_run(tmp_path: Path)
             executor=blocking,
             poll_interval_seconds=0.001,
         )
-        manual = RunJobManager(capacity=capacity)
+
+        async def manual_executor(
+            config: StarterRunConfig,
+            *,
+            progress_sink=None,
+        ) -> RunExecutionResult:
+            return RunExecutionResult(
+                run=_run(config),
+                store_path=config.store_path,
+                bundle_path=config.store_path.parent / "manual.plab.zip",
+            )
+
+        manual = RunJobManager(capacity=capacity, executor=manual_executor)
 
         campaign = await campaigns.launch(_launch_plan(tmp_path))
         await blocking.started.wait()
