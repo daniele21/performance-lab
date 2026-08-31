@@ -20,6 +20,16 @@ function slug(label: string) {
 export function AppShell({ activePrimary, activeSecondary, children }: AppShellProps) {
   return (
     <div className="app-shell">
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main-content")?.focus();
+        }}
+      >
+        Skip to main content
+      </a>
       <aside className="app-shell__sidebar">
         <a className="app-shell__brand" href="#overview" aria-label="Performance Lab home">
           <img className="app-shell__mark" src={performanceLabMark} alt="" aria-hidden="true" />
@@ -82,7 +92,7 @@ export function AppShell({ activePrimary, activeSecondary, children }: AppShellP
           ))}
         </div>
       </aside>
-      <main id="main-content" className="app-shell__main">
+      <main id="main-content" className="app-shell__main" tabIndex={-1}>
         {children}
       </main>
     </div>
