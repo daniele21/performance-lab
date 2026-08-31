@@ -1,10 +1,10 @@
 {
-  "stage": "target",
-  "source_head_sha": "1c37ec2447515a5d75b27c680d552ce232fb5bda",
-  "workflow_run_id": 33445346076,
-  "artifact_id": 9777817615,
-  "artifact_name": "pvr08-target-candidate-33445346076-1",
-  "artifact_sha256": "d0aa52e49b64276dd1f6f8287e43bb89bb110c38c7cc455798176ffee31ff065",
+  "stage": "golden",
+  "source_head_sha": "afa3fa2dc2d82acccdd86338806e3923636ab476",
+  "workflow_run_id": 33445799989,
+  "artifact_id": 9777981789,
+  "artifact_name": "pvr08-target-candidate-33445799989-1",
+  "artifact_sha256": "5575bb27b4858260e22226754776647954fed7fa912fcd30dce65822c2820a84",
   "files": {
     "benchmark-detail.png": "32335866e03f84fb46bf7e6ec36f693d00450515fba0ed5a7372e9f13ef740c5",
     "campaign-results.png": "6c308a2f01d0fcf38f52411c05db2f2832bb4051051121c9f75fd8c09fcae310",
