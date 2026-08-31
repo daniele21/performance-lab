@@ -20,17 +20,17 @@
 
 .case-comparison__back:focus-visible,
 .case-comparison__evidence-link:focus-visible {
-  outline: 2px solid var(--color-focus-ring);
+  outline: 2px solid var(--color-focus);
   outline-offset: 3px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-control);
 }
 
 .case-comparison__summary,
 .case-comparison__candidate,
 .case-comparison__context-grid > div {
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface-elevated);
 }
 
 .case-comparison__summary {
@@ -68,7 +68,7 @@
   display: block;
   margin-bottom: var(--space-2);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -77,8 +77,8 @@
   margin: 0;
   padding: var(--space-3);
   overflow: auto;
-  border-radius: var(--radius-md);
-  background: var(--color-surface-sunken);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-subtle);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -103,8 +103,8 @@
 
 .case-comparison__notice {
   padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-sunken);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-subtle);
 }
 
 .case-comparison__notice p,
