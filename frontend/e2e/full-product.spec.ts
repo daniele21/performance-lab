@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("J0 planning: packaged product builds a frozen campaign plan", async ({ page }) => {
+test("J0 campaign: packaged product executes the reviewed frozen plan", async ({ page }) => {
   await page.goto("/#find-best-setup");
   await expect(page.getByRole("heading", { name: "Find best setup" })).toBeVisible();
   await expect(page.getByText("Structured document extraction")).toBeVisible();
@@ -18,8 +18,25 @@ test("J0 planning: packaged product builds a frozen campaign plan", async ({ pag
 
   await expect(page.getByRole("heading", { name: "Campaign review / estimate" })).toBeVisible();
   await expect(page.getByText("Plan frozen")).toBeVisible();
-  await expect(page.getByText("Engine pending")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Start evaluation campaign" })).toBeDisabled();
+  await expect(page.getByText("Ready to run")).toBeVisible();
+  await expect(page.getByText("strict-quality-dominance@1.0.0")).toBeVisible();
+  await page.getByRole("button", { name: "Start evaluation campaign" }).click();
+
+  await expect(page).toHaveURL(/#campaigns\/[^/]+$/, { timeout: 120_000 });
+  await expect(page.getByRole("heading", { name: "Results" })).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText("No hidden weights · No universal score")).toBeVisible();
+  await expect(page.getByText("No single recommended winner")).toBeVisible();
+
+  const campaignUrl = page.url();
+  await page.reload();
+  await expect(page).toHaveURL(campaignUrl);
+  await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+
+  const runLink = page.getByRole("button", { name: "Open immutable Run" }).first();
+  await expect(runLink).toBeVisible();
+  await runLink.click();
+  await expect(page).toHaveURL(/#runs\/[^/]+$/);
+  await expect(page.getByRole("heading", { name: "fixture-good" })).toBeVisible();
 });
 
 test("J1/J8: packaged product completes, persists and drills into sample evidence", async ({
