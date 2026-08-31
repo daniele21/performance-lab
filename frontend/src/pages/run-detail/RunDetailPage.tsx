@@ -223,12 +223,12 @@ export function RunDetailView({ run, onCompare }: RunDetailViewProps) {
           <code>{summary.run_id}</code>
         </div>
 
-        <section className="run-detail__metric-panel" aria-labelledby="run-detail-evidence-title">
+        <section className="run-detail__metric-panel" aria-label="Run evidence">
           <SectionHeader
             title="Run evidence"
             description="Exact quality, performance and resource evidence for this execution identity."
           />
-          <div className="run-detail__metric-grid" id="run-detail-evidence-title">
+          <div className="run-detail__metric-grid">
             <Metrics
               title="Quality"
               description="Evaluator-owned scores."
