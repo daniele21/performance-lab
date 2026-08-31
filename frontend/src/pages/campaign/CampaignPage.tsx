@@ -287,7 +287,9 @@ function CampaignResults({
       <div className="campaign-compatibility" aria-label="Evidence compatibility">
         {results.compatibility.map((dimension) => (
           <article key={dimension.dimension}>
-            <span>{dimension.dimension === "capability" ? "Quality" : label(dimension.dimension)}</span>
+            <span>
+              {dimension.dimension === "capability" ? "Quality" : label(dimension.dimension)}
+            </span>
             <Status
               tone={
                 dimension.comparable && dimension.evidence_available
