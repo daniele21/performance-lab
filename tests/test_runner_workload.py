@@ -1,8 +1,8 @@
 import pytest
 
+from performance_lab.domain import EndpointProfile
 from performance_lab.run_config import StarterRunConfig
 from performance_lab.runner import RunExecutionError, _resolve_execution_bundle
-from performance_lab.domain import EndpointProfile
 
 
 def _config(*, suite_id: str, suite_version: str | None) -> StarterRunConfig:
