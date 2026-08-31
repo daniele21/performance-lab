@@ -113,8 +113,7 @@ def validate_target(target_id, target, errors):
     dimensions = target.get("material_dimensions")
     if not string_list(dimensions) or not dimensions:
         errors.append(
-            f"target_environments.{target_id}.material_dimensions must be a "
-            "non-empty string list"
+            f"target_environments.{target_id}.material_dimensions must be a non-empty string list"
         )
 
 
@@ -123,22 +122,18 @@ def validate_environment(env_id, env, targets, automated_ids, errors):
     automation = env.get("automation")
     if fidelity not in FIDELITY_CLASSES:
         errors.append(
-            f"execution_environments.{env_id}.fidelity_class must be one of "
-            f"{FIDELITY_ORDER}"
+            f"execution_environments.{env_id}.fidelity_class must be one of {FIDELITY_ORDER}"
         )
     if automation not in AUTOMATION:
         errors.append(
-            f"execution_environments.{env_id}.automation must be one of "
-            f"{sorted(AUTOMATION)}"
+            f"execution_environments.{env_id}.automation must be one of {sorted(AUTOMATION)}"
         )
     elif automation == "automated":
         automated_ids.add(env_id)
     if not non_empty(env.get("platform")):
         errors.append(f"execution_environments.{env_id}.platform is required")
     if not non_empty(env.get("artifact_surface")):
-        errors.append(
-            f"execution_environments.{env_id}.artifact_surface is required"
-        )
+        errors.append(f"execution_environments.{env_id}.artifact_surface is required")
     validate_refs(
         env.get("target_environment_refs"),
         set(targets),
@@ -146,9 +141,7 @@ def validate_environment(env_id, env, targets, automated_ids, errors):
         errors,
     )
     if not string_list(env.get("known_gaps")):
-        errors.append(
-            f"execution_environments.{env_id}.known_gaps must be a string list"
-        )
+        errors.append(f"execution_environments.{env_id}.known_gaps must be a string list")
 
 
 def validate_media(journey_id, journey, errors):
@@ -158,8 +151,7 @@ def validate_media(journey_id, journey, errors):
         errors.append(f"critical_journeys.{journey_id}.ui_surface must be boolean")
     if not string_list(media):
         errors.append(
-            f"critical_journeys.{journey_id}.required_media_artifacts must be "
-            "a string list"
+            f"critical_journeys.{journey_id}.required_media_artifacts must be a string list"
         )
     elif ui_surface is True and set(media) != REQUIRED_UI_MEDIA:
         errors.append(
@@ -219,8 +211,7 @@ def validate_journey(
         )
     elif auto_refs and ranks and max(ranks) < FIDELITY_RANK[minimum]:
         errors.append(
-            f"critical_journeys.{journey_id} does not reach "
-            f"minimum_automated_fidelity {minimum}"
+            f"critical_journeys.{journey_id} does not reach minimum_automated_fidelity {minimum}"
         )
 
     confirmation = journey.get("real_environment_confirmation")
@@ -231,9 +222,7 @@ def validate_journey(
         )
     residual = journey.get("residual_gaps")
     if not string_list(residual):
-        errors.append(
-            f"critical_journeys.{journey_id}.residual_gaps must be a string list"
-        )
+        errors.append(f"critical_journeys.{journey_id}.residual_gaps must be a string list")
     if not auto_refs and not non_empty(journey.get("automation_gap_reason")):
         errors.append(
             f"critical_journeys.{journey_id} needs automated_environment_refs "
@@ -241,8 +230,7 @@ def validate_journey(
         )
     if auto_refs and not any(ref in automated_ids for ref in auto_refs):
         errors.append(
-            f"critical_journeys.{journey_id} has no valid automated "
-            "execution environment"
+            f"critical_journeys.{journey_id} has no valid automated execution environment"
         )
     if confirmation == "not_required" and residual:
         warnings.append(
@@ -273,9 +261,7 @@ def main():
         applicability = {}
     status = applicability.get("status")
     if status not in APPLICABILITY:
-        errors.append(
-            f"applicability.status must be one of {sorted(APPLICABILITY)}"
-        )
+        errors.append(f"applicability.status must be one of {sorted(APPLICABILITY)}")
     if not non_empty(applicability.get("reason")):
         errors.append("applicability.reason is required")
 
@@ -287,9 +273,7 @@ def main():
     command_map = commands.get("commands")
     command_map = command_map if isinstance(command_map, dict) else {}
     command_entry = command_map.get("e2e")
-    command_status = (
-        command_entry.get("status") if isinstance(command_entry, dict) else None
-    )
+    command_status = command_entry.get("status") if isinstance(command_entry, dict) else None
     if not isinstance(command_entry, dict):
         errors.append("commands.json must declare commands.e2e")
     if status == "n/a" and command_status != "n/a":
@@ -323,8 +307,7 @@ def main():
             )
     elif status == "n/a" and (targets or environments or journeys):
         errors.append(
-            "E2E marked n/a must not declare target/execution environments "
-            "or critical journeys"
+            "E2E marked n/a must not declare target/execution environments or critical journeys"
         )
 
     for target_id, target in targets.items():
