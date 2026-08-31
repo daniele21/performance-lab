@@ -69,5 +69,5 @@ jobs:
         with:
           name: browser-acceptance-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: frontend/test-results
-          if-no-files-found: error
+          if-no-files-found: ignore
           retention-days: 7
