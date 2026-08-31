@@ -54,42 +54,60 @@ export function AppShell({ activePrimary, activeSecondary, children }: AppShellP
         </nav>
 
         <div className="app-shell__secondary">
-          {Object.entries(SECONDARY_NAVIGATION).map(([group, items]) => (
-            <nav key={group} aria-label={group}>
-              <p className="app-navigation__group">{group}</p>
-              <ul className="app-navigation app-navigation--secondary">
-                {items.map((item) => {
-                  const active = isSecondaryNavigationActive(item, activeSecondary);
-                  return (
-                    <li key={item.label}>
-                      {item.href === null ? (
-                        <span
-                          className="app-navigation__link app-navigation__link--disabled"
-                          data-disabled="true"
-                          aria-disabled="true"
-                          title={item.disabledReason}
-                        >
-                          <span>{item.label}</span>
-                          <span className="app-navigation__availability" aria-hidden="true">
-                            Pending
-                          </span>
-                        </span>
-                      ) : (
-                        <a
-                          className="app-navigation__link"
-                          data-current={active ? "true" : undefined}
-                          href={item.href}
-                          aria-current={active ? "page" : undefined}
-                        >
-                          {item.label}
-                        </a>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-          ))}
+          {Object.entries(SECONDARY_NAVIGATION).map(([group, items]) => {
+            const groupActive = items.some((item) =>
+              isSecondaryNavigationActive(item, activeSecondary),
+            );
+
+            return (
+              <details
+                key={group}
+                className="app-navigation-group"
+                data-current={groupActive ? "true" : undefined}
+                open={groupActive}
+              >
+                <summary className="app-navigation__group">
+                  <span>{group}</span>
+                </summary>
+                <nav aria-label={group}>
+                  <ul className="app-navigation app-navigation--secondary">
+                    {items.map((item) => {
+                      const active = isSecondaryNavigationActive(item, activeSecondary);
+                      const reasonId = `nav-${slug(group)}-${slug(item.label)}-reason`;
+
+                      return (
+                        <li key={item.label}>
+                          {item.href === null ? (
+                            <span
+                              className="app-navigation__link app-navigation__link--disabled"
+                              data-disabled="true"
+                              aria-disabled="true"
+                              aria-describedby={reasonId}
+                              title={item.disabledReason}
+                            >
+                              <span>{item.label}</span>
+                              <span id={reasonId} className="app-navigation__disabled-reason">
+                                Unavailable. {item.disabledReason}
+                              </span>
+                            </span>
+                          ) : (
+                            <a
+                              className="app-navigation__link"
+                              data-current={active ? "true" : undefined}
+                              href={item.href}
+                              aria-current={active ? "page" : undefined}
+                            >
+                              {item.label}
+                            </a>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </nav>
+              </details>
+            );
+          })}
         </div>
       </aside>
       <main id="main-content" className="app-shell__main" tabIndex={-1}>
