@@ -350,8 +350,20 @@ test("J0 campaign: reviewed plan executes and produces policy-backed results", a
 
   await expect(page).toHaveURL(/#campaigns\/campaign-1$/);
   await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+  await expect(page.getByLabel("Campaign results")).toBeVisible();
   await expect(page.getByText("No hidden weights · No universal score")).toBeVisible();
   await expect(page.getByText("model-a", { exact: true }).last()).toBeVisible();
   await expect(page.getByText("Comparable", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Inspect recommended Run" })).toBeVisible();
+
+  const resultsLeadTerminalProgress = await page.locator(".campaign-page").evaluate((root) => {
+    const results = root.querySelector(".campaign-results");
+    const progress = root.querySelector(".campaign-progress-section");
+    return Boolean(
+      results &&
+        progress &&
+        results.compareDocumentPosition(progress) & Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+  expect(resultsLeadTerminalProgress).toBe(true);
 });
