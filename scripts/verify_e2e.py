@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
 FIDELITY_ORDER = [
@@ -199,9 +198,8 @@ def validate_journey(
                 f"must reference automated environments: {ref}"
             )
         fidelity = env.get("fidelity_class") if env else None
-        if env and env.get("automation") == "automated":
-            if fidelity in FIDELITY_RANK:
-                ranks.append(FIDELITY_RANK[fidelity])
+        if env and env.get("automation") == "automated" and fidelity in FIDELITY_RANK:
+            ranks.append(FIDELITY_RANK[fidelity])
 
     minimum = journey.get("minimum_automated_fidelity")
     if minimum not in FIDELITY_CLASSES:
