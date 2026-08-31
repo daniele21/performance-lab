@@ -22,7 +22,9 @@ def _campaign(*, status: CampaignStatus = CampaignStatus.QUEUED) -> Campaign:
         CampaignStatus.INTERRUPTED,
     }
     entry_status = (
-        CampaignEntryStatus.SUCCEEDED if status == CampaignStatus.SUCCEEDED else CampaignEntryStatus.QUEUED
+        CampaignEntryStatus.SUCCEEDED
+        if status == CampaignStatus.SUCCEEDED
+        else CampaignEntryStatus.QUEUED
     )
     return Campaign(
         campaign_id="campaign-a",
@@ -55,7 +57,9 @@ def _campaign(*, status: CampaignStatus = CampaignStatus.QUEUED) -> Campaign:
     )
 
 
-def test_campaign_store_persists_mutable_progress_then_freezes_terminal_snapshot(tmp_path: Path) -> None:
+def test_campaign_store_persists_mutable_progress_then_freezes_terminal_snapshot(
+    tmp_path: Path,
+) -> None:
     store = SQLiteCampaignStore(tmp_path / "runs.sqlite3")
     queued = _campaign()
     store.save(queued)
