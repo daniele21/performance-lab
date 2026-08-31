@@ -41,7 +41,14 @@ function metric(
 }
 
 const quality = metric("accuracy|exact@1", "Exact match", "quality", 0.91, null, true);
-const performance = metric("tokens_per_second", "Tokens / second", "performance", 24.8, "tok/s", true);
+const performance = metric(
+  "tokens_per_second",
+  "Tokens / second",
+  "performance",
+  24.8,
+  "tok/s",
+  true,
+);
 const resources = metric("peak_rss_mb", "Peak RSS", "resources", 1680, "MB", false);
 
 function runSummary(runId: string, modelId = identity.model_id) {
@@ -360,7 +367,8 @@ const campaign = {
       model_id: identity.model_id,
       rationale: "Best comparable quality evidence under the explicit strict-dominance policy.",
     },
-    recommendation_reason: "Best comparable quality evidence under the explicit strict-dominance policy.",
+    recommendation_reason:
+      "Best comparable quality evidence under the explicit strict-dominance policy.",
   },
   error_code: null,
   error_message: null,
@@ -388,7 +396,10 @@ async function installFixture(page: Page) {
 
     if (path === "/api/v1/tested-models") return fulfillJson(route, testedModels);
     if (path === "/api/v1/runs" && request.method() === "GET") {
-      return fulfillJson(route, [runSummary("run-a"), runSummary("run-b", "qwen2.5-3b-instruct-q4")]);
+      return fulfillJson(route, [
+        runSummary("run-a"),
+        runSummary("run-b", "qwen2.5-3b-instruct-q4"),
+      ]);
     }
     if (path === "/api/v1/targets") return fulfillJson(route, [target]);
     if (path === "/api/v1/scenarios") return fulfillJson(route, [scenario]);
@@ -406,7 +417,11 @@ async function installFixture(page: Page) {
       return fulfillJson(route, campaignCases);
     }
 
-    return fulfillJson(route, { detail: `Unhandled visual acceptance fixture: ${request.method()} ${path}` }, 500);
+    return fulfillJson(
+      route,
+      { detail: `Unhandled visual acceptance fixture: ${request.method()} ${path}` },
+      500,
+    );
   });
 }
 
@@ -426,7 +441,9 @@ test.use({
   colorScheme: "dark",
 });
 
-test("UXUI-10 bootstrap captures the accepted implementation candidates", async ({ page }, testInfo) => {
+test("UXUI-10 bootstrap captures the accepted implementation candidates", async ({
+  page,
+}, testInfo) => {
   await installFixture(page);
 
   await page.goto("/#overview");
@@ -446,7 +463,9 @@ test("UXUI-10 bootstrap captures the accepted implementation candidates", async 
   await expect(page.getByRole("heading", { name: "general-diagnostic-starter" })).toBeVisible();
   const caseDisclosure = page.locator("details").filter({ hasText: "case-a" }).first();
   await caseDisclosure.locator("summary").click();
-  await expect(caseDisclosure.getByText("Normalize text and compare exact equality.")).toBeVisible();
+  await expect(
+    caseDisclosure.getByText("Normalize text and compare exact equality."),
+  ).toBeVisible();
   await capture(page, testInfo, "benchmark-detail");
 
   await page.goto("/#runs/run-a/samples/reasoning/sample-a/1");
