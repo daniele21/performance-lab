@@ -140,8 +140,9 @@ class CampaignQueryService:
                 decision_policy=policy,
                 compatibility=compatibility,
                 recommendation_reason=(
-                    "The campaign did not complete every planned run successfully. Partial evidence "
-                    "remains inspectable, but no best-fit recommendation is produced."
+                    "The campaign did not complete every planned run successfully. "
+                    "Partial evidence remains inspectable, but no best-fit recommendation is "
+                    "produced."
                 ),
             )
         if len(successful) != len(campaign.entries):
