@@ -23,11 +23,22 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  color: var(--color-text-primary);
   background: var(--color-surface);
+  font-size: 0.9375rem;
+  font-weight: var(--font-weight-body);
+  line-height: 1.5;
 }
 
 a {
   color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 button,
@@ -36,8 +47,13 @@ a {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-primary) 26%, transparent);
 }
 
 .skip-link {
@@ -46,14 +62,15 @@ a {
   left: var(--space-3);
   z-index: 1000;
   transform: translateY(calc(-100% - var(--space-6)));
-  border: 1px solid var(--color-focus);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-control);
   padding: var(--space-2) var(--space-3);
   color: var(--color-text-primary);
-  background: var(--color-surface-elevated);
-  font-weight: 700;
+  background: var(--color-surface-raised);
+  font-size: 0.85rem;
+  font-weight: var(--font-weight-semibold);
   text-decoration: none;
-  box-shadow: var(--shadow-overlay);
+  box-shadow: var(--shadow-raised);
   transition: transform var(--transition-functional);
 }
 
@@ -85,19 +102,21 @@ code,
   display: grid;
   gap: var(--space-3);
   max-width: 52rem;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border-subtle);
   padding-top: var(--space-6);
 }
 
 .product-intro__status h2 {
   margin: 0;
   font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
 }
 
 .product-intro__status p {
   margin: 0;
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
 
 @media (prefers-reduced-motion: reduce) {
