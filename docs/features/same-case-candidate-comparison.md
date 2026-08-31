@@ -4,6 +4,7 @@ Status: active
 Document type: feature
 Owner: product-evidence
 Canonical scope: feature.same-case-candidate-comparison
+Read when: changing Campaign case discovery, same-case compatibility or cross-candidate sample evidence semantics
 Last reviewed: 2026-08-31
 
 ## Purpose
