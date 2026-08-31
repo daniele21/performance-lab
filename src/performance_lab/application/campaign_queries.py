@@ -145,7 +145,9 @@ class CampaignQueryService:
             raw_runs[entry.entry_id] = run
             matches = _matching_samples(run, task_id, sample_id)
             if not matches:
-                unavailable[entry.entry_id] = "This exact benchmark case is not retained in this Run."
+                unavailable[entry.entry_id] = (
+                    "This exact benchmark case is not retained in this Run."
+                )
                 continue
             if len(matches) != 1:
                 unavailable[entry.entry_id] = (
