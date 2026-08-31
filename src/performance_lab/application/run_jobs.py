@@ -19,13 +19,15 @@ from performance_lab.engine import ProgressEvent
 from performance_lab.run_config import StarterRunConfig
 from performance_lab.runner import RunExecutionResult, execute_starter_run
 
+from .evaluation_capacity import EvaluationCapacity, EvaluationCapacityError
+
 
 class RunJobError(RuntimeError):
     """Base class for local UI run lifecycle failures."""
 
 
 class RunJobCapacityError(RunJobError):
-    """Raised when the local process already owns an active benchmark job."""
+    """Raised when the local process already owns active evaluation capacity."""
 
 
 class RunJobNotFoundError(RunJobError):
@@ -86,11 +88,12 @@ class RunExecutor(Protocol):
 
 
 class RunJobManager:
-    """Own at most one active benchmark task per local Performance Lab process.
+    """Own at most one manual benchmark task per local Performance Lab process.
 
-    The manager intentionally rejects excess launches instead of maintaining an
-    unbounded queue. Progress is stored as the latest immutable snapshot, so SSE
-    clients never require a growing per-client event buffer.
+    ``EvaluationCapacity`` is shared with campaign execution so manual and campaign runs can never
+    overlap. The manager rejects excess launches rather than maintaining an unbounded queue.
+    Progress is stored as the latest immutable snapshot, so SSE clients never require a growing
+    per-client event buffer.
     """
 
     def __init__(
@@ -99,17 +102,23 @@ class RunJobManager:
         executor: RunExecutor = execute_starter_run,
         recovered_runs: tuple[Run, ...] = (),
         poll_interval_seconds: float = 0.1,
+        capacity: EvaluationCapacity | None = None,
     ) -> None:
         if poll_interval_seconds <= 0:
             raise ValueError("poll_interval_seconds must be > 0")
         self._executor = executor
         self._poll_interval_seconds = poll_interval_seconds
+        self._capacity = capacity or EvaluationCapacity()
         self._jobs: dict[str, RunJobSnapshot] = {}
         self._tasks: dict[str, asyncio.Task[None]] = {}
         self._active_job_id: str | None = None
         self._lock = asyncio.Lock()
         for run in recovered_runs:
             self._recover(run)
+
+    @property
+    def capacity(self) -> EvaluationCapacity:
+        return self._capacity
 
     def list_jobs(self) -> tuple[RunJobSnapshot, ...]:
         return tuple(
@@ -137,15 +146,19 @@ class RunJobManager:
         if actual_digest != config_digest:
             raise FrozenConfigMismatchError("launch config differs from frozen review")
 
+        job_id = f"job-{uuid4()}"
         async with self._lock:
             if self._active_job_id is not None:
                 active = self._jobs.get(self._active_job_id)
                 if active is not None and active.state not in _TERMINAL_JOB_STATES:
                     raise RunJobCapacityError("one local benchmark job is already active")
                 self._active_job_id = None
+            try:
+                await self._capacity.acquire(job_id)
+            except EvaluationCapacityError as exc:
+                raise RunJobCapacityError("local evaluation capacity is already in use") from exc
 
             now = datetime.now(UTC)
-            job_id = f"job-{uuid4()}"
             snapshot = RunJobSnapshot(
                 job_id=job_id,
                 state=RunJobState.STARTING,
@@ -159,7 +172,13 @@ class RunJobManager:
             )
             self._jobs[job_id] = snapshot
             self._active_job_id = job_id
-            task = asyncio.create_task(self._execute(job_id, config), name=job_id)
+            try:
+                task = asyncio.create_task(self._execute(job_id, config), name=job_id)
+            except Exception:
+                self._jobs.pop(job_id, None)
+                self._active_job_id = None
+                await self._capacity.release(job_id)
+                raise
             self._tasks[job_id] = task
             return snapshot
 
@@ -272,6 +291,7 @@ class RunJobManager:
                 error_message=_bounded_error_message(exc),
             )
         finally:
+            await self._capacity.release(job_id)
             async with self._lock:
                 if self._active_job_id == job_id:
                     self._active_job_id = None
