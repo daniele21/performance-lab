@@ -165,15 +165,21 @@ export function CampaignPage({
     );
   }
 
+  const terminal = isTerminal(campaign);
+
   return (
     <AppShell activePrimary="Find best setup">
       <div className="campaign-page">
         <PageHeader
-          eyebrow={isTerminal(campaign) ? "Campaign results" : "Evaluation campaign"}
+          eyebrow={terminal ? "Campaign results" : "Evaluation campaign"}
           title={campaign.use_case_id}
-          description="Campaign progress is server-owned and reconnectable. Each completed row remains an immutable Run with its own evidence identity."
+          description={
+            terminal
+              ? "Decision policy, compatibility and retained Run evidence explain the best fit for this completed campaign."
+              : "Campaign progress is server-owned and reconnectable. Each completed row remains an immutable Run with its own evidence identity."
+          }
           actions={
-            isTerminal(campaign) ? (
+            terminal ? (
               <Button variant="quiet" onClick={onNewCampaign}>
                 Find another setup
               </Button>
@@ -183,7 +189,7 @@ export function CampaignPage({
 
         <div className="campaign-status-row">
           <Status tone={stateTone(campaign.status)}>{label(campaign.status)}</Status>
-          {!isTerminal(campaign) ? (
+          {!terminal ? (
             <Status tone={connection === "reconnecting" ? "warning" : "neutral"}>
               {connection === "reconnecting" ? "Reconnecting" : "Live progress connected"}
             </Status>
@@ -191,7 +197,13 @@ export function CampaignPage({
           <span className="campaign-id">{campaign.campaign_id}</span>
         </div>
 
-        <section className="campaign-progress-section">
+        {terminal ? (
+          <CampaignResults campaign={campaign} onOpenRun={onOpenRun} onOpenCase={onOpenCase} />
+        ) : null}
+
+        <section
+          className={`campaign-progress-section${terminal ? " campaign-progress-section--completed" : ""}`}
+        >
           <SectionHeader
             title="Campaign progress"
             description={`${progress.completedRuns} of ${campaign.entries.length} immutable runs completed successfully.`}
@@ -201,7 +213,7 @@ export function CampaignPage({
             completed={progress.completed}
             total={progress.samples || null}
           />
-          {!isTerminal(campaign) ? (
+          {!terminal ? (
             <div className="campaign-actions">
               <Button
                 variant="quiet"
@@ -259,10 +271,6 @@ export function CampaignPage({
             ))}
           </div>
         </section>
-
-        {isTerminal(campaign) ? (
-          <CampaignResults campaign={campaign} onOpenRun={onOpenRun} onOpenCase={onOpenCase} />
-        ) : null}
       </div>
     </AppShell>
   );
@@ -279,7 +287,7 @@ function CampaignResults({
 }) {
   const { results } = campaign;
   return (
-    <section className="campaign-results" aria-labelledby="campaign-results-title">
+    <section className="campaign-results" aria-label="Campaign results">
       <SectionHeader
         title="Results"
         description="Compatibility and the versioned decision policy are shown before any recommendation. Quality, performance and resources stay separate."
