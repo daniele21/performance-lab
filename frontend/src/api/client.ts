@@ -157,7 +157,11 @@ export function listCampaigns(options?: RequestOptions) {
 }
 
 export function launchCampaign(request: CampaignLaunchRequest, options?: RequestOptions) {
-  return postJson<CampaignLaunchRequest, CampaignReadModel>("/api/v1/campaigns", request, options);
+  return postJson<CampaignLaunchRequest, CampaignReadModel>(
+    "/api/v1/campaigns",
+    request,
+    options,
+  );
 }
 
 export function getCampaign(campaignId: string, options?: RequestOptions) {
