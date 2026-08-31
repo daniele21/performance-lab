@@ -100,14 +100,14 @@ jobs:
         run: python scripts/pre_real_e2e.py --output-root build/pre-real-e2e
       - name: Verify pre-real screenshot and video evidence
         run: >-
-          node frontend/scripts/verify-e2e-media.mjs
+          python scripts/verify_e2e_media.py
           build/pre-real-e2e/playwright-report.json
           J0 J1 J2 J3 J4 J5 J6 J7 J8 J9
       - name: Build, smoke, run packaged J0/J1/J8/J9 and atomically publish local artifact
         run: python scripts/package_release.py --validated --require-full-product-e2e
       - name: Verify packaged-product screenshot and video evidence
         run: >-
-          node frontend/scripts/verify-e2e-media.mjs
+          python scripts/verify_e2e_media.py
           frontend/test-results-full-product/report.json
           J0 J1 J8 J9
       - name: Finalize pre-real readiness verdict
