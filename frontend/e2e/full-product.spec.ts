@@ -42,7 +42,9 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
   await expect(page.getByText("fixture-good", { exact: true })).toBeVisible();
   await expect(page.getByText("fixture-bad", { exact: true })).toBeVisible();
   await expect(page.getByText("Content not retained").first()).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open exact sample evidence" }).first()).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Open exact sample evidence" }).first(),
+  ).toBeVisible();
 
   await page.getByRole("link", { name: /Back to campaign results/ }).click();
   await expect(page).toHaveURL(campaignUrl);
