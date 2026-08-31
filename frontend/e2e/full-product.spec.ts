@@ -54,7 +54,12 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
   await expect(page).toHaveURL(/#campaigns\/[^/]+$/, { timeout: 120_000 });
   await expect(page.getByRole("heading", { name: "Results" })).toBeVisible({ timeout: 120_000 });
   await expect(page.getByText("No hidden weights · No universal score")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Inspect recommended Run" })).toBeVisible();
+  await expect(page.getByText("No single recommended winner")).toBeVisible();
+  await expect(
+    page.getByText(
+      "Candidates do not expose the same aggregate quality metrics, so no weighted or partial ranking is inferred.",
+    ),
+  ).toBeVisible();
 
   const campaignUrl = page.url();
   await page.reload();
@@ -75,7 +80,8 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
 
   await page.getByRole("link", { name: /Back to campaign results/ }).click();
   await expect(page).toHaveURL(campaignUrl);
-  const runLink = page.getByRole("button", { name: "Open immutable Run" }).first();
+  const goodRun = page.getByRole("article").filter({ hasText: "fixture-good" });
+  const runLink = goodRun.getByRole("button", { name: "Open immutable Run" });
   await expect(runLink).toBeVisible();
   await runLink.click();
   await expect(page).toHaveURL(/#runs\/[^/]+$/);
