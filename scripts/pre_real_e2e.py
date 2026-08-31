@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run browser pre-real E2E and retain journey evidence for J0-J9."""
+"""Run browser pre-real E2E and retain journey evidence for the declared gate."""
 
 from __future__ import annotations
 
@@ -15,7 +15,8 @@ from typing import Any, Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "build" / "pre-real-e2e"
-REQUIRED_JOURNEYS = tuple(f"J{index}" for index in range(10))
+CONTRACT_PATH = ROOT / ".engineering" / "pre-real-e2e.json"
+E2E_PATH = ROOT / ".engineering" / "e2e.json"
 JOURNEY_PATTERN = re.compile(r"\bJ([0-9])\b")
 PASS_STATUSES = {"expected", "passed"}
 
@@ -24,6 +25,51 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
     return parser.parse_args()
+
+
+def load_json_object(path: Path, label: str) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"invalid {label} {path}: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"{label} must contain an object: {path}")
+    return payload
+
+
+def load_gate_contract() -> dict[str, Any]:
+    contract = load_json_object(CONTRACT_PATH, "pre-real E2E contract")
+    if contract.get("schema_version") != 1 or contract.get("gate_id") != "PRE_REAL_E2E":
+        raise RuntimeError("pre-real E2E contract must declare schema_version=1 and gate_id=PRE_REAL_E2E")
+    if contract.get("source_of_truth") != ".engineering/e2e.json":
+        raise RuntimeError("pre-real E2E contract source_of_truth must be .engineering/e2e.json")
+    if contract.get("blocks_real_environment") is not True:
+        raise RuntimeError("pre-real E2E contract must block real environment until PASS")
+    required = contract.get("required_journeys")
+    if not isinstance(required, list) or not required or not all(isinstance(item, str) for item in required):
+        raise RuntimeError("pre-real E2E contract required_journeys must be a non-empty string list")
+    layers = contract.get("layers")
+    if not isinstance(layers, list) or not layers:
+        raise RuntimeError("pre-real E2E contract layers must be a non-empty list")
+    return contract
+
+
+def contract_layer(contract: dict[str, Any], layer_id: str) -> dict[str, Any]:
+    for layer in contract.get("layers", []):
+        if isinstance(layer, dict) and layer.get("id") == layer_id:
+            return layer
+    raise RuntimeError(f"pre-real E2E contract is missing layer: {layer_id}")
+
+
+def execution_environment(environment_id: str) -> dict[str, Any]:
+    e2e = load_json_object(E2E_PATH, "E2E fidelity contract")
+    environments = e2e.get("execution_environments")
+    if not isinstance(environments, list):
+        raise RuntimeError("E2E fidelity contract execution_environments must be a list")
+    for environment in environments:
+        if isinstance(environment, dict) and environment.get("id") == environment_id:
+            return environment
+    raise RuntimeError(f"unknown execution environment ref: {environment_id}")
 
 
 def _walk_specs(suites: Iterable[dict[str, Any]]) -> Iterable[dict[str, Any]]:
@@ -73,7 +119,8 @@ def _has_trace(attachments: list[dict[str, Any]]) -> bool:
 
 
 def collect_journey_evidence(report: dict[str, Any], required: Iterable[str]) -> dict[str, Any]:
-    journey_specs: dict[str, list[dict[str, Any]]] = {journey: [] for journey in required}
+    required_tuple = tuple(required)
+    journey_specs: dict[str, list[dict[str, Any]]] = {journey: [] for journey in required_tuple}
     suites = report.get("suites")
     if not isinstance(suites, list):
         suites = []
@@ -105,7 +152,7 @@ def collect_journey_evidence(report: dict[str, Any], required: Iterable[str]) ->
                 journey_specs[journey].append(evidence)
 
     result: dict[str, Any] = {}
-    for journey in required:
+    for journey in required_tuple:
         specs = journey_specs[journey]
         passed = bool(specs) and all(spec["passed"] for spec in specs)
         screenshot = bool(specs) and all(spec["screenshot"] for spec in specs)
@@ -123,13 +170,7 @@ def collect_journey_evidence(report: dict[str, Any], required: Iterable[str]) ->
 
 
 def load_report(path: Path) -> dict[str, Any]:
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise RuntimeError(f"invalid Playwright JSON report {path}: {exc}") from exc
-    if not isinstance(payload, dict):
-        raise RuntimeError(f"Playwright JSON report must be an object: {path}")
-    return payload
+    return load_json_object(path, "Playwright JSON report")
 
 
 def git_revision() -> str | None:
@@ -153,6 +194,7 @@ def write_summary(path: Path, manifest: dict[str, Any]) -> None:
         "",
         f"Status: **{manifest['status']}**",
         f"Environment: `{manifest['execution_environment_ref']}`",
+        f"Fidelity: `{manifest['fidelity_class']}`",
         f"Browser context: `{manifest['browser_context']}`",
         "",
         "| Journey | Status | Screenshot | Trace |",
@@ -168,8 +210,7 @@ def write_summary(path: Path, manifest: dict[str, Any]) -> None:
     lines.extend(
         [
             "",
-            "This layer proves the complete browser journeys in an emulated desktop Chromium context. ",
-            "The Performance Lab Python API/persistence are still mocked here; packaged-product evidence is a separate required layer before RUNTIME-1.",
+            "This layer runs every declared browser journey in an emulated desktop Chromium context. The Python API/persistence remain mocked, so the overall environment keeps its canonical host_or_fake fidelity. Packaged-product evidence is a separate required layer before RUNTIME-1.",
             "",
         ]
     )
@@ -178,6 +219,19 @@ def write_summary(path: Path, manifest: dict[str, Any]) -> None:
 
 def main() -> int:
     args = parse_args()
+    try:
+        contract = load_gate_contract()
+        layer = contract_layer(contract, "browser-emulated-journeys")
+        environment_ref = str(layer["execution_environment_ref"])
+        environment_contract = execution_environment(environment_ref)
+        required = tuple(str(item) for item in layer["required_journeys"])
+        viewport = layer.get("viewport")
+        if not isinstance(viewport, dict):
+            raise RuntimeError("browser-emulated-journeys viewport is required")
+    except (KeyError, RuntimeError) as exc:
+        print(f"pre-real E2E contract failed: {exc}", file=sys.stderr)
+        return 1
+
     output_root = args.output_root.resolve()
     if output_root.exists():
         shutil.rmtree(output_root)
@@ -199,7 +253,7 @@ def main() -> int:
 
     try:
         report = load_report(report_path)
-        journeys = collect_journey_evidence(report, REQUIRED_JOURNEYS)
+        journeys = collect_journey_evidence(report, required)
     except RuntimeError as exc:
         print(f"pre-real E2E failed: {exc}", file=sys.stderr)
         return 1
@@ -208,14 +262,14 @@ def main() -> int:
     status = "PASS" if completed.returncode == 0 and journey_pass else "FAIL"
     manifest = {
         "schema_version": 1,
-        "gate_id": "PRE_REAL_E2E",
-        "layer": "browser-emulated-journeys",
+        "gate_id": contract["gate_id"],
+        "layer": layer["id"],
         "status": status,
         "source_revision": git_revision(),
-        "execution_environment_ref": "browser-built-mocked-api",
-        "fidelity_class": "host_or_fake",
-        "browser_context": "desktop-standard-emulated",
-        "viewport": {"width": 1280, "height": 900},
+        "execution_environment_ref": environment_ref,
+        "fidelity_class": environment_contract["fidelity_class"],
+        "browser_context": layer["browser_context"],
+        "viewport": viewport,
         "playwright_exit_code": completed.returncode,
         "journeys": journeys,
         "ready_for_real_environment": False,
@@ -225,7 +279,7 @@ def main() -> int:
     write_summary(output_root / "browser-summary.md", manifest)
 
     print("Pre-real browser E2E")
-    for journey in REQUIRED_JOURNEYS:
+    for journey in required:
         evidence = journeys[journey]
         print(
             f"{journey}: {evidence['status']} "
@@ -233,9 +287,7 @@ def main() -> int:
             f"trace={evidence['required_evidence']['trace']}"
         )
     print(f"RESULT: {status}")
-    if status != "PASS":
-        return 1
-    return 0
+    return 0 if status == "PASS" else 1
 
 
 if __name__ == "__main__":
