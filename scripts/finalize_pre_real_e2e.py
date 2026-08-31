@@ -9,9 +9,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from pre_real_e2e import collect_journey_evidence, load_report, write_json
-
-PACKAGED_REQUIRED = ("J0", "J1", "J8", "J9")
+from pre_real_e2e import (
+    collect_journey_evidence,
+    contract_layer,
+    execution_environment,
+    load_gate_contract,
+    load_report,
+    write_json,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -39,7 +44,7 @@ def write_summary(path: Path, manifest: dict[str, Any]) -> None:
         f"Overall: **{manifest['status']}**",
         f"Ready for REAL_ENVIRONMENT: **{'YES' if manifest['ready_for_real_environment'] else 'NO'}**",
         "",
-        "## Browser-emulated J0-J9",
+        "## Browser-emulated journeys",
         "",
         "| Journey | Status | Screenshot | Trace |",
         "| --- | --- | --- | --- |",
@@ -51,15 +56,7 @@ def write_summary(path: Path, manifest: dict[str, Any]) -> None:
             f"{'PASS' if required['final_screenshot'] else 'FAIL'} | "
             f"{'PASS' if required['trace'] else 'FAIL'} |"
         )
-    lines.extend(
-        [
-            "",
-            "## Packaged-product journeys",
-            "",
-            "| Journey | Status | Screenshot | Trace |",
-            "| --- | --- | --- | --- |",
-        ]
-    )
+    lines.extend(["", "## Packaged-product journeys", "", "| Journey | Status | Screenshot | Trace |", "| --- | --- | --- | --- |"])
     for journey, evidence in manifest["packaged_layer"]["journeys"].items():
         required = evidence["required_evidence"]
         lines.append(
@@ -67,13 +64,11 @@ def write_summary(path: Path, manifest: dict[str, Any]) -> None:
             f"{'PASS' if required['final_screenshot'] else 'FAIL'} | "
             f"{'PASS' if required['trace'] else 'FAIL'} |"
         )
-    lines.extend(
-        [
-            "",
-            "The browser-emulated layer covers every declared product journey J0-J9. The packaged layer proves the journeys whose current E2E contract requires representative-virtual assembled-product fidelity. Physical runtime/model/device evidence is still RUNTIME-1 and is not claimed here.",
-            "",
-        ]
-    )
+    lines.extend([
+        "",
+        "This gate proves the declared automated pre-real layers only. Physical runtime/model/device evidence remains RUNTIME-1 and is never inferred from browser or packaged fixtures.",
+        "",
+    ])
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -83,37 +78,37 @@ def main() -> int:
     output_root.mkdir(parents=True, exist_ok=True)
 
     try:
+        contract = load_gate_contract()
+        packaged_layer = contract_layer(contract, "packaged-product-journeys")
+        environment_ref = str(packaged_layer["execution_environment_ref"])
+        environment_contract = execution_environment(environment_ref)
+        packaged_required = tuple(str(item) for item in packaged_layer["required_journeys"])
         browser = load_json(args.browser_manifest.resolve())
         packaged_report = load_report(args.packaged_report.resolve())
-    except RuntimeError as exc:
+    except (KeyError, RuntimeError) as exc:
         print(f"pre-real readiness failed: {exc}", file=sys.stderr)
         return 1
 
-    packaged_journeys = collect_journey_evidence(packaged_report, PACKAGED_REQUIRED)
+    packaged_journeys = collect_journey_evidence(packaged_report, packaged_required)
     browser_pass = browser.get("status") == "PASS"
     packaged_pass = all(item["status"] == "PASS" for item in packaged_journeys.values())
     status = "PASS" if browser_pass and packaged_pass else "FAIL"
 
     manifest = {
         "schema_version": 1,
-        "gate_id": "PRE_REAL_E2E",
+        "gate_id": contract["gate_id"],
         "status": status,
         "ready_for_real_environment": status == "PASS",
-        "real_environment_gate": "RUNTIME-1",
+        "real_environment_gate": contract["real_environment_gate"],
         "browser_layer": browser,
         "packaged_layer": {
-            "layer": "packaged-product-journeys",
+            "layer": packaged_layer["id"],
             "status": "PASS" if packaged_pass else "FAIL",
-            "execution_environment_ref": "packaged-product-fixture",
-            "fidelity_class": "representative_virtual",
+            "execution_environment_ref": environment_ref,
+            "fidelity_class": environment_contract["fidelity_class"],
             "journeys": packaged_journeys,
         },
-        "residual_real_environment_gaps": [
-            "real external runtime/model identity and effective backend behavior",
-            "physical-device memory/resource behavior",
-            "telemetry sensor availability and provenance",
-            "thermal and repeated-load characteristics",
-        ],
+        "residual_real_environment_gaps": environment_contract.get("known_gaps", []),
     }
     write_json(output_root / "manifest.json", manifest)
     write_summary(output_root / "summary.md", manifest)
