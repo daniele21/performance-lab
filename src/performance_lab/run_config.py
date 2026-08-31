@@ -49,7 +49,8 @@ class StarterRunConfig(BaseModel):
     local_llm_server_telemetry: LocalLLMServerTelemetryConfig | None = None
     local_llm_server_identity: LocalLLMServerIdentityConfig | None = None
     hardware: HardwareIdentity = Field(default_factory=HardwareIdentity)
-    suite_id: Literal["general-diagnostic-starter"] = "general-diagnostic-starter"
+    suite_id: str = Field(default="general-diagnostic-starter", min_length=1)
+    suite_version: str | None = Field(default=None, min_length=1)
 
 
 def load_starter_run_config(path: Path) -> StarterRunConfig:
