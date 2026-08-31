@@ -42,29 +42,30 @@ Canonical experience truth lives in `design/ux-contract.json`, `design/brand-kit
 | UXUI-06 | Find best setup planning | UXUI-04A/05 | DONE |
 | UXUI-07 | Campaign lifecycle + results/recommendation | UXUI-06 | DONE |
 | UXUI-08 | Same-case cross-candidate comparison | UXUI-05/07 | DONE |
-| UXUI-09 | Product hardening | UXUI-03..08 | READY |
-| UXUI-10 | Built-product acceptance and browser goldens | UXUI-09 | BLOCKED |
+| UXUI-09 | Product hardening | UXUI-03..08 | DONE |
+| UXUI-10 | Built-product acceptance and browser goldens | UXUI-09 | READY |
 
 Allowed states: `READY`, `ACTIVE`, `BLOCKED`, `DONE`. Shared API/read-model changes integrate before dependent frontend slices; shared design primitives have one owner at a time.
 
 ## Current executable slice
 
-### UXUI-09 — Product hardening
+### UXUI-10 — Built-product acceptance and browser goldens
 
 Owning boundary:
 
-- harden the complete use-case-first, manual-run, campaign, same-case evidence and Compare journeys without changing their domain owners;
-- cover loading/empty/error/reconnect/cancel/partial/not-comparable states consistently;
-- verify keyboard/focus, WCAG 2.2 AA semantics, reduced motion and compact/standard/wide desktop behavior;
-- verify long model ids, config digests, case content and evidence lists do not break hierarchy or navigation;
-- preserve explicit unavailable/not-retained/not-comparable states instead of smoothing them into generic errors.
+- validate the complete J0-J9 product through the assembled built artifact without changing settled domain or UI ownership;
+- close remaining approved visual-target gaps on the real implementation rather than generated mockups;
+- perform the manual keyboard/focus/contrast and representative-user checks required for reference-grade UX claims;
+- capture implementation screenshots only from an approved exact build/source identity and use only stable high-value surfaces as future visual-regression goldens;
+- keep real-device/runtime performance evidence separate from browser/product acceptance.
 
 Acceptance direction:
 
-- J0-J9 remain green while failure/recovery and accessibility coverage expands;
-- no frontend fallback recreates Python comparison, campaign or evidence semantics;
-- responsive and long-data behavior remains usable at the approved desktop breakpoints;
-- remaining visual-target gaps are implementation-ready for UXUI-10 acceptance.
+- required exact-head repository, browser and built-product gates are green with no unresolved UXUI-09 regressions;
+- compact/standard/wide desktop behavior and critical failure/recovery paths remain usable under final review;
+- approved implementation screenshots reflect semantic product truth and are not substituted by generated design targets;
+- remaining manual accessibility/usability evidence is explicit, and no stronger claim is made than the evidence supports;
+- after acceptance, durable docs/current state are reconciled and this active convergence workstream can close.
 
 ## Integrated foundation
 
@@ -72,10 +73,12 @@ UXUI-01 through UXUI-07 are integrated through the established convergence PR se
 
 UXUI-08 adds a Python-owned same-case projection over existing Campaign/Run/sample owners. Campaign Results enumerates retained task/sample identities; opening one exact case shows model + quantization + frozen config + immutable Run/sample attempt for every candidate. Capability compatibility reuses the canonical fingerprint rules, incompatible candidates remain explicit, response retention state is never reconstructed and the case surface does not invent a winner or delta. J9 is exercised in both mocked-browser and packaged-product environments.
 
+UXUI-09 hardens shared product owners rather than individual pages: AppShell adds keyboard skip navigation, SPA routing restores focus to the main landmark, shared loading/error states use assistive status/alert semantics, reduced-motion behavior remains centralized and technical content inherits bounded long-word wrapping. Browser evidence verifies recoverable errors, supported 1024/1280/1600 desktop widths, extreme model/run/case identities, long case content and dense evaluator evidence while J0-J9 remain unchanged.
+
 ## Integration strategy
 
-1. UXUI-09 hardens failure, accessibility, responsive and long-data behavior across the complete journey.
-2. UXUI-10 captures built-product acceptance and accepted implementation goldens.
+1. UXUI-10 runs final assembled-product acceptance, closes visual-target gaps and captures approved implementation goldens.
+2. When acceptance evidence agrees with the UX contract, reconcile `docs/current-state.md` and close/delete this active workstream by default.
 
 Ordinary UX/UI branches start from current green `dev` and target `dev`; if `dev` moves, readiness is re-established on the regenerated merge-ref.
 

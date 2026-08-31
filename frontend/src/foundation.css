@@ -40,6 +40,42 @@ a {
   outline-offset: 3px;
 }
 
+.skip-link {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 1000;
+  transform: translateY(calc(-100% - var(--space-6)));
+  border: 1px solid var(--color-focus);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-overlay);
+  transition: transform var(--transition-functional);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.app-shell__main,
+code,
+pre,
+dd,
+.data-table th,
+.data-table td,
+.state-surface {
+  overflow-wrap: anywhere;
+}
+
+code,
+.data-table code {
+  word-break: break-word;
+}
+
 .product-intro {
   display: grid;
   gap: var(--space-8);

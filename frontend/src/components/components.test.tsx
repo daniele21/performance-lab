@@ -10,6 +10,7 @@ import {
   Field,
   Metric,
   Progress,
+  StateSurface,
   Toggle,
 } from ".";
 
@@ -84,5 +85,23 @@ describe("design system primitives", () => {
       />,
     );
     expect(markup).toContain("No evidence available.");
+  });
+
+  it("announces loading state politely", () => {
+    const markup = renderToStaticMarkup(
+      <StateSurface kind="loading" title="Loading runs" description="Reading evidence." />,
+    );
+    expect(markup).toContain('role="status"');
+    expect(markup).toContain('aria-live="polite"');
+    expect(markup).toContain('aria-atomic="true"');
+  });
+
+  it("announces recoverable errors assertively", () => {
+    const markup = renderToStaticMarkup(
+      <StateSurface kind="error" title="Could not load runs" description="Try again." />,
+    );
+    expect(markup).toContain('role="alert"');
+    expect(markup).toContain('aria-live="assertive"');
+    expect(markup).toContain('aria-atomic="true"');
   });
 });

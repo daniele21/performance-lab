@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { AppShell, Button, StateSurface } from "./components";
 import "./foundation.css";
@@ -23,12 +23,25 @@ function currentRoute(): AppRoute {
 
 export function App() {
   const [route, setRoute] = useState<AppRoute>(currentRoute);
+  const hasRenderedInitialRoute = useRef(false);
 
   useEffect(() => {
     const handleHashChange = () => setRoute(currentRoute());
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
+
+  useEffect(() => {
+    if (!hasRenderedInitialRoute.current) {
+      hasRenderedInitialRoute.current = true;
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById("main-content")?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [route]);
 
   if (route.kind === "overview") {
     return (
