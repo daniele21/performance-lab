@@ -1,7 +1,4 @@
-import type {
-  CampaignPlanPreviewRequest,
-  DecisionPolicyReadModel,
-} from "./planning-types";
+import type { CampaignPlanPreviewRequest, DecisionPolicyReadModel } from "./planning-types";
 import type { IdentitySummary, MetricReadModel, UIModelIdentity } from "./types";
 
 export type CampaignStatus =
