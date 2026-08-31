@@ -39,7 +39,7 @@ jobs:
               raise SystemExit(f'expected exactly one {old}')
           path.write_text(text.replace(old, new, 1))
           PY
-          npm --prefix frontend exec -- prettier --write e2e/visual-acceptance.spec.ts
+          npm --prefix frontend exec -- prettier --write frontend/e2e/visual-acceptance.spec.ts
           rm .github/workflows/uxui10-fix-gates.yml
           git diff --check
       - name: Commit owner-level fixes
