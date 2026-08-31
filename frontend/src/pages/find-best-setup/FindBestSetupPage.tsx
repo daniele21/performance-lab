@@ -258,8 +258,7 @@ export function FindBestSetupView({
               {target ? (
                 <div className="best-setup-target-context">
                   <span>
-                    Device:{" "}
-                    {target.hardware_device_id ?? target.hardware_device_class ?? "Unknown"}
+                    Device: {target.hardware_device_id ?? target.hardware_device_class ?? "Unknown"}
                   </span>
                   <span>Endpoint: {target.target.endpoint_identity}</span>
                 </div>
@@ -500,10 +499,7 @@ type LoadState =
   | { status: "ready"; context: CampaignPlanningContextReadModel }
   | { status: "error"; message: string };
 
-export function FindBestSetupPage({
-  onManualTest,
-  onCampaignStarted,
-}: FindBestSetupPageProps) {
+export function FindBestSetupPage({ onManualTest, onCampaignStarted }: FindBestSetupPageProps) {
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
 
