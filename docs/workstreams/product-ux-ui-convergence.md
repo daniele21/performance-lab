@@ -39,7 +39,7 @@ Desired outcome: neutral graphite canvas, low decorative chroma, stronger inform
 | --- | --- | --- | --- |
 | UXUI-00..09 | Existing product UX/UI + hardening | — | DONE |
 | UXUI-10 | Existing automated built-product/golden baseline | UXUI-09 | DONE |
-| PVR-00 | Visual/component baseline audit | UXUI-10 | ACTIVE |
+| PVR-00 | Visual/component baseline audit | UXUI-10 | DONE |
 | PVR-01 | Visual direction + `brand-kit` v0.6 contract | UXUI-10 | ACTIVE |
 | PVR-02 | Tokens/primitives/foundation refactor | PVR-00/01 | BLOCKED |
 | PVR-03 | App shell + navigation visual refactor | PVR-02 | BLOCKED |
@@ -55,23 +55,32 @@ Allowed states: `READY`, `ACTIVE`, `BLOCKED`, `DONE`.
 
 ## PVR-00 — Baseline audit
 
-Audit the current real implementation and PRE_REAL screenshots, not mockups. Produce implementation ownership and concrete refactor findings inside this workstream rather than a parallel permanent audit document.
+Audit basis: current PRE_REAL screenshots plus canonical shared styles/components and representative primary/secondary page styles (`AppShell`, `Metric`, `tokens`, `design-system`, `primitives`, Overview, Find best setup, Campaign, Run Detail and secondary/library surfaces).
 
-Required checks:
+### Findings
 
-- shell/navigation prominence and workspace focus;
-- typography scale/weights and excessive bold usage;
-- surface nesting, borders, elevation and visual depth;
-- color/chroma usage and whether accent is semantic or decorative;
-- CTA hierarchy and control sizing;
-- metric composition and Quality/Performance/Resources density;
-- copy visible by default versus contextual/advanced disclosure;
-- table/data-row rhythm, long identifiers and status wrapping;
-- loading/empty/error/partial/incompatible/disabled states;
-- 1024/1280/1600 layout behavior;
-- shared owners versus page-specific CSS duplication.
+| Area | Finding | Owner / action |
+| --- | --- | --- |
+| Color | saturated cyan is navigation, selection, progress, links and CTA at once; semantic meaning is diluted | `brand-kit.json` -> PVR-01, executable tokens -> PVR-02 |
+| Surfaces | most hierarchy is `1px border + elevated background`; canvas/cards/actions/tables feel equally weighted | shared tokens/primitives -> PVR-02 |
+| Navigation | 15rem admin-like sidebar, repeated secondary groups and `Pending` badges compete with workspace | `AppShell` + shared shell CSS -> PVR-03 |
+| Typography | system is readable but relies heavily on 700/750 weights, uppercase eyebrows and similarly sized support copy | brand typography roles -> PVR-01/02 |
+| Controls | 2.5–2.65rem controls plus bright primary treatment make actions visually louder than needed | Button/Field/IconButton primitives -> PVR-02 |
+| Metrics | Q/P/R semantics are correct but large card/grid treatment uses vertical space without increasing evidence clarity | `Metric`/`MetricGroup` -> PVR-02, page composition -> PVR-04/05 |
+| Wizard | Find best setup repeats the same bordered-card grammar across steps, choices, status, actions and summaries | shared foundation first, then PVR-04A |
+| Campaign | progress/actions/cards/policy/recommendation share near-equal visual weight; completed state does not foreground the decision enough | PVR-04A |
+| Run detail | identity/status/metrics/evidence are correct but separated into many equally weighted bordered blocks | PVR-04B |
+| Secondary UI | Library/Settings use the same large card treatment as primary decision surfaces, weakening task hierarchy | PVR-06 |
+| Copy | contextual/technical explanation frequently remains visible instead of using existing disclosure hierarchy | page composition PVR-04..06, reconciled in PVR-07 |
+| Polish | wrapping/status alignment, disabled opacity, dividers and long technical identities need explicit regression treatment | PVR-07 |
 
-Current known issues to confirm systematically: cyan is over-prominent; surfaces have nearly equal visual weight; sidebar behaves like an admin dashboard; explanatory copy competes with decisions; completed progress remains too prominent; large vertical metric cards dilute evidence density; status/labels can wrap awkwardly; borders do too much of the hierarchy work.
+### Ownership conclusion
+
+The visual debt is primarily shared-system debt, not independent page debt. PVR-02 must first replace the universal `surface_elevated + border + cyan` grammar with explicit surface depth, border strength, interaction and metric roles. Page slices must reuse that system rather than create local premium-looking cards. No new architecture or backend/read-model change is required by the audit.
+
+Responsive behavior is structurally sound: compact breakpoints already collapse grids/navigation and long-content hardening exists. The refactor should preserve those behaviors and change content priority/composition rather than introduce a new mobile model.
+
+PVR-00 is complete. Current screenshots/goldens remain the intentional `before` reference and PRE_REAL remains the behavioral screenshot/trace owner during implementation.
 
 ## PVR-01 — Design contract v0.6
 
@@ -90,7 +99,7 @@ Contract must define:
 - motion remains functional and reduced-motion safe;
 - no decorative gradients/glass/stock imagery in core workflows.
 
-PVR-01 may proceed in parallel with PVR-00 because it changes the durable visual contract while PVR-00 inventories implementation ownership. PVR-02 does not start until both agree.
+PVR-01 may proceed independently from the completed audit. PVR-02 does not start until the v0.6 contract is integrated.
 
 ## PVR-02/03 — Shared foundation and shell
 
@@ -125,8 +134,8 @@ Keep the golden set bounded to high-value stable surfaces; J0-J9 PRE_REAL retain
 
 ## Integration strategy
 
-1. PVR-00 and PVR-01 start from current green `dev` and may run in parallel because they own different artifacts.
-2. Merge the agreed v0.6 contract/audit before PVR-02 changes shared design primitives.
+1. Merge PVR-00 audit and PVR-01 visual contract; they own different artifacts and were developed in parallel.
+2. PVR-02 changes shared design primitives only after the v0.6 contract is current on `dev`.
 3. Merge PVR-02 then PVR-03 before page slices.
 4. Run PVR-04A, PVR-04B, PVR-05 and PVR-06 in parallel with disjoint page ownership and shared primitives frozen unless a coordinated follow-up is required.
 5. PVR-07 reconciles cross-surface polish and accessibility.
