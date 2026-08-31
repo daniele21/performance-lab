@@ -7,11 +7,20 @@ from hashlib import sha256
 from typing import Literal
 
 from performance_lab.datasets import MaterializedDataset, WorkloadPackBundle
-from performance_lab.domain import DatasetSnapshot, EndpointProfile, EvaluationSuite, Target
+from performance_lab.domain import (
+    DatasetSnapshot,
+    DecisionPolicyRef,
+    EndpointProfile,
+    EvaluationSuite,
+    HardwareIdentity,
+    Target,
+)
 from performance_lab.plugins import Evaluator
 from performance_lab.regression import BaselineBinding, RegressionPolicy
-from performance_lab.run_config import StarterRunConfig
+from performance_lab.run_config import LocalLLMServerIdentityConfig, StarterRunConfig
 
+from .campaign_jobs import CampaignLaunchPlan, CampaignRunSpec
+from .endpoint_discovery import local_server_root
 from .evidence_queries import UIQueryService as EvidenceUIQueryService
 from .planning_models import (
     BenchmarkPlanReadModel,
@@ -25,6 +34,7 @@ from .planning_models import (
     CandidateModelReadModel,
     ConfigurationSearchOptionReadModel,
     ConfigurationSearchPlanReadModel,
+    DecisionPolicyReadModel,
     UseCaseReadModel,
 )
 from .ui_models import (
@@ -38,10 +48,20 @@ from .ui_queries import STARTER_SUITE_ID, CompletedRunReader
 
 GENERAL_USE_CASE_ID = "general-capability"
 GENERAL_USE_CASE_VERSION = "1"
+STRICT_QUALITY_DOMINANCE_POLICY_ID = "strict-quality-dominance"
+STRICT_QUALITY_DOMINANCE_POLICY_VERSION = "1.0.0"
 _NO_BOUNDED_RANGE_REASON = (
     "The runtime reports parameter support but no bounded search ranges. "
     "Performance Lab will not invent sweep domains."
 )
+
+
+class CampaignPlanLaunchError(ValueError):
+    """Raised when a reviewed campaign plan is no longer executable."""
+
+
+class CampaignPlanDigestMismatchError(CampaignPlanLaunchError):
+    """Raised when launch no longer matches the exact reviewed plan digest."""
 
 
 class UIQueryService(EvidenceUIQueryService):
@@ -266,6 +286,7 @@ class UIQueryService(EvidenceUIQueryService):
                 "for this target and plan."
             ),
         )
+        decision_policy = _decision_policy()
         digest = _plan_digest(
             use_case=use_case,
             target=target_context.target,
@@ -273,6 +294,7 @@ class UIQueryService(EvidenceUIQueryService):
             configuration=configuration,
             benchmark=benchmark_plan,
             estimate=estimate,
+            decision_policy=decision_policy,
         )
         return CampaignPlanPreviewReadModel(
             can_plan=True,
@@ -283,7 +305,128 @@ class UIQueryService(EvidenceUIQueryService):
             configuration_search=configuration,
             benchmark_plan=benchmark_plan,
             estimate=estimate,
+            decision_policy=decision_policy,
+            execution_available=True,
+            execution_blocked_reason=None,
         )
+
+    def prepare_campaign_launch(
+        self,
+        request: CampaignPlanPreviewRequest,
+        *,
+        expected_plan_digest: str,
+    ) -> CampaignLaunchPlan:
+        """Revalidate a reviewed plan and derive exact run configs only at launch time."""
+
+        preview = self.preview_campaign_plan(request)
+        if not preview.can_plan:
+            messages = "; ".join(issue.message for issue in preview.issues)
+            raise CampaignPlanLaunchError(messages or "campaign plan is no longer executable")
+        if preview.plan_digest != expected_plan_digest:
+            raise CampaignPlanDigestMismatchError(
+                "campaign plan changed since review; rebuild and review the campaign again"
+            )
+        if not preview.execution_available:
+            raise CampaignPlanLaunchError(
+                preview.execution_blocked_reason or "campaign execution is unavailable"
+            )
+        if (
+            preview.use_case is None
+            or preview.target is None
+            or preview.benchmark_plan is None
+            or preview.decision_policy is None
+        ):
+            raise CampaignPlanLaunchError("campaign plan is incomplete")
+
+        endpoint = self._endpoint_for_target(preview.target)
+        runs = tuple(
+            CampaignRunSpec(
+                candidate_id=candidate.candidate_id,
+                model_id=candidate.model_id,
+                config=self._campaign_run_config(
+                    target=preview.target,
+                    endpoint=endpoint,
+                    model_id=candidate.model_id,
+                    suite_id=preview.benchmark_plan.suite.suite_id,
+                    suite_version=preview.benchmark_plan.suite.suite_version,
+                ),
+            )
+            for candidate in preview.candidates
+        )
+        return CampaignLaunchPlan(
+            plan_digest=expected_plan_digest,
+            use_case_id=preview.use_case.use_case_id,
+            use_case_version=preview.use_case.version,
+            target_id=preview.target.target_id,
+            suite_id=preview.benchmark_plan.suite.suite_id,
+            suite_version=preview.benchmark_plan.suite.suite_version,
+            decision_policy=DecisionPolicyRef(
+                policy_id=preview.decision_policy.policy_id,
+                policy_version=preview.decision_policy.policy_version,
+            ),
+            runs=runs,
+        )
+
+    def _endpoint_for_target(self, target: TargetSummaryReadModel) -> EndpointProfile:
+        profiles = (*self.endpoint_profiles, *self._session_endpoint_profiles.values())
+        endpoint = next(
+            (item for item in profiles if item.profile_id == target.endpoint_profile_id),
+            None,
+        )
+        if endpoint is None:
+            raise CampaignPlanLaunchError(
+                f"endpoint profile is no longer available: {target.endpoint_profile_id}"
+            )
+        return endpoint
+
+    def _campaign_run_config(
+        self,
+        *,
+        target: TargetSummaryReadModel,
+        endpoint: EndpointProfile,
+        model_id: str,
+        suite_id: str,
+        suite_version: str,
+    ) -> StarterRunConfig:
+        template = (
+            self.starter_run_template.model_dump(mode="python")
+            if self.starter_run_template is not None
+            else {}
+        )
+        configured_target_id = (
+            self.starter_run_template.target_id if self.starter_run_template is not None else None
+        )
+        session_connection = self._session_connections.get(target.target_id)
+        overrides: dict[str, object] = {
+            "target_id": target.target_id,
+            "endpoint_identity": target.endpoint_identity,
+            "endpoint": endpoint,
+            "model_id": model_id,
+            "run_id": None,
+            "suite_id": suite_id,
+            "suite_version": suite_version,
+        }
+        if target.target_id != configured_target_id:
+            overrides.update(
+                {
+                    "hardware": HardwareIdentity(),
+                    "use_host_telemetry": False,
+                    "local_llm_server_telemetry": None,
+                    "local_llm_server_identity": None,
+                }
+            )
+        if session_connection is not None:
+            overrides["local_llm_server_telemetry"] = None
+            overrides["local_llm_server_identity"] = (
+                LocalLLMServerIdentityConfig(
+                    base_url=local_server_root(session_connection),
+                    model_id=model_id,
+                    required=False,
+                )
+                if session_connection.server_type == "local_llm_server"
+                else None
+            )
+        return StarterRunConfig.model_validate({**template, **overrides})
 
     def _use_cases(self) -> tuple[UseCaseReadModel, ...]:
         use_cases: list[UseCaseReadModel] = []
@@ -402,10 +545,25 @@ def _suite_summary(suite: EvaluationSuite) -> SuiteSummaryReadModel:
     )
 
 
+def _decision_policy() -> DecisionPolicyReadModel:
+    return DecisionPolicyReadModel(
+        policy_id=STRICT_QUALITY_DOMINANCE_POLICY_ID,
+        policy_version=STRICT_QUALITY_DOMINANCE_POLICY_VERSION,
+        title="Strict quality dominance",
+        description=(
+            "Recommend a candidate only when comparable quality evidence shows it is no worse "
+            "on every reported quality metric and strictly better on at least one metric against "
+            "every alternative. Otherwise report the trade-off without inventing a weighted score."
+        ),
+    )
+
+
 def _blocked(code: str, field: str, message: str) -> CampaignPlanPreviewReadModel:
     return CampaignPlanPreviewReadModel(
         can_plan=False,
         issues=(CampaignPlanIssueReadModel(code=code, field=field, message=message),),
+        execution_available=False,
+        execution_blocked_reason="Resolve the planning issue before starting a campaign.",
     )
 
 
@@ -417,15 +575,17 @@ def _plan_digest(
     configuration: ConfigurationSearchPlanReadModel,
     benchmark: BenchmarkPlanReadModel,
     estimate: CampaignEstimateReadModel,
+    decision_policy: DecisionPolicyReadModel,
 ) -> str:
     payload = {
-        "contract": "campaign-plan-v1",
+        "contract": "campaign-plan-v2",
         "use_case": use_case.model_dump(mode="json"),
         "target": target.model_dump(mode="json"),
         "candidates": [item.model_dump(mode="json") for item in candidates],
         "configuration": configuration.model_dump(mode="json"),
         "benchmark": benchmark.model_dump(mode="json"),
         "estimate": estimate.model_dump(mode="json"),
+        "decision_policy": decision_policy.model_dump(mode="json"),
     }
     canonical = json.dumps(
         payload,
