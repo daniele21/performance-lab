@@ -19,6 +19,15 @@ describe("hash routing", () => {
     });
   });
 
+  it("routes one exact campaign benchmark case without changing evidence identity", () => {
+    expect(parseHash("#campaigns/campaign%2Fone/cases/task%2Fone/sample%2Fone")).toEqual({
+      kind: "campaign-case-comparison",
+      campaignId: "campaign/one",
+      taskId: "task/one",
+      sampleId: "sample/one",
+    });
+  });
+
   it("decodes immutable run identities from the Runs route", () => {
     expect(parseHash("#runs/run%2Fone")).toEqual({ kind: "run-detail", runId: "run/one" });
   });
@@ -92,6 +101,10 @@ describe("hash routing", () => {
     expect(parseHash("#campaigns/%E0%A4%A")).toEqual({
       kind: "not-found",
       path: "campaigns/%E0%A4%A",
+    });
+    expect(parseHash("#campaigns/campaign/cases/%E0%A4%A/sample")).toEqual({
+      kind: "not-found",
+      path: "campaigns/campaign/cases/%E0%A4%A/sample",
     });
     expect(parseHash("#live-run/%E0%A4%A")).toEqual({
       kind: "not-found",
