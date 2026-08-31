@@ -258,13 +258,20 @@ class CampaignJobManager:
                     self._finish_entry_from_run(campaign_id, index, result)
                 except asyncio.CancelledError:
                     if self._stop_requested(campaign_id):
+                        interrupted = campaign_id in self._shutdown_requested
                         self._replace_entry(
                             campaign_id,
                             index,
                             status=(
                                 CampaignEntryStatus.INTERRUPTED
-                                if campaign_id in self._shutdown_requested
+                                if interrupted
                                 else CampaignEntryStatus.CANCELLED
+                            ),
+                            error_code="process_shutdown" if interrupted else None,
+                            error_message=(
+                                "campaign execution was interrupted by local process shutdown"
+                                if interrupted
+                                else None
                             ),
                         )
                         break
@@ -303,16 +310,11 @@ class CampaignJobManager:
             error_code = None
             error_message = None
         elif result.run.status == RunStatus.CANCELLED:
-            status = (
-                CampaignEntryStatus.INTERRUPTED
-                if campaign_id in self._shutdown_requested
-                else CampaignEntryStatus.CANCELLED
-            )
-            error_code = "process_shutdown" if status == CampaignEntryStatus.INTERRUPTED else None
+            interrupted = campaign_id in self._shutdown_requested
+            status = CampaignEntryStatus.INTERRUPTED if interrupted else CampaignEntryStatus.CANCELLED
+            error_code = "process_shutdown" if interrupted else None
             error_message = (
-                "campaign execution was interrupted by local process shutdown"
-                if status == CampaignEntryStatus.INTERRUPTED
-                else None
+                "campaign execution was interrupted by local process shutdown" if interrupted else None
             )
         else:
             status = CampaignEntryStatus.FAILED
@@ -361,10 +363,7 @@ class CampaignJobManager:
             error_message = None
         else:
             entry_status = CampaignEntryStatus.CANCELLED
-            failed = any(
-                entry.status in {CampaignEntryStatus.FAILED, CampaignEntryStatus.INTERRUPTED}
-                for entry in campaign.entries
-            )
+            failed = any(entry.status != CampaignEntryStatus.SUCCEEDED for entry in campaign.entries)
             campaign_status = CampaignStatus.FAILED if failed else CampaignStatus.SUCCEEDED
             error_code = "one_or_more_runs_failed" if failed else None
             error_message = (
@@ -376,18 +375,17 @@ class CampaignJobManager:
         entries = tuple(
             entry
             if entry.status in TERMINAL_CAMPAIGN_ENTRY_STATUSES
-            else entry.model_copy(
-                update={
-                    "status": entry_status,
-                    **(
-                        {
-                            "error_code": "process_shutdown",
-                            "error_message": "campaign entry did not complete before process shutdown",
-                        }
-                        if entry_status == CampaignEntryStatus.INTERRUPTED
-                        else {}
-                    ),
-                }
+            else _validated_entry_update(
+                entry,
+                status=entry_status,
+                **(
+                    {
+                        "error_code": "process_shutdown",
+                        "error_message": "campaign entry did not complete before process shutdown",
+                    }
+                    if entry_status == CampaignEntryStatus.INTERRUPTED
+                    else {}
+                ),
             )
             for entry in campaign.entries
         )
@@ -404,17 +402,15 @@ class CampaignJobManager:
     def _replace_entry(self, campaign_id: str, index: int, **changes: object) -> Campaign:
         campaign = self.get(campaign_id)
         entries = list(campaign.entries)
-        entries[index] = entries[index].model_copy(update=changes)
+        entries[index] = _validated_entry_update(entries[index], **changes)
         return self._replace_campaign(campaign, entries=tuple(entries))
 
     def _replace_campaign(self, campaign: Campaign, **changes: object) -> Campaign:
-        updated = campaign.model_copy(
-            update={
-                **changes,
-                "revision": campaign.revision + 1,
-                "updated_at": datetime.now(UTC),
-            }
-        )
+        payload = campaign.model_dump(mode="python")
+        payload.update(changes)
+        payload["revision"] = campaign.revision + 1
+        payload["updated_at"] = datetime.now(UTC)
+        updated = Campaign.model_validate(payload)
         self._store.save(updated)
         return updated
 
@@ -427,17 +423,17 @@ class CampaignJobManager:
             entries = tuple(
                 entry
                 if entry.status in TERMINAL_CAMPAIGN_ENTRY_STATUSES
-                else entry.model_copy(
-                    update={
-                        "status": CampaignEntryStatus.INTERRUPTED,
-                        "error_code": "process_restarted",
-                        "error_message": "campaign entry was active when the local process restarted",
-                    }
+                else _validated_entry_update(
+                    entry,
+                    status=CampaignEntryStatus.INTERRUPTED,
+                    error_code="process_restarted",
+                    error_message="campaign entry was active when the local process restarted",
                 )
                 for entry in campaign.entries
             )
-            recovered = campaign.model_copy(
-                update={
+            payload = campaign.model_dump(mode="python")
+            payload.update(
+                {
                     "status": CampaignStatus.INTERRUPTED,
                     "revision": campaign.revision + 1,
                     "updated_at": now,
@@ -447,7 +443,13 @@ class CampaignJobManager:
                     "error_message": "campaign was active when the local process restarted",
                 }
             )
-            self._store.save(recovered)
+            self._store.save(Campaign.model_validate(payload))
+
+
+def _validated_entry_update(entry: CampaignEntry, **changes: object) -> CampaignEntry:
+    payload = entry.model_dump(mode="python")
+    payload.update(changes)
+    return CampaignEntry.model_validate(payload)
 
 
 def _capacity_owner(campaign_id: str) -> str:
