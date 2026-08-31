@@ -43,7 +43,7 @@ Canonical experience truth lives in `design/ux-contract.json`, `design/brand-kit
 | UXUI-07 | Campaign lifecycle + results/recommendation | UXUI-06 | DONE |
 | UXUI-08 | Same-case cross-candidate comparison | UXUI-05/07 | DONE |
 | UXUI-09 | Product hardening | UXUI-03..08 | DONE |
-| UXUI-10 | Built-product acceptance and browser goldens | UXUI-09 | READY |
+| UXUI-10 | Built-product acceptance and browser goldens | UXUI-09 | ACTIVE |
 
 Allowed states: `READY`, `ACTIVE`, `BLOCKED`, `DONE`. Shared API/read-model changes integrate before dependent frontend slices; shared design primitives have one owner at a time.
 
@@ -59,9 +59,15 @@ Owning boundary:
 - capture implementation screenshots only from an approved exact build/source identity and use only stable high-value surfaces as future visual-regression goldens;
 - keep real-device/runtime performance evidence separate from browser/product acceptance.
 
-Acceptance direction:
+Automated acceptance completed in this slice:
 
-- required exact-head repository, browser and built-product gates are green with no unresolved UXUI-09 regressions;
+- five reviewed implementation screenshots from an identified 1536x960 Chromium build are versioned under `design/reference/visual-goldens/desktop-standard/` with source/build provenance;
+- Browser Acceptance owns permanent pixel comparison for Overview, Test a model / frozen review, Benchmark Detail, Sample Evidence Detail and Campaign Results;
+- the golden set stays intentionally bounded and does not turn every product state into screenshot CI.
+
+Remaining acceptance direction:
+
+- required exact-head repository, browser and built-product gates remain green with no unresolved UXUI-09 regressions;
 - compact/standard/wide desktop behavior and critical failure/recovery paths remain usable under final review;
 - approved implementation screenshots reflect semantic product truth and are not substituted by generated design targets;
 - remaining manual accessibility/usability evidence is explicit, and no stronger claim is made than the evidence supports;
@@ -77,8 +83,8 @@ UXUI-09 hardens shared product owners rather than individual pages: AppShell add
 
 ## Integration strategy
 
-1. UXUI-10 runs final assembled-product acceptance, closes visual-target gaps and captures approved implementation goldens.
-2. When acceptance evidence agrees with the UX contract, reconcile `docs/current-state.md` and close/delete this active workstream by default.
+1. UXUI-10 keeps the accepted implementation-golden regression gate green while the remaining manual compact/standard/wide accessibility and representative-user review is completed.
+2. When that human acceptance evidence agrees with the UX contract, reconcile `docs/current-state.md` and close/delete this active workstream by default.
 
 Ordinary UX/UI branches start from current green `dev` and target `dev`; if `dev` moves, readiness is re-established on the regenerated merge-ref.
 
@@ -86,7 +92,7 @@ Ordinary UX/UI branches start from current green `dev` and target `dev`; if `dev
 
 Existing targets cover Overview, Find best setup / Results, Test a model / Review, Benchmark Detail, Sample Evidence, Models, Datasets, Evaluators, Evidence and Model connections.
 
-Still required before final visual acceptance: Find best setup planning steps, Campaign Live, Runs history, Run Detail / Samples, Case Comparison Across Candidates, compatible/incompatible Compare states and failure/recovery states.
+Still required for final human visual/reference review: Find best setup planning steps, Campaign Live, Runs history, Run Detail / Samples, Case Comparison Across Candidates, compatible/incompatible Compare states and failure/recovery states. These states are not automatically added to the golden set; screenshot-sprawl remains a non-goal.
 
 ## Durable destinations
 

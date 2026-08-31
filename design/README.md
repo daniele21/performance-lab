@@ -260,15 +260,21 @@ Current SVG references remain conceptual guidance for already-defined flows:
 
 They are not pixel-regression goldens and may lag the newly consolidated surface contracts above.
 
-The final UX-aligned desktop UI targets will live under:
+The approved UX-aligned desktop UI targets live under:
 
 ```text
 design/reference/visual-targets/
 ```
 
-Generated/hand-authored design targets express approved design intent. They must **not** be used directly as pixel-diff CI truth. Once the real implementation is semantically correct, accessible and accepted against the design target, browser screenshots from that implementation become the visual-regression goldens.
+Generated/hand-authored design targets express approved design intent. They must **not** be used directly as pixel-diff CI truth. Accepted browser screenshots from the real implementation live separately under:
 
-Canonical standard desktop visual-target viewport: **1536 x 960**.
+```text
+design/reference/visual-goldens/desktop-standard/
+```
+
+The golden manifest records the exact source/build/browser identity from which each baseline was reviewed. Only a limited set of stable, high-value, target-backed surfaces belongs there; visual regression does not replace semantic journeys, accessibility checks or representative-user review.
+
+Canonical standard desktop visual-target and implementation-golden viewport: **1536 x 960**.
 
 ## Contracts
 

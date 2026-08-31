@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Route, type TestInfo } from "@playwright/test";
+import { expect, test, type Page, type Route } from "@playwright/test";
 
 const API = { api_version: "v1", read_model_version: 1 } as const;
 const NOW = "2026-08-31T08:00:00Z";
@@ -425,9 +425,8 @@ async function installFixture(page: Page) {
   });
 }
 
-async function capture(page: Page, testInfo: TestInfo, name: string) {
-  await page.screenshot({
-    path: testInfo.outputPath("visual-acceptance", `${name}.png`),
+async function matchGolden(page: Page, name: string) {
+  await expect(page).toHaveScreenshot(`${name}.png`, {
     animations: "disabled",
     caret: "hide",
   });
@@ -441,15 +440,15 @@ test.use({
   colorScheme: "dark",
 });
 
-test("UXUI-10 bootstrap captures the accepted implementation candidates", async ({
+test("UXUI-10: stable target-backed surfaces match accepted implementation goldens", async ({
   page,
-}, testInfo) => {
+}) => {
   await installFixture(page);
 
   await page.goto("/#overview");
   await expect(page.getByRole("heading", { name: "Your tested models" })).toBeVisible();
   await expect(page.getByRole("table", { name: "Tested model evidence" })).toBeVisible();
-  await capture(page, testInfo, "overview");
+  await matchGolden(page, "overview");
 
   await page.goto("/#test-a-model");
   await page.getByLabel("Model ID").fill(identity.model_id);
@@ -457,7 +456,7 @@ test("UXUI-10 bootstrap captures the accepted implementation candidates", async 
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText("Preflight passed")).toBeVisible();
-  await capture(page, testInfo, "test-a-model-review");
+  await matchGolden(page, "test-a-model-review");
 
   await page.goto("/#benchmarks/general-diagnostic-starter/1");
   await expect(page.getByRole("heading", { name: "general-diagnostic-starter" })).toBeVisible();
@@ -466,21 +465,18 @@ test("UXUI-10 bootstrap captures the accepted implementation candidates", async 
   await expect(
     caseDisclosure.getByText("Normalize text and compare exact equality."),
   ).toBeVisible();
-  await capture(page, testInfo, "benchmark-detail");
+  await matchGolden(page, "benchmark-detail");
 
   await page.goto("/#runs/run-a/samples/reasoning/sample-a/1");
   await expect(page.getByRole("heading", { name: "sample-a" })).toBeVisible();
   await expect(page.getByText("Evaluation explanation unavailable")).toBeVisible();
-  await capture(page, testInfo, "sample-evidence-detail");
+  await matchGolden(page, "sample-evidence-detail");
 
   await page.goto("/#campaigns/campaign-visual");
   await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
   await page.locator(".campaign-results").evaluate((element) => {
     element.scrollIntoView({ block: "start" });
   });
-  await capture(page, testInfo, "campaign-results");
+  await matchGolden(page, "campaign-results");
 
-  throw new Error(
-    "UXUI-10 bootstrap only: review these exact implementation screenshots before accepting them as visual-regression goldens.",
-  );
 });

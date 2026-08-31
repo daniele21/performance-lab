@@ -10,6 +10,7 @@ export default defineConfig({
   expect: { timeout: 5_000 },
   reporter: [["line"]],
   outputDir: "test-results",
+  snapshotPathTemplate: "../design/reference/visual-goldens/desktop-standard/{arg}{ext}",
   use: {
     baseURL: "http://127.0.0.1:4173",
     browserName: "chromium",

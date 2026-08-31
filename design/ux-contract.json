@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.5.0",
+  "contract_version": "0.5.1",
   "applicable": true,
   "design_source_of_truth": {
     "type": "in-repo",
@@ -747,15 +747,17 @@
     "design/reference/ux-reference-board.svg#recovery"
   ],
   "visual_target_policy": {
-    "status": "pending_final_ux_aligned_targets",
+    "status": "approved_targets_with_initial_implementation_goldens",
     "approved_target_root": "design/reference/visual-targets/",
     "target_role": "design intent reference, not pixel-regression golden",
     "standard_desktop_reference_viewport": "1536x960",
-    "implementation_golden_rule": "visual-regression goldens are captured from an approved real implementation after semantic, accessibility and journey validation; generated mockups are never used as pixel-diff truth"
+    "implementation_golden_rule": "visual-regression goldens are captured from an approved real implementation after semantic, accessibility and journey validation; generated mockups are never used as pixel-diff truth",
+    "implementation_golden_root": "design/reference/visual-goldens/desktop-standard/",
+    "implementation_golden_scope": "limited stable high-value target-backed surfaces with exact build/source provenance; not a substitute for semantic, accessibility or representative-user acceptance"
   },
   "validation": {
     "accessibility_automation": "planned with browser UI: Playwright + accessibility assertions",
-    "visual_regression": "use stable high-value implementation screenshots only after the corresponding design target is approved",
+    "visual_regression": "CI compares the limited stable high-value implementation-golden set after semantic journey coverage; manual accessibility/usability evidence remains a separate reference-grade gate",
     "manual_accessibility": "keyboard/focus/contrast review at compact, standard and wide desktop sizes",
     "usability_evidence": "representative-user review before reference-grade UI claim",
     "sample_traceability": "verify aggregate -> sample -> evaluator-evidence navigation and aggregate-safe/content-not-retained states",
