@@ -161,10 +161,7 @@ export function launchCampaign(request: CampaignLaunchRequest, options?: Request
 }
 
 export function getCampaign(campaignId: string, options?: RequestOptions) {
-  return getJson<CampaignReadModel>(
-    `/api/v1/campaigns/${encodeURIComponent(campaignId)}`,
-    options,
-  );
+  return getJson<CampaignReadModel>(`/api/v1/campaigns/${encodeURIComponent(campaignId)}`, options);
 }
 
 export function cancelCampaign(campaignId: string, options?: RequestOptions) {
