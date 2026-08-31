@@ -2,14 +2,25 @@ import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+
 from performance_lab.application.campaign_jobs import (
     CampaignJobManager,
     CampaignLaunchPlan,
     CampaignRunSpec,
 )
 from performance_lab.application.evaluation_capacity import EvaluationCapacity
+from performance_lab.application.run_jobs import (
+    RunJobCapacityError,
+    RunJobManager,
+    RunJobState,
+    starter_run_config_digest,
+)
 from performance_lab.datasets import build_general_starter_suite
 from performance_lab.domain import (
+    Campaign,
+    CampaignEntry,
+    CampaignEntryStatus,
     CampaignStatus,
     DecisionPolicyRef,
     ExecutionFingerprint,
@@ -66,6 +77,37 @@ def _run(config: StarterRunConfig) -> Run:
     )
 
 
+def _launch_plan(tmp_path: Path) -> CampaignLaunchPlan:
+    return CampaignLaunchPlan(
+        plan_digest="a" * 64,
+        use_case_id="general-capability",
+        use_case_version="1",
+        target_id="target-a",
+        suite_id="general-diagnostic-starter",
+        suite_version="2026-08-15-v1",
+        decision_policy=DecisionPolicyRef(
+            policy_id="strict-quality-dominance",
+            policy_version="1.0.0",
+        ),
+        runs=(CampaignRunSpec("candidate-a", "model-a", _config(tmp_path, "model-a")),),
+    )
+
+
+class BlockingExecutor:
+    def __init__(self) -> None:
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+
+    async def __call__(self, config: StarterRunConfig, *, progress_sink=None) -> RunExecutionResult:
+        self.started.set()
+        await self.release.wait()
+        return RunExecutionResult(
+            run=_run(config),
+            store_path=config.store_path,
+            bundle_path=config.store_path.parent / "artifact.plab.zip",
+        )
+
+
 def test_campaign_executes_bounded_run_specs_sequentially_and_persists_terminal_state(
     tmp_path: Path,
 ) -> None:
@@ -86,22 +128,16 @@ def test_campaign_executes_bounded_run_specs_sequentially_and_persists_terminal_
             capacity=EvaluationCapacity(),
             executor=executor,
         )
+        plan = _launch_plan(tmp_path)
         campaign = await manager.launch(
             CampaignLaunchPlan(
-                plan_digest="a" * 64,
-                use_case_id="general-capability",
-                use_case_version="1",
-                target_id="target-a",
-                suite_id="general-diagnostic-starter",
-                suite_version="2026-08-15-v1",
-                decision_policy=DecisionPolicyRef(
-                    policy_id="strict-quality-dominance",
-                    policy_version="1.0.0",
-                ),
-                runs=(
-                    CampaignRunSpec("candidate-a", "model-a", _config(tmp_path, "model-a")),
-                    CampaignRunSpec("candidate-b", "model-b", _config(tmp_path, "model-b")),
-                ),
+                **{
+                    **plan.__dict__,
+                    "runs": (
+                        CampaignRunSpec("candidate-a", "model-a", _config(tmp_path, "model-a")),
+                        CampaignRunSpec("candidate-b", "model-b", _config(tmp_path, "model-b")),
+                    ),
+                }
             )
         )
         async for _ in manager.stream(campaign.campaign_id):
@@ -113,3 +149,81 @@ def test_campaign_executes_bounded_run_specs_sequentially_and_persists_terminal_
 
     asyncio.run(exercise())
     assert calls == ["model-a", "model-b"]
+
+
+def test_campaign_cancel_releases_shared_capacity_for_manual_run(tmp_path: Path) -> None:
+    async def exercise() -> None:
+        capacity = EvaluationCapacity()
+        blocking = BlockingExecutor()
+        campaigns = CampaignJobManager(
+            SQLiteCampaignStore(tmp_path / "runs.sqlite3"),
+            capacity=capacity,
+            executor=blocking,
+            poll_interval_seconds=0.001,
+        )
+        manual = RunJobManager(capacity=capacity)
+
+        campaign = await campaigns.launch(_launch_plan(tmp_path))
+        await blocking.started.wait()
+        manual_config = _config(tmp_path, "manual-model")
+        with pytest.raises(RunJobCapacityError):
+            await manual.launch(
+                manual_config,
+                config_digest=starter_run_config_digest(manual_config),
+            )
+
+        cancelled = await campaigns.cancel(campaign.campaign_id)
+        assert cancelled.status == CampaignStatus.CANCELLED
+        assert cancelled.entries[0].status == CampaignEntryStatus.CANCELLED
+        assert capacity.owner is None
+
+        job = await manual.launch(
+            manual_config,
+            config_digest=starter_run_config_digest(manual_config),
+        )
+        completed = await manual.wait(job.job_id)
+        assert completed.state == RunJobState.SUCCEEDED
+
+    asyncio.run(exercise())
+
+
+def test_campaign_restart_recovers_active_state_as_interrupted(tmp_path: Path) -> None:
+    store = SQLiteCampaignStore(tmp_path / "runs.sqlite3")
+    now = datetime.now(UTC)
+    store.save(
+        Campaign(
+            campaign_id="campaign-active",
+            plan_digest="a" * 64,
+            use_case_id="general-capability",
+            use_case_version="1",
+            target_id="target-a",
+            suite_id="general-diagnostic-starter",
+            suite_version="2026-08-15-v1",
+            decision_policy=DecisionPolicyRef(
+                policy_id="strict-quality-dominance",
+                policy_version="1.0.0",
+            ),
+            status=CampaignStatus.RUNNING,
+            created_at=now,
+            updated_at=now,
+            entries=(
+                CampaignEntry(
+                    entry_id="entry-1",
+                    candidate_id="candidate-a",
+                    model_id="model-a",
+                    config_digest="b" * 64,
+                    status=CampaignEntryStatus.RUNNING,
+                    run_id="run-active",
+                ),
+            ),
+        )
+    )
+
+    manager = CampaignJobManager(store, capacity=EvaluationCapacity())
+    recovered = manager.get("campaign-active")
+
+    assert recovered.status == CampaignStatus.INTERRUPTED
+    assert recovered.completed_at is not None
+    assert recovered.error_code == "process_restarted"
+    assert recovered.entries[0].status == CampaignEntryStatus.INTERRUPTED
+    assert recovered.entries[0].error_code == "process_restarted"
