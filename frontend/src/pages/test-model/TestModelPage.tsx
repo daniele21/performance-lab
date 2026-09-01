@@ -261,7 +261,9 @@ export function TestModelView({
                         label="Model ID"
                         description="Automatic discovery is unavailable for this target. Enter a model ID only as a fallback."
                         value={selection.modelId}
-                        onChange={(event) => updateSelection({ modelId: event.currentTarget.value })}
+                        onChange={(event) =>
+                          updateSelection({ modelId: event.currentTarget.value })
+                        }
                         placeholder="e.g. local-model"
                       />
                     </>
