@@ -1,0 +1,46 @@
+name: Generate uv and pnpm locks
+
+on:
+  push:
+    branches: [agent/toolchain-uv-pnpm-howto]
+
+permissions:
+  contents: write
+
+jobs:
+  generate-locks:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+          run_install: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.12.5
+          python-version: '3.12'
+          enable-cache: true
+      - name: Import npm lock into pnpm and verify frozen install
+        shell: bash
+        run: |
+          cd frontend
+          pnpm import
+          pnpm install --frozen-lockfile
+      - name: Generate uv lock and verify locked environment
+        run: |
+          uv lock
+          uv sync --extra dev --locked
+      - name: Commit canonical lockfiles
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uv.lock frontend/pnpm-lock.yaml
+          git rm frontend/package-lock.json
+          git commit -m 'Generate canonical uv and pnpm lockfiles'
+          git push origin HEAD:agent/toolchain-uv-pnpm-howto
