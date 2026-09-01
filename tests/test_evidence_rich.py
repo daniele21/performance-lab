@@ -7,6 +7,7 @@ from zipfile import ZipFile
 
 from performance_lab.domain import (
     DatasetSnapshot,
+    EndpointProfile,
     EvaluationSuite,
     EvaluatorRef,
     EvidenceMode,
@@ -24,7 +25,6 @@ from performance_lab.domain import (
 from performance_lab.run_config import StarterRunConfig
 from performance_lab.storage import SQLiteRunStore
 from performance_lab.ui_server import build_local_ui_app
-from performance_lab.domain import EndpointProfile
 
 
 def _run(run_id: str, status: RunStatus) -> Run:
