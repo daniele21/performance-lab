@@ -110,15 +110,15 @@ const sampleEvidence = {
   benchmark_case: benchmarkCase,
   prompt: {
     ...API_IDENTITY,
-    state: "not_retained",
-    content: null,
-    reason: "content_not_retained",
+    state: "retained",
+    content: "Rendered prompt sent to model: Question?",
+    reason: null,
   },
   response: {
     ...API_IDENTITY,
-    state: "not_retained",
-    content: null,
-    reason: "content_not_retained",
+    state: "retained",
+    content: "Expected answer",
+    reason: null,
   },
   scores: [
     {
@@ -216,7 +216,7 @@ test("J7: benchmark definition exposes inspectable cases and evaluator rules", a
   await expect(page.getByText("model-a")).toHaveCount(0);
 });
 
-test("J8: run samples drill down to truthful retained evidence states", async ({ page }) => {
+test("J8: run samples expose the exact prompt, model output and expected output distinctly", async ({ page }) => {
   await installEvidenceFixture(page);
   await page.goto("/#runs/run-a");
 
@@ -225,8 +225,13 @@ test("J8: run samples drill down to truthful retained evidence states", async ({
   await page.getByRole("link", { name: "Inspect sample evidence" }).click();
 
   await expect(page.getByRole("heading", { name: "sample-a" })).toBeVisible();
-  await expect(page.getByText("Expected answer")).toBeVisible();
-  await expect(page.getByText("Content not retained").first()).toBeVisible();
+  await expect(page.getByText("Prompt sent to model", { exact: true })).toBeVisible();
+  await expect(page.getByText("Rendered prompt sent to model: Question?", { exact: true })).toBeVisible();
+  await expect(page.getByText("Model output", { exact: true })).toBeVisible();
+  await expect(page.getByText("Expected answer", { exact: true })).toBeVisible();
+  await expect(page.getByText("Expected output", { exact: true })).toBeVisible();
+  await expect(page.getByText("Original benchmark input", { exact: true })).toBeVisible();
+  await expect(page.getByText("It is not the prompt sent to the model.", { exact: false })).toBeVisible();
   await expect(page.getByText("Evaluation explanation unavailable")).toBeVisible();
   await expect(page.getByText("client · sample · latency-v1")).toBeVisible();
 });
