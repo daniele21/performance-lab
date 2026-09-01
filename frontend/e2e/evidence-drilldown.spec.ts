@@ -227,9 +227,17 @@ test("J8: run samples expose the exact prompt, model output and expected output 
   await expect(page.getByRole("heading", { name: "sample-a" })).toBeVisible();
   await expect(page.getByText("Prompt sent to model", { exact: true })).toBeVisible();
   await expect(page.getByText("Rendered prompt sent to model: Question?", { exact: true })).toBeVisible();
-  await expect(page.getByText("Model output", { exact: true })).toBeVisible();
-  await expect(page.getByText("Expected answer", { exact: true })).toBeVisible();
-  await expect(page.getByText("Expected output", { exact: true })).toBeVisible();
+
+  const modelOutput = page.locator(".evidence-drilldown__panel").filter({
+    has: page.getByText("Model output", { exact: true }),
+  });
+  await expect(modelOutput.getByText("Expected answer", { exact: true })).toBeVisible();
+
+  const expectedOutput = page.locator(".evidence-drilldown__panel").filter({
+    has: page.getByText("Expected output", { exact: true }),
+  });
+  await expect(expectedOutput.getByText("Expected answer", { exact: true })).toBeVisible();
+
   await expect(page.getByText("Original benchmark input", { exact: true })).toBeVisible();
   await expect(page.getByText("It is not the prompt sent to the model.", { exact: false })).toBeVisible();
   await expect(page.getByText("Evaluation explanation unavailable")).toBeVisible();
