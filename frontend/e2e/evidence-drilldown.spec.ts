@@ -216,30 +216,37 @@ test("J7: benchmark definition exposes inspectable cases and evaluator rules", a
   await expect(page.getByText("model-a")).toHaveCount(0);
 });
 
-test("J8: run samples expose the exact prompt, model output and expected output distinctly", async ({ page }) => {
-  await installEvidenceFixture(page);
-  await page.goto("/#runs/run-a");
+test(
+  "J8: run samples expose the exact prompt, model output and expected output distinctly",
+  async ({ page }) => {
+    await installEvidenceFixture(page);
+    await page.goto("/#runs/run-a");
 
-  await expect(page.getByRole("heading", { name: "Samples" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "sample-a" })).toBeVisible();
-  await page.getByRole("link", { name: "Inspect sample evidence" }).click();
+    await expect(page.getByRole("heading", { name: "Samples" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "sample-a" })).toBeVisible();
+    await page.getByRole("link", { name: "Inspect sample evidence" }).click();
 
-  await expect(page.getByRole("heading", { name: "sample-a" })).toBeVisible();
-  await expect(page.getByText("Prompt sent to model", { exact: true })).toBeVisible();
-  await expect(page.getByText("Rendered prompt sent to model: Question?", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "sample-a" })).toBeVisible();
+    await expect(page.getByText("Prompt sent to model", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Rendered prompt sent to model: Question?", { exact: true }),
+    ).toBeVisible();
 
-  const modelOutput = page.locator(".evidence-drilldown__panel").filter({
-    has: page.getByText("Model output", { exact: true }),
-  });
-  await expect(modelOutput.getByText("Expected answer", { exact: true })).toBeVisible();
+    const modelOutput = page.locator(".evidence-drilldown__panel").filter({
+      has: page.getByText("Model output", { exact: true }),
+    });
+    await expect(modelOutput.getByText("Expected answer", { exact: true })).toBeVisible();
 
-  const expectedOutput = page.locator(".evidence-drilldown__panel").filter({
-    has: page.getByText("Expected output", { exact: true }),
-  });
-  await expect(expectedOutput.getByText("Expected answer", { exact: true })).toBeVisible();
+    const expectedOutput = page.locator(".evidence-drilldown__panel").filter({
+      has: page.getByText("Expected output", { exact: true }),
+    });
+    await expect(expectedOutput.getByText("Expected answer", { exact: true })).toBeVisible();
 
-  await expect(page.getByText("Original benchmark input", { exact: true })).toBeVisible();
-  await expect(page.getByText("It is not the prompt sent to the model.", { exact: false })).toBeVisible();
-  await expect(page.getByText("Evaluation explanation unavailable")).toBeVisible();
-  await expect(page.getByText("client · sample · latency-v1")).toBeVisible();
-});
+    await expect(page.getByText("Original benchmark input", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("It is not the prompt sent to the model.", { exact: false }),
+    ).toBeVisible();
+    await expect(page.getByText("Evaluation explanation unavailable")).toBeVisible();
+    await expect(page.getByText("client · sample · latency-v1")).toBeVisible();
+  },
+);
