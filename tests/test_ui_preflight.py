@@ -9,7 +9,7 @@ from performance_lab.application import (
     UIQueryService,
 )
 from performance_lab.datasets import build_general_starter_suite
-from performance_lab.domain import Capability, EndpointProfile, Target
+from performance_lab.domain import Capability, EndpointProfile, EvidenceMode, Target
 from performance_lab.storage import SQLiteRunStore
 from performance_lab.ui_api import create_ui_app
 
@@ -57,6 +57,7 @@ def test_preflight_freezes_exact_starter_execution_input(tmp_path: Path) -> None
     assert result.preview is not None
     assert result.preview.config.target_id == "local-device"
     assert result.preview.config.model_id == "model-a"
+    assert result.preview.config.evidence_mode == EvidenceMode.EVIDENCE_RICH
     assert result.preview.config.use_host_telemetry is True
     assert result.preview.config.suite_id == "general-diagnostic-starter"
     assert len(result.preview.config_digest) == 64
@@ -85,6 +86,7 @@ def test_discovered_session_connection_becomes_executable_target(tmp_path: Path)
     assert result.can_run
     assert result.preview is not None
     assert result.preview.target.target_id == target.target_id
+    assert result.preview.config.evidence_mode == EvidenceMode.EVIDENCE_RICH
     assert str(result.preview.config.endpoint.base_url).startswith("http://127.0.0.1:1235/v1")
     assert result.preview.config.local_llm_server_identity is not None
     assert result.preview.config.local_llm_server_identity.model_id == "discovered-model"
@@ -138,6 +140,7 @@ def test_versioned_preflight_api_returns_frozen_preview(tmp_path: Path) -> None:
     payload = response.json()
     assert payload["can_run"] is True
     assert payload["preview"]["config"]["model_id"] == "model-a"
+    assert payload["preview"]["config"]["evidence_mode"] == "evidence_rich"
     assert payload["preview"]["config_digest"]
     assert client.get("/api/v1/datasets").json()
     scenarios = client.get("/api/v1/scenarios").json()
