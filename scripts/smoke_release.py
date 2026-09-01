@@ -12,7 +12,6 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
-import venv
 import zipfile
 from pathlib import Path
 
@@ -149,11 +148,16 @@ def smoke(artifact: Path) -> None:
         manifest = verify_payload(extracted)
 
         environment = root / "venv"
-        venv.EnvBuilder(with_pip=True, system_site_packages=True, clear=True).create(environment)
+        subprocess.run(
+        ["uv", "venv", "--python", sys.executable, "--system-site-packages", str(environment)],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
         python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
         wheel = next((extracted / "python").glob("*.whl"))
         subprocess.run(
-            [str(python), "-m", "pip", "install", "--no-deps", str(wheel)],
+            ["uv", "pip", "install", "--python", str(python), "--no-deps", str(wheel)],
             check=True,
             text=True,
             capture_output=True,

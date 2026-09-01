@@ -13,7 +13,6 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
-import venv
 import zipfile
 from pathlib import Path
 
@@ -103,10 +102,15 @@ def install_wheel(extracted: Path, root: Path) -> Path:
     if len(wheels) != 1:
         raise RuntimeError(f"expected exactly one packaged wheel, found {len(wheels)}")
     environment = root / "venv"
-    venv.EnvBuilder(with_pip=True, system_site_packages=True, clear=True).create(environment)
+    subprocess.run(
+        ["uv", "venv", "--python", sys.executable, "--system-site-packages", str(environment)],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
     python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
     subprocess.run(
-        [str(python), "-m", "pip", "install", "--no-deps", str(wheels[0])],
+        ["uv", "pip", "install", "--python", str(python), "--no-deps", str(wheels[0])],
         check=True,
         text=True,
         capture_output=True,
