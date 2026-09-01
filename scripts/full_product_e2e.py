@@ -209,7 +209,7 @@ def run_full_product_e2e(artifact: Path) -> None:
                 f"http://{HOST}:{fixture_port}/v1/"
             )
             subprocess.run(
-                ["npm", "--prefix", "frontend", "run", "test:e2e:full-product"],
+                ["pnpm", "--dir", "frontend", "run", "test:e2e:full-product"],
                 cwd=ROOT,
                 env=environment,
                 check=True,

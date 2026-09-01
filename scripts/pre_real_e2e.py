@@ -258,7 +258,7 @@ def main() -> int:
     environment["PERFORMANCE_LAB_PRE_REAL_REPORT"] = str(report_path)
 
     completed = subprocess.run(
-        ["npm", "--prefix", "frontend", "run", "test:e2e:pre-real"],
+        ["pnpm", "--dir", "frontend", "run", "test:e2e:pre-real"],
         cwd=ROOT,
         env=environment,
         check=False,

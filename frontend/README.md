@@ -7,7 +7,7 @@ This directory is the browser product surface for Performance Lab.
 ## Toolchain
 
 - Node: `frontend/.nvmrc`
-- package manager: exact npm version in `package.json#packageManager`
+- package manager: exact pnpm version in `package.json#packageManager`
 - dependencies: exact versions plus committed `package-lock.json`
 - framework: React + TypeScript + Vite
 - unit test runner: Vitest
@@ -17,11 +17,11 @@ This directory is the browser product surface for Performance Lab.
 ## Commands
 
 ```text
-npm --prefix frontend ci
-npm --prefix frontend run dev
-npm --prefix frontend run check
-npm --prefix frontend run test
-npm --prefix frontend run build
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend run dev
+pnpm --dir frontend run check
+pnpm --dir frontend run test
+pnpm --dir frontend run build
 ```
 
 The development and preview servers bind to `127.0.0.1` and fail on a port collision rather than silently moving to a different port.
