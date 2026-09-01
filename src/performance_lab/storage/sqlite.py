@@ -151,6 +151,9 @@ class SQLiteRunStore:
             )
 
     def publish(self, run: Run) -> None:
+        self._publish(run, promote_working_content=True)
+
+    def _publish(self, run: Run, *, promote_working_content: bool) -> None:
         if run.status not in _TERMINAL_STATUSES:
             raise InvalidRunStateError("only terminal runs can be published as immutable evidence")
         payload = run.canonical_json()
@@ -182,17 +185,18 @@ class SQLiteRunStore:
                     published_at,
                 ),
             )
-            connection.execute(
-                """
-                INSERT INTO completed_sample_content(
-                    run_id, task_id, sample_id, attempt, payload_json, published_at
+            if promote_working_content:
+                connection.execute(
+                    """
+                    INSERT INTO completed_sample_content(
+                        run_id, task_id, sample_id, attempt, payload_json, published_at
+                    )
+                    SELECT run_id, task_id, sample_id, attempt, payload_json, ?
+                    FROM working_sample_content
+                    WHERE run_id = ?
+                    """,
+                    (published_at, run.run_id),
                 )
-                SELECT run_id, task_id, sample_id, attempt, payload_json, ?
-                FROM working_sample_content
-                WHERE run_id = ?
-                """,
-                (published_at, run.run_id),
-            )
             connection.execute("DELETE FROM working_sample_content WHERE run_id = ?", (run.run_id,))
             connection.execute("DELETE FROM working_runs WHERE run_id = ?", (run.run_id,))
             connection.commit()
@@ -321,7 +325,7 @@ class SQLiteRunStore:
         run = load_json(Run, run_json)
         if manifest_raw.get("run_id") != run.run_id:
             raise InvalidRunBundleError("manifest run_id does not match payload")
-        self.publish(run)
+        self._publish(run, promote_working_content=False)
         return run
 
 
