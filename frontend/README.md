@@ -8,7 +8,7 @@ This directory is the browser product surface for Performance Lab.
 
 - Node: `frontend/.nvmrc`
 - package manager: exact pnpm version in `package.json#packageManager`
-- dependencies: exact versions plus committed `package-lock.json`
+- dependencies: exact versions plus committed `pnpm-lock.yaml`
 - framework: React + TypeScript + Vite
 - unit test runner: Vitest
 - lint: ESLint

@@ -9,7 +9,7 @@ Canonical machine-readable contracts:
 - `e2e.json` — critical journeys, target/execution environments, environment fidelity and residual real-environment gaps;
 - `documentation-policy.json` — repository documentation and agent-context budgets.
 
-Use the native Python/npm commands declared in `commands.json` rather than inventing parallel wrappers. `frontend/package-lock.json` is the frozen browser dependency source and `requirements/ci-constraints.txt` is the constrained Python CI source.
+Use the canonical `uv`/`pnpm` commands declared in `commands.json` rather than inventing parallel wrappers. `uv.lock` is the locked Python project environment and `frontend/pnpm-lock.yaml` is the frozen browser dependency source; local Python execution is isolated in the repository-owned `.venv` managed by `uv`.
 
 ## Current adoption boundary
 

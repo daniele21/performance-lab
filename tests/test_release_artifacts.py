@@ -62,7 +62,7 @@ def test_build_delta_reports_source_inputs_toolchain_and_artifact_changes() -> N
         "build_id": "build-1",
         "source_revision": "abc",
         "source_dirty": False,
-        "inputs": {"frontend/package-lock.json": "one"},
+        "inputs": {"frontend/pnpm-lock.yaml": "one"},
         "toolchain": {"node": "v24"},
         "lineage": {"platform": "linux"},
         "payload_file_count": 2,
@@ -73,7 +73,7 @@ def test_build_delta_reports_source_inputs_toolchain_and_artifact_changes() -> N
         "build_id": "build-2",
         "source_revision": "def",
         "source_dirty": False,
-        "inputs": {"frontend/package-lock.json": "two"},
+        "inputs": {"frontend/pnpm-lock.yaml": "two"},
         "toolchain": {"node": "v24"},
         "lineage": {"platform": "linux"},
         "payload_file_count": 3,
@@ -86,7 +86,7 @@ def test_build_delta_reports_source_inputs_toolchain_and_artifact_changes() -> N
     assert "Previous build: `build-1`" in delta
     assert "Current build: `build-2`" in delta
     assert "`abc` -> `def`" in delta
-    assert "frontend/package-lock.json: changed" in delta
+    assert "frontend/pnpm-lock.yaml: changed" in delta
     assert "node: unchanged" in delta
     assert "file count: `2` -> `3`" in delta
 
