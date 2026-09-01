@@ -13,7 +13,9 @@ REAL_RUNTIME_SCRIPT = ROOT / "tests" / "real_runtime" / "smoke_local_llm_server.
 
 
 def _load_real_runtime_script() -> ModuleType:
-    spec = importlib.util.spec_from_file_location("real_runtime_smoke_contract", REAL_RUNTIME_SCRIPT)
+    spec = importlib.util.spec_from_file_location(
+        "real_runtime_smoke_contract", REAL_RUNTIME_SCRIPT
+    )
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
