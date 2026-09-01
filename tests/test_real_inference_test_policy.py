@@ -6,7 +6,6 @@ import sys
 from importlib import util
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REAL_RUNTIME_SCRIPT = ROOT / "tests" / "real_runtime" / "smoke_local_llm_server.py"
 
