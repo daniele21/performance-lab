@@ -120,6 +120,13 @@ const sampleEvidence = {
     content: "Model answer",
     reason: null,
   },
+  quality: {
+    ...API_IDENTITY,
+    verdict: "incorrect",
+    metric: "accuracy",
+    value: 0,
+    percentage: 0,
+  },
   scores: [
     {
       ...API_IDENTITY,
@@ -216,7 +223,7 @@ test("J7: benchmark definition exposes inspectable cases and evaluator rules", a
   await expect(page.getByText("model-a")).toHaveCount(0);
 });
 
-test("J8: sample evidence distinguishes prompt, output and expected", async ({ page }) => {
+test("J8: sample evidence distinguishes prompt, output, expected and correctness", async ({ page }) => {
   await installEvidenceFixture(page);
   await page.goto("/#runs/run-a");
 
@@ -225,12 +232,16 @@ test("J8: sample evidence distinguishes prompt, output and expected", async ({ p
   await page.getByRole("link", { name: "Inspect sample evidence" }).click();
 
   await expect(page.getByRole("heading", { name: "sample-a" })).toBeVisible();
+  await expect(page.getByText("Quality", { exact: true })).toBeVisible();
+  await expect(page.getByText("Incorrect", { exact: true })).toBeVisible();
+  await expect(page.getByText("accuracy · 0 · 0%", { exact: true })).toBeVisible();
   await expect(page.getByText("Prompt sent to model", { exact: true })).toBeVisible();
   await expect(page.getByText("Rendered prompt: Question?", { exact: true })).toBeVisible();
   await expect(page.getByText("Model output", { exact: true })).toBeVisible();
   await expect(page.getByText("Model answer", { exact: true })).toBeVisible();
   await expect(page.getByText("Expected output", { exact: true })).toBeVisible();
   await expect(page.getByText("Expected answer", { exact: true })).toBeVisible();
+  await expect(page.getByText("Evidence-rich local content", { exact: true })).toBeVisible();
   await expect(page.getByText("Original benchmark input", { exact: true })).toBeVisible();
   await expect(page.getByText("Evaluation explanation unavailable")).toBeVisible();
   await expect(page.getByText("client · sample · latency-v1")).toBeVisible();
