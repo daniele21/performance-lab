@@ -120,7 +120,9 @@ def test_evidence_rich_content_promotes_locally_but_never_enters_bundle(tmp_path
     assert store.get_completed("run-rich") is not None
 
 
-def test_hard_restart_discards_sensitive_working_content_but_keeps_interrupted_run(tmp_path: Path) -> None:
+def test_hard_restart_discards_sensitive_working_content_but_keeps_interrupted_run(
+    tmp_path: Path,
+) -> None:
     store_path = tmp_path / "runs.sqlite3"
     store = SQLiteRunStore(store_path)
     store.save_working(_run("run-interrupted", RunStatus.RUNNING))
