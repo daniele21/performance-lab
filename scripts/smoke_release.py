@@ -149,11 +149,11 @@ def smoke(artifact: Path) -> None:
 
         environment = root / "venv"
         subprocess.run(
-        ["uv", "venv", "--python", sys.executable, "--system-site-packages", str(environment)],
-        check=True,
-        text=True,
-        capture_output=True,
-    )
+            ["uv", "venv", "--python", sys.executable, "--system-site-packages", str(environment)],
+            check=True,
+            text=True,
+            capture_output=True,
+        )
         python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
         wheel = next((extracted / "python").glob("*.whl"))
         subprocess.run(

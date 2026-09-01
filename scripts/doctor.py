@@ -28,7 +28,11 @@ def main() -> int:
     python = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     node = _version(["node", "--version"])
     uv_output = _version(["uv", "--version"])
-    uv = uv_output.removeprefix("uv ").split()[0] if uv_output not in {"missing", "unavailable"} else uv_output
+    uv = (
+        uv_output.removeprefix("uv ").split()[0]
+        if uv_output not in {"missing", "unavailable"}
+        else uv_output
+    )
     pnpm = _version(["pnpm", "--version"])
     expected_venv = (ROOT / ".venv").resolve()
     active_venv = Path(sys.prefix).resolve()
