@@ -8,10 +8,12 @@ export interface UIModelIdentity {
 
 export type EvidenceAvailability = "available" | "unknown" | "unavailable" | "not_evaluated";
 export type EvidenceContentState = "retained" | "not_retained" | "unavailable";
+export type EvidenceMode = "aggregate_safe" | "evidence_rich";
 export type ExplanationState = "available" | "unavailable";
 export type MetricDimension = "quality" | "performance" | "resources";
 export type RunStatus = "planned" | "running" | "succeeded" | "failed" | "cancelled";
 export type SampleStatus = "succeeded" | "failed" | "cancelled";
+export type SampleQualityVerdict = "correct" | "incorrect" | "partial" | "scored" | "not_evaluated";
 export type ScenarioKind = "general_capability" | "my_workload" | "performance" | "regression";
 export type RunJobState =
   "starting" | "running" | "cancelling" | "succeeded" | "failed" | "cancelled" | "interrupted";
@@ -229,6 +231,7 @@ export interface StarterRunConfigTransport {
   store_path: string;
   run_id: string | null;
   write_bundle: boolean;
+  evidence_mode: EvidenceMode;
   use_host_telemetry: boolean;
   suite_id: "general-diagnostic-starter";
   [key: string]: unknown;
@@ -322,6 +325,13 @@ export interface SampleScoreReadModel extends UIModelIdentity {
   explanation: string | null;
 }
 
+export interface SampleQualitySummaryReadModel extends UIModelIdentity {
+  verdict: SampleQualityVerdict;
+  metric: string | null;
+  value: number | null;
+  percentage: number | null;
+}
+
 export interface SampleMeasurementReadModel extends UIModelIdentity {
   name: string;
   value: number;
@@ -339,6 +349,7 @@ export interface SampleEvidenceDetailReadModel extends UIModelIdentity {
   benchmark_case: BenchmarkCaseReadModel | null;
   prompt: EvidenceContentReadModel;
   response: EvidenceContentReadModel;
+  quality: SampleQualitySummaryReadModel;
   scores: SampleScoreReadModel[];
   measurements: SampleMeasurementReadModel[];
   definition_issues: string[];
