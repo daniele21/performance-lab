@@ -1,0 +1,73 @@
+name: Migrate uv and pnpm consumers
+
+on:
+  push:
+    branches: [agent/toolchain-uv-pnpm-howto]
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply mechanical toolchain replacements
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              "scripts/pre_real_e2e.py": [
+                  ('["npm", "--prefix", "frontend", "run", "test:e2e:pre-real"]', '["pnpm", "--dir", "frontend", "run", "test:e2e:pre-real"]'),
+              ],
+              "scripts/full_product_e2e.py": [
+                  ('["npm", "--prefix", "frontend", "run", "test:e2e:full-product"]', '["pnpm", "--dir", "frontend", "run", "test:e2e:full-product"]'),
+              ],
+              "frontend/AGENTS.md": [
+                  ("npm --prefix frontend run check", "pnpm --dir frontend run check"),
+                  ("npm --prefix frontend run test", "pnpm --dir frontend run test"),
+                  ("npm --prefix frontend run build", "pnpm --dir frontend run build"),
+                  ("npm --prefix frontend run test:e2e", "pnpm --dir frontend run test:e2e"),
+                  ("python scripts/package_release.py --require-full-product-e2e", "uv run --extra dev --locked python scripts/package_release.py --require-full-product-e2e"),
+              ],
+              "frontend/README.md": [
+                  ("package manager: exact npm version in `package.json#packageManager`", "package manager: exact pnpm version in `package.json#packageManager`"),
+                  ("npm --prefix frontend ci", "pnpm --dir frontend install --frozen-lockfile"),
+                  ("npm --prefix frontend run dev", "pnpm --dir frontend run dev"),
+                  ("npm --prefix frontend run check", "pnpm --dir frontend run check"),
+                  ("npm --prefix frontend run test", "pnpm --dir frontend run test"),
+                  ("npm --prefix frontend run build", "pnpm --dir frontend run build"),
+              ],
+              "CONTRIBUTING.md": [
+                  ("exact Node/npm/dependency versions", "exact Node/pnpm/dependency versions"),
+                  ("python scripts/select_validation_profile.py --base <base-sha> --head <head-sha>", "uv run --extra dev --locked python scripts/select_validation_profile.py --base <base-sha> --head <head-sha>"),
+              ],
+          }
+
+          for rel, pairs in replacements.items():
+              path = Path(rel)
+              text = path.read_text(encoding="utf-8")
+              original = text
+              for old, new in pairs:
+                  if old not in text:
+                      raise SystemExit(f"missing expected text in {rel}: {old}")
+                  text = text.replace(old, new)
+              if text != original:
+                  path.write_text(text, encoding="utf-8")
+          PY
+      - name: Show remaining legacy toolchain references
+        shell: bash
+        run: |
+          grep -RInE '\bnpm\b|pip install|package-lock\.json|ci-constraints\.txt' \
+            --exclude-dir=.git --exclude='pnpm-lock.yaml' --exclude='uv.lock' . || true
+      - name: Commit migrated consumers
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scripts/pre_real_e2e.py scripts/full_product_e2e.py frontend/AGENTS.md frontend/README.md CONTRIBUTING.md
+          git commit -m 'Migrate direct toolchain consumers to uv and pnpm'
+          git push origin HEAD:agent/toolchain-uv-pnpm-howto
