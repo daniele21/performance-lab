@@ -127,6 +127,7 @@ const runPreflight = {
       store_path: ".performance-lab/runs.sqlite3",
       run_id: null,
       write_bundle: true,
+      evidence_mode: "evidence_rich",
       use_host_telemetry: false,
       suite_id: "general-diagnostic-starter",
     },
@@ -260,6 +261,13 @@ const sampleEvidence = {
     state: "retained",
     content: "No",
     reason: null,
+  },
+  quality: {
+    ...API,
+    verdict: "correct",
+    metric: "accuracy",
+    value: 1,
+    percentage: 100,
   },
   scores: [
     {
@@ -469,6 +477,8 @@ test("UXUI-10: stable target-backed surfaces match accepted implementation golde
 
   await page.goto("/#runs/run-a/samples/reasoning/sample-a/1");
   await expect(page.getByRole("heading", { name: "sample-a" })).toBeVisible();
+  await expect(page.getByText("Quality", { exact: true })).toBeVisible();
+  await expect(page.getByText("Correct", { exact: true })).toBeVisible();
   await expect(page.getByText("Evaluation explanation unavailable")).toBeVisible();
   await matchGolden(page, "sample-evidence-detail");
 
