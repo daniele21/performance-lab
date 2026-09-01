@@ -10,7 +10,7 @@
   "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write . && git diff --exit-code",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc -b --pretty false",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck",
