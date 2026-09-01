@@ -152,6 +152,43 @@ describe("TestModelView", () => {
     expect(markup).toContain("disabled");
   });
 
+  it("shows automatically discovered models for a configured target", () => {
+    const markup = renderToStaticMarkup(
+      <TestModelView
+        targets={[target]}
+        scenarios={scenarios}
+        selection={selection}
+        step="model"
+        preflight={null}
+        modelSource="configured"
+        probe={{ ...probe, target }}
+      />,
+    );
+
+    expect(markup).toContain("Model");
+    expect(markup).toContain("model-a");
+    expect(markup).toContain("reported by 127.0.0.1:1235/v1/");
+    expect(markup).not.toContain("Automatic discovery is unavailable");
+  });
+
+  it("keeps manual model ID as a fallback when configured discovery fails", () => {
+    const markup = renderToStaticMarkup(
+      <TestModelView
+        targets={[target]}
+        scenarios={scenarios}
+        selection={{ ...selection, modelId: "" }}
+        step="model"
+        preflight={null}
+        modelSource="configured"
+        probeError="Target discovery failed"
+      />,
+    );
+
+    expect(markup).toContain("Target discovery failed");
+    expect(markup).toContain("Model ID");
+    expect(markup).toContain("only as a fallback");
+  });
+
   it("shows discovered local models and honest runtime/request capabilities", () => {
     const markup = renderToStaticMarkup(
       <TestModelView
