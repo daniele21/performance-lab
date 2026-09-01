@@ -117,6 +117,8 @@ def install_wheel(extracted: Path, root: Path) -> Path:
             "uv",
             "export",
             "--locked",
+            "--extra",
+            "ui",
             "--no-dev",
             "--no-emit-project",
             "--format",
