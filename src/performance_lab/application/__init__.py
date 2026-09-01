@@ -22,6 +22,7 @@ from .evidence_models import (
     SampleScoreReadModel,
     SampleSummaryReadModel,
 )
+from .execution_policy_queries import UIQueryService
 from .planning_models import (
     BenchmarkPlanReadModel,
     CampaignEstimateReadModel,
@@ -41,7 +42,6 @@ from .planning_queries import (
     CampaignPlanDigestMismatchError,
     CampaignPlanLaunchError,
 )
-from .target_queries import UIQueryService
 from .ui_models import (
     UI_READ_MODEL_VERSION,
     BaselineSummaryReadModel,
