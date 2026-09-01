@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.1.2",
+  "contract_version": "0.1.1",
   "applicability": {
     "status": "required",
     "reason": "Performance Lab has critical browser, CLI, persistence, regression and external-runtime workflows whose complete outcomes cannot be established by lower-level tests alone."
