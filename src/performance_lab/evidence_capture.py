@@ -12,6 +12,7 @@ from performance_lab.plugins import (
     InferenceChunk,
     InferenceRequest,
     InferenceResponse,
+    ProbeResult,
 )
 
 
@@ -44,7 +45,7 @@ class EvidenceCapturingAdapter:
         self._run_id = run_id
         self.adapter_id = delegate.adapter_id
 
-    async def probe(self):
+    async def probe(self) -> ProbeResult:
         return await self._delegate.probe()
 
     async def generate(self, request: InferenceRequest) -> InferenceResponse:
