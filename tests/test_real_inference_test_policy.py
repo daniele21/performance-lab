@@ -1,24 +1,21 @@
 from __future__ import annotations
 
-import importlib.util
 import json
 import subprocess
 import sys
+from importlib import util
 from pathlib import Path
-from types import ModuleType
 
 
 ROOT = Path(__file__).resolve().parents[1]
 REAL_RUNTIME_SCRIPT = ROOT / "tests" / "real_runtime" / "smoke_local_llm_server.py"
 
 
-def _load_real_runtime_script() -> ModuleType:
-    spec = importlib.util.spec_from_file_location(
-        "real_runtime_smoke_contract", REAL_RUNTIME_SCRIPT
-    )
+def _load_real_runtime_script():
+    spec = util.spec_from_file_location("real_runtime_smoke_contract", REAL_RUNTIME_SCRIPT)
     assert spec is not None
     assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
+    module = util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
