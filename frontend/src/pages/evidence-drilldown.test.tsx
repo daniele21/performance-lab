@@ -125,6 +125,13 @@ const sampleDetail: SampleEvidenceDetailReadModel = {
     content: null,
     reason: "content_not_retained",
   },
+  quality: {
+    ...API_IDENTITY,
+    verdict: "correct",
+    metric: "accuracy",
+    value: 1,
+    percentage: 100,
+  },
   scores: [
     {
       ...API_IDENTITY,
@@ -182,18 +189,21 @@ describe("evidence drilldown views", () => {
     expect(markup).not.toContain("model-a");
   });
 
-  it("renders explicit retention and evaluator explanation states without confusing benchmark input with prompt", () => {
+  it("renders explicit retention and correctness without confusing benchmark input with prompt", () => {
     const markup = renderToStaticMarkup(<SampleEvidenceView detail={sampleDetail} />);
 
     expect(markup).toContain("model-a");
     expect(markup).toContain("Q4_K_M");
+    expect(markup).toContain("Quality");
+    expect(markup).toContain("Correct");
+    expect(markup).toContain("accuracy · 1 · 100%");
     expect(markup).toContain("Execution");
     expect(markup).toContain("Prompt sent to model");
     expect(markup).toContain("Model output");
     expect(markup).toContain("Expected output");
     expect(markup).toContain("Expected answer");
     expect(markup).toContain("Original benchmark input");
-    expect(markup).toContain("It is not the prompt sent to the model.");
+    expect(markup).toContain("It is not automatically the prompt sent to the model.");
     expect(markup.match(/Content not retained/g)?.length).toBe(2);
     expect(markup).toContain("Evaluation explanation unavailable");
     expect(markup).toContain("client · sample · latency-v1");
@@ -211,5 +221,7 @@ describe("evidence drilldown views", () => {
     expect(expectedOutputLabel).toBeGreaterThan(modelOutputLabel);
     expect(markup).toContain("Rendered prompt actually sent to the model");
     expect(markup).toContain("Expected answer");
+    expect(markup).toContain("Evidence-rich local content");
+    expect(markup).toContain("excluded from aggregate-safe portable bundles");
   });
 });
