@@ -148,6 +148,8 @@ def install_locked_runtime(environment: Path, requirements: Path) -> Path:
             "uv",
             "export",
             "--locked",
+            "--extra",
+            "ui",
             "--no-dev",
             "--no-emit-project",
             "--format",
