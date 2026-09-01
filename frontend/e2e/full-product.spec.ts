@@ -121,9 +121,7 @@ test("J1/J8: packaged manual test retains and explains exact sample evidence", a
   await expect(page.getByRole("heading", { name: "Model exchange" })).toBeVisible();
   await expect(page.getByText("Quality", { exact: true })).toBeVisible();
   await expect(page.getByText("Correct", { exact: true })).toBeVisible();
-  await expect(
-    page.getByText("normalized_exact_match · 1 · 100%", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("normalized_exact_match · 1 · 100%", { exact: true })).toBeVisible();
 
   const promptPanel = page.locator(".evidence-drilldown__panel").filter({
     has: page.getByText("Prompt sent to model", { exact: true }),
