@@ -120,6 +120,31 @@ def test_evidence_rich_content_promotes_locally_but_never_enters_bundle(tmp_path
     assert store.get_completed("run-rich") is not None
 
 
+def test_bundle_import_never_promotes_local_working_sensitive_content(tmp_path: Path) -> None:
+    source = SQLiteRunStore(tmp_path / "source.sqlite3")
+    completed = _run("run-import", RunStatus.SUCCEEDED)
+    source.publish(completed)
+    bundle = source.export_bundle("run-import", tmp_path / "run-import.plab.zip")
+
+    target = SQLiteRunStore(tmp_path / "target.sqlite3")
+    target.save_working(_run("run-import", RunStatus.RUNNING))
+    target.save_working_sample_content(
+        SampleContentEvidence(
+            run_id="run-import",
+            task_id="qa",
+            sample_id="sample-1",
+            prompt="UNRELATED LOCAL PROMPT",
+            response="UNRELATED LOCAL RESPONSE",
+        )
+    )
+
+    imported = target.import_bundle(bundle)
+
+    assert imported == completed
+    assert target.get_sample_content("run-import", "qa", "sample-1", 1) is None
+    assert all(run.run_id != "run-import" for run in target.list_working())
+
+
 def test_hard_restart_discards_sensitive_working_content_but_keeps_interrupted_run(
     tmp_path: Path,
 ) -> None:
