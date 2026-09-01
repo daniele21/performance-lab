@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { launchRunJob, listScenarios, listTargets, preflightRun, probeEndpoint } from "../../api";
+import {
+  launchRunJob,
+  listScenarios,
+  listTargets,
+  preflightRun,
+  probeEndpoint,
+  probeTarget,
+} from "../../api";
 import type {
   EndpointConnectionInput,
   EndpointProbeReadModel,
@@ -194,7 +201,9 @@ export function TestModelView({
                   <Select
                     label="Target"
                     value={selection.targetId}
-                    onChange={(event) => updateSelection({ targetId: event.currentTarget.value })}
+                    onChange={(event) =>
+                      updateSelection({ targetId: event.currentTarget.value, modelId: "" })
+                    }
                   >
                     <option value="">Choose a target</option>
                     {targets.map((target) => (
@@ -203,13 +212,50 @@ export function TestModelView({
                       </option>
                     ))}
                   </Select>
-                  <Field
-                    label="Model ID"
-                    description="Manual fallback for targets that do not yet expose model discovery through the UI."
-                    value={selection.modelId}
-                    onChange={(event) => updateSelection({ modelId: event.currentTarget.value })}
-                    placeholder="e.g. local-model"
-                  />
+
+                  {selection.targetId && probeLoading ? (
+                    <p className="test-model-disclosure-note" role="status">
+                      Discovering models from this target…
+                    </p>
+                  ) : null}
+
+                  {selection.targetId && probeError ? (
+                    <p className="test-model-connection-error" role="alert">
+                      {probeError}
+                    </p>
+                  ) : null}
+
+                  {selection.targetId && !probeLoading && probe?.healthy && probe.models.length ? (
+                    <Select
+                      label="Model"
+                      description={`${probe.models.length} model${probe.models.length === 1 ? "" : "s"} reported by ${probe.endpoint_identity}.`}
+                      value={selection.modelId}
+                      onChange={(event) => updateSelection({ modelId: event.currentTarget.value })}
+                    >
+                      {probe.models.map((model) => (
+                        <option key={model.model_id} value={model.model_id}>
+                          {model.model_id}
+                        </option>
+                      ))}
+                    </Select>
+                  ) : null}
+
+                  {selection.targetId &&
+                  !probeLoading &&
+                  (probeError || (probe && (!probe.healthy || !probe.models.length))) ? (
+                    <>
+                      {probe?.warning ? (
+                        <p className="test-model-discovery-warning">{probe.warning}</p>
+                      ) : null}
+                      <Field
+                        label="Model ID"
+                        description="Automatic discovery is unavailable for this target. Enter a model ID only as a fallback."
+                        value={selection.modelId}
+                        onChange={(event) => updateSelection({ modelId: event.currentTarget.value })}
+                        placeholder="e.g. local-model"
+                      />
+                    </>
+                  ) : null}
                 </div>
               ) : (
                 <div className="test-model-connection">
@@ -426,7 +472,7 @@ export function TestModelView({
                   updateSelection({ useHostTelemetry: event.currentTarget.checked })
                 }
               />
-              {modelSource === "local" && probe?.supported_generation_parameters.length ? (
+              {probe?.supported_generation_parameters.length ? (
                 <Disclosure summary="Discovered request parameters">
                   <div className="test-model-parameter-tags">
                     {probe.supported_generation_parameters.map((parameter) => (
@@ -665,6 +711,49 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
     return () => controller.abort();
   }, [attempt]);
 
+  useEffect(() => {
+    if (catalog.status !== "ready" || modelSource !== "configured" || !selection.targetId) {
+      return;
+    }
+
+    const targetId = selection.targetId;
+    const controller = new AbortController();
+    setProbeLoading(true);
+    setProbeError(null);
+    setProbe(null);
+    setPreflight(null);
+
+    probeTarget(targetId, { signal: controller.signal })
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        setProbe(result);
+        setSelection((current) => {
+          if (current.targetId !== targetId) return current;
+          const currentStillAvailable = result.models.some(
+            (model) => model.model_id === current.modelId,
+          );
+          return {
+            ...current,
+            modelId: currentStillAvailable ? current.modelId : (result.models[0]?.model_id ?? ""),
+          };
+        });
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setSelection((current) =>
+          current.targetId === targetId ? { ...current, modelId: "" } : current,
+        );
+        setProbeError(
+          error instanceof Error ? error.message : "Models could not be discovered for this target.",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setProbeLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [catalog.status, modelSource, selection.targetId]);
+
   const request = useMemo(
     () => ({
       target_id: selection.targetId,
@@ -774,11 +863,11 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
       }}
       onModelSourceChange={(source) => {
         setModelSource(source);
+        setProbe(null);
         setProbeError(null);
         setPreflight(null);
         setLaunchError(null);
         if (source === "configured") {
-          setProbe(null);
           setSelection((current) => ({
             ...current,
             targetId: catalog.targets[0]?.target_id ?? "",
