@@ -101,14 +101,41 @@ def install_wheel(extracted: Path, root: Path) -> Path:
     wheels = tuple((extracted / "python").glob("*.whl"))
     if len(wheels) != 1:
         raise RuntimeError(f"expected exactly one packaged wheel, found {len(wheels)}")
+
     environment = root / "venv"
     subprocess.run(
-        ["uv", "venv", "--python", sys.executable, "--system-site-packages", str(environment)],
+        ["uv", "venv", "--python", sys.executable, str(environment)],
         check=True,
         text=True,
         capture_output=True,
     )
     python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+
+    requirements = root / "runtime-requirements.txt"
+    subprocess.run(
+        [
+            "uv",
+            "export",
+            "--locked",
+            "--no-dev",
+            "--no-emit-project",
+            "--format",
+            "requirements-txt",
+            "--output-file",
+            str(requirements),
+        ],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["uv", "pip", "sync", "--python", str(python), str(requirements)],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
     subprocess.run(
         ["uv", "pip", "install", "--python", str(python), "--no-deps", str(wheels[0])],
         check=True,
