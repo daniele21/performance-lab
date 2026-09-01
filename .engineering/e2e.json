@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.1.1",
+  "contract_version": "0.1.2",
   "applicability": {
     "status": "required",
     "reason": "Performance Lab has critical browser, CLI, persistence, regression and external-runtime workflows whose complete outcomes cannot be established by lower-level tests alone."
@@ -197,7 +197,7 @@
     },
     {
       "id": "J8",
-      "claim": "User can open one immutable run, drill into its contributing samples and understand one sample from retained prompt/expected/actual/evaluator evidence or an explicit content-not-retained state.",
+      "claim": "User can open one immutable run, drill into its contributing samples, distinguish quality verdict from execution outcome, and for direct Test a model runs inspect the retained prompt, actual model output, expected output and evaluator evidence; aggregate-safe evidence must instead show an explicit content-not-retained state.",
       "ui_surface": true,
       "required_media_artifacts": ["screenshots", "video"],
       "target_environment_refs": ["desktop-browser-product"],
