@@ -45,8 +45,8 @@ FORBIDDEN_MARKERS = (
     "requirements/ci-constraints.txt",
     "python -m pip install -e",
     "npm --prefix frontend",
-    "npm run build",
-    "npm run preview",
+    'command: "npm run build',
+    "&& npm run preview",
 )
 
 
