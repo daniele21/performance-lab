@@ -5,7 +5,7 @@ Document type: operational-reference
 Owner: evidence model
 Canonical scope: operations.output-evidence
 Read when: interpreting a completed run, consuming `.plab.zip`, or deciding which evidence is safe to compare or retain
-Last reviewed: 2026-08-15
+Last reviewed: 2026-09-01
 
 Performance Lab produces evidence at multiple layers. Terminal output is only a pointer/presentation layer; the durable comparison contract is the immutable `Run` plus its `ExecutionFingerprint` and versioned regression artifacts.
 
@@ -15,6 +15,9 @@ Performance Lab produces evidence at multiple layers. Terminal output is only a 
 CLI run result
    |
    +--> SQLite store
+   |       |
+   |       +--> canonical Run evidence
+   |       +--> optional local-only sample content sidecar (evidence-rich mode)
    |
    +--> .plab.zip
            |
@@ -32,7 +35,7 @@ CLI run result
                            +--> typed error when failed/cancelled
 ```
 
-Comparison and regression consume immutable completed evidence; they do not infer results from console text.
+Comparison and regression consume immutable completed Run evidence; they do not infer results from console text or require prompt/output transcripts.
 
 ## `performance-lab run --json`
 
@@ -125,7 +128,7 @@ Representative shape:
 
 ## Sample evidence
 
-Each `SampleExecution` contains:
+Each canonical `SampleExecution` contains:
 
 | Field | Meaning |
 | --- | --- |
@@ -140,7 +143,36 @@ Each `SampleExecution` contains:
 | `scores[]` | evaluator results |
 | `error` | typed bounded error information for non-successful samples |
 
-The persisted Run schema deliberately does not contain raw prompt or generated model text. This reduces sensitive-content retention and prevents exported evidence from silently becoming a transcript/data dump.
+The canonical Run schema deliberately does **not** contain raw prompt or generated model text. This keeps comparison/export evidence aggregate-safe and prevents a portable bundle from silently becoming a transcript/data dump.
+
+### Evidence-rich local sample content
+
+`evidence_mode=evidence_rich` adds a separate local-only `SampleContentEvidence` record keyed by `run_id + task_id + sample_id + attempt`. It contains:
+
+```text
+prompt     exact rendered chat content sent through the adapter
+response   exact generated text when a response was produced
+```
+
+The capture path writes the prompt before inference and the response after generation. Therefore a failed inference can truthfully retain a prompt while the response remains unavailable. The browser never reconstructs either value from benchmark source data.
+
+The local SQLite store keeps rich content outside canonical Run JSON:
+
+```text
+working_sample_content
+completed_sample_content
+```
+
+Working content is promoted in the same SQLite transaction that publishes the completed Run. If the process hard-restarts before publication, working raw content is deleted because current recovery is `NEW_RUN_ONLY`, while bounded interrupted-run metadata remains available for recovery UX. Completed raw content can be deleted independently without changing the immutable canonical Run.
+
+The browser **Test a model** flow defaults to this evidence-rich mode so Sample Evidence can show, in distinct panels:
+
+1. the prompt actually sent to the model;
+2. the model output;
+3. the benchmark expected output;
+4. the evaluator-owned correctness/score summary.
+
+Campaign, CLI and CI/regression defaults remain aggregate-safe unless a caller explicitly opts into richer retention where supported.
 
 ## Scores
 
@@ -154,7 +186,7 @@ higher_is_better
 numerator / denominator when applicable
 ```
 
-Quality aggregation remains metric-specific. Performance Lab does not collapse capability, speed and resources into one universal opaque score.
+Quality aggregation remains metric-specific. Performance Lab does not collapse capability, speed and resources into one universal opaque score. Sample-detail correctness labels are derived in the Python evidence owner only for metrics whose per-case values have explicit 0..1 correctness semantics; other metrics remain generically `scored` rather than receiving an invented pass/fail label.
 
 ## Measurements
 
@@ -205,7 +237,7 @@ run.json
 }
 ```
 
-`run.json` contains the canonical serialized immutable Run.
+`run.json` contains the canonical serialized immutable Run. **Evidence-rich prompt/model-output sidecars are never included in version-1 bundles.**
 
 Import validation rejects:
 
@@ -220,16 +252,18 @@ The ZIP format is intentionally independent from SQLite internals.
 
 ## SQLite evidence store
 
-The local store separates mutable working state from immutable completed evidence:
+The local store separates mutable working state from immutable completed evidence and, when explicitly enabled, sensitive local content:
 
 ```text
 working_runs
 completed_runs
+working_sample_content       # evidence-rich only
+completed_sample_content     # evidence-rich only
 ```
 
-A completed `run_id` cannot be replaced by a different payload. Publishing the exact same canonical completed payload is idempotent; publishing different content under the same completed ID is rejected.
+A completed `run_id` cannot be replaced by a different canonical payload. Publishing the exact same canonical completed payload is idempotent; publishing different content under the same completed ID is rejected.
 
-SQLite table layout is an implementation detail. External tooling should prefer the canonical Run/bundle or supported query/CLI boundaries rather than coupling to table columns.
+SQLite table layout is an implementation detail. External tooling should prefer the canonical Run/bundle or supported query/API boundaries rather than coupling to table columns. In particular, do not treat the sidecar tables as a portable evidence format.
 
 ## Comparison evidence
 
@@ -253,9 +287,11 @@ See [`ci-regression.md`](ci-regression.md).
 
 ## Privacy and retention boundary
 
-The default canonical Run evidence is designed to keep enough information for reproducibility without automatically persisting sensitive prompt/output text. Retention policy may further reduce per-sample diagnostics/measurements before terminal publication while preserving fingerprint and aggregate evidence required by the configured policy.
+The default canonical Run evidence is designed to keep enough information for reproducibility without persisting sensitive prompt/output text. `aggregate_safe` retains that behavior end to end.
 
-Do not add plaintext credentials, raw private endpoint configuration or prompt/output content to fingerprint fields merely because they would make debugging easier.
+`evidence_rich` is a deliberate local diagnostic opt-in/default for the browser Test a model workflow. Prompt/model output may contain secrets, personal data, proprietary text or other sensitive content, so the UI must label retained rich content explicitly. Rich content is not added to fingerprints, canonical Run JSON, portable bundles or aggregate comparison inputs.
+
+Do not add plaintext credentials, raw private endpoint configuration or prompt/output content to fingerprint fields merely because they would make debugging easier. Deleting rich local content must not mutate or fabricate canonical completed evidence; older aggregate-safe runs remain `content_not_retained` permanently.
 
 ## How to inspect a bundle manually
 
@@ -280,5 +316,7 @@ Keep together:
 - regression policy;
 - CI artifact where applicable;
 - representative hardware/device context not already captured in the fingerprint.
+
+Raw prompt/output sidecars are **not required** for comparison or regression and should be retained only when their diagnostic value justifies the privacy cost.
 
 A green unit-test run is not a substitute for this real evidence set.
