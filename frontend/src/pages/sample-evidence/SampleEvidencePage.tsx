@@ -117,7 +117,7 @@ export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailRea
         <section className="evidence-drilldown__section">
           <SectionHeader
             title="Model exchange"
-            description="The rendered prompt sent to the model, the raw model output and the benchmark expected output are kept visually distinct. Retention states remain explicit."
+            description="The rendered prompt sent to the model, the model output and the benchmark expected output are kept visually distinct. Retention states remain explicit."
           />
           <div className="evidence-drilldown__stack">
             <ContentPanel label="Prompt sent to model" evidence={detail.prompt} />
