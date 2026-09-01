@@ -7,7 +7,12 @@ from contextlib import suppress
 from typing import Protocol
 
 from performance_lab.domain import SampleContentEvidence
-from performance_lab.plugins import InferenceAdapter, InferenceChunk, InferenceRequest, InferenceResponse
+from performance_lab.plugins import (
+    InferenceAdapter,
+    InferenceChunk,
+    InferenceRequest,
+    InferenceResponse,
+)
 
 
 class EvidenceCaptureError(RuntimeError):
