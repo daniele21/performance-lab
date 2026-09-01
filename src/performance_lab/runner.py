@@ -141,6 +141,10 @@ async def execute_starter_run(
         bundle_path = config.store_path.parent / "artifacts" / f"{run_id}.plab.zip"
         store.export_bundle(run_id, bundle_path)
         return RunExecutionResult(run=run, store_path=config.store_path, bundle_path=bundle_path)
+    except Exception:
+        if config.evidence_mode == EvidenceMode.EVIDENCE_RICH:
+            store.delete_working_sample_content(run_id)
+        raise
     finally:
         await base_adapter.aclose()
 
