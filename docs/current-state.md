@@ -24,6 +24,8 @@ Campaigns revalidate frozen plan digests, persist reconnectable lifecycle separa
 
 The browser now uses the v0.6 graphite `Precision Instrument` visual system. Five provenance-bound v0.6 target-backed goldens cover Overview, Test a model frozen review, Benchmark Detail, Sample Evidence Detail and Campaign Results. Product hardening covers keyboard/focus semantics, assistive loading/error feedback, reduced motion, long-content containment and 1024/standard/1600 desktop contexts.
 
+Repository setup and CI use one locked toolchain path: `uv` owns Python resolution, `.venv`, execution and builds through `uv.lock`; pnpm owns frontend resolution/execution through `frontend/pnpm-lock.yaml`. The legacy pip-constraints/npm-lock setup path is removed and repository health blocks its reintroduction.
+
 E2E contract 0.1.1 requires screenshot and video artifacts for UI journeys. Current integrated evidence is fully green: Browser Acceptance is 20/20 with screenshot/video/trace retained, PRE_REAL browser J0-J9 passes with retained media, packaged J0/J1/J8/J9 passes with retained media, and the finalizer reports `READY_FOR_REAL_ENVIRONMENT: YES`.
 
 Hosted fixtures never prove representative hardware/runtime behavior; `RUNTIME-1` remains separate real-environment evidence.
