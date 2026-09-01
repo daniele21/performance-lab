@@ -19,6 +19,8 @@ from .evidence_models import (
     ExplanationState,
     SampleEvidenceDetailReadModel,
     SampleMeasurementReadModel,
+    SampleQualitySummaryReadModel,
+    SampleQualityVerdict,
     SampleScoreReadModel,
     SampleSummaryReadModel,
 )
@@ -134,6 +136,8 @@ __all__ = [
     "RuntimeParameterReadModel",
     "SampleEvidenceDetailReadModel",
     "SampleMeasurementReadModel",
+    "SampleQualitySummaryReadModel",
+    "SampleQualityVerdict",
     "SampleScoreReadModel",
     "SampleSummaryReadModel",
     "ScenarioKind",
