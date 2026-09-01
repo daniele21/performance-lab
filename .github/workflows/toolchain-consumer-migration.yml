@@ -27,10 +27,10 @@ jobs:
                   ('["npm", "--prefix", "frontend", "run", "test:e2e:full-product"]', '["pnpm", "--dir", "frontend", "run", "test:e2e:full-product"]'),
               ],
               "frontend/AGENTS.md": [
+                  ("npm --prefix frontend run test:e2e", "pnpm --dir frontend run test:e2e"),
                   ("npm --prefix frontend run check", "pnpm --dir frontend run check"),
                   ("npm --prefix frontend run test", "pnpm --dir frontend run test"),
                   ("npm --prefix frontend run build", "pnpm --dir frontend run build"),
-                  ("npm --prefix frontend run test:e2e", "pnpm --dir frontend run test:e2e"),
                   ("python scripts/package_release.py --require-full-product-e2e", "uv run --extra dev --locked python scripts/package_release.py --require-full-product-e2e"),
               ],
               "frontend/README.md": [
