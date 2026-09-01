@@ -135,6 +135,18 @@ export function TestModelView({
   const currentIndex = stepIndex(step);
   const selectedScenario = scenarios.find((item) => item.scenario === selection.scenario);
   const selectedDiscoveredModel = probe?.models.find((item) => item.model_id === selection.modelId);
+  const hasSelectedTarget = Boolean(selection.targetId);
+  const hasDiscoveredModels = Boolean(probe?.healthy && probe.models.length);
+  const configuredDiscoveryFailed = Boolean(
+    probeError || (probe && (!probe.healthy || !probe.models.length)),
+  );
+  const showConfiguredModels = hasSelectedTarget && !probeLoading && hasDiscoveredModels;
+  const showConfiguredFallback = hasSelectedTarget && !probeLoading && configuredDiscoveryFailed;
+  const discoveredModelCount = probe?.models.length ?? 0;
+  const discoveredModelNoun = discoveredModelCount === 1 ? "model" : "models";
+  const configuredModelDescription = probe
+    ? `${discoveredModelCount} ${discoveredModelNoun} reported by ${probe.endpoint_identity}.`
+    : "";
   const canLeaveModel = Boolean(selection.targetId && selection.modelId.trim());
   const canLeaveScenario = Boolean(selectedScenario?.supported);
 
@@ -213,22 +225,22 @@ export function TestModelView({
                     ))}
                   </Select>
 
-                  {selection.targetId && probeLoading ? (
+                  {hasSelectedTarget && probeLoading ? (
                     <p className="test-model-disclosure-note" role="status">
                       Discovering models from this target…
                     </p>
                   ) : null}
 
-                  {selection.targetId && probeError ? (
+                  {hasSelectedTarget && probeError ? (
                     <p className="test-model-connection-error" role="alert">
                       {probeError}
                     </p>
                   ) : null}
 
-                  {selection.targetId && !probeLoading && probe?.healthy && probe.models.length ? (
+                  {showConfiguredModels && probe ? (
                     <Select
                       label="Model"
-                      description={`${probe.models.length} model${probe.models.length === 1 ? "" : "s"} reported by ${probe.endpoint_identity}.`}
+                      description={configuredModelDescription}
                       value={selection.modelId}
                       onChange={(event) => updateSelection({ modelId: event.currentTarget.value })}
                     >
@@ -240,9 +252,7 @@ export function TestModelView({
                     </Select>
                   ) : null}
 
-                  {selection.targetId &&
-                    !probeLoading &&
-                    (probeError || (probe && (!probe.healthy || !probe.models.length))) ? (
+                  {showConfiguredFallback ? (
                     <>
                       {probe?.warning ? (
                         <p className="test-model-discovery-warning">{probe.warning}</p>
@@ -732,11 +742,10 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
           const currentStillAvailable = result.models.some(
             (model) => model.model_id === current.modelId,
           );
+          const firstDiscoveredModelId = result.models[0]?.model_id ?? "";
           return {
             ...current,
-            modelId: currentStillAvailable
-              ? current.modelId
-              : (result.models[0]?.model_id ?? ""),
+            modelId: currentStillAvailable ? current.modelId : firstDiscoveredModelId,
           };
         });
       })
@@ -745,11 +754,11 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
         setSelection((current) =>
           current.targetId === targetId ? { ...current, modelId: "" } : current,
         );
-        setProbeError(
-          error instanceof Error
-            ? error.message
-            : "Models could not be discovered for this target.",
-        );
+        if (error instanceof Error) {
+          setProbeError(error.message);
+          return;
+        }
+        setProbeError("Models could not be discovered for this target.");
       })
       .finally(() => {
         if (!controller.signal.aborted) setProbeLoading(false);
