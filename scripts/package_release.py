@@ -94,8 +94,8 @@ def build_id(explicit: str | None) -> str:
 def input_hashes() -> dict[str, str]:
     paths = {
         "pyproject.toml": ROOT / "pyproject.toml",
-        "requirements/ci-constraints.txt": ROOT / "requirements" / "ci-constraints.txt",
-        "frontend/package-lock.json": ROOT / "frontend" / "package-lock.json",
+        "uv.lock": ROOT / "uv.lock",
+        "frontend/pnpm-lock.yaml": ROOT / "frontend" / "pnpm-lock.yaml",
     }
     return {name: sha256_file(path) for name, path in paths.items()}
 
@@ -103,37 +103,27 @@ def input_hashes() -> dict[str, str]:
 def toolchain() -> dict[str, str]:
     return {
         "python": platform.python_version(),
+        "uv": run(["uv", "--version"], capture=True),
         "node": run(["node", "--version"], capture=True),
-        "npm": run(["npm", "--version"], capture=True),
+        "pnpm": run(["pnpm", "--version"], capture=True),
     }
 
 
 def validate_before_packaging() -> None:
     run([sys.executable, "scripts/validate.py"])
-    run(["npm", "--prefix", "frontend", "run", "check"])
-    run(["npm", "--prefix", "frontend", "run", "test"])
+    run(["pnpm", "--dir", "frontend", "run", "check"])
+    run(["pnpm", "--dir", "frontend", "run", "test"])
     run([sys.executable, "-m", "pytest", "tests/e2e", "-v", "--tb=short"])
 
 
 def build_payload(staging: Path) -> Path:
-    run(["npm", "--prefix", "frontend", "run", "build"])
+    run(["pnpm", "--dir", "frontend", "run", "build"])
     web = staging / "web"
     shutil.copytree(ROOT / "frontend" / "dist", web)
 
     python_dir = staging / "python"
     python_dir.mkdir(parents=True)
-    run(
-        [
-            sys.executable,
-            "-m",
-            "pip",
-            "wheel",
-            ".",
-            "--no-deps",
-            "--wheel-dir",
-            str(python_dir),
-        ]
-    )
+    run(["uv", "build", "--wheel", "--out-dir", str(python_dir)])
     wheels = tuple(python_dir.glob("*.whl"))
     if len(wheels) != 1:
         raise RuntimeError(f"expected exactly one wheel, found {len(wheels)}")
