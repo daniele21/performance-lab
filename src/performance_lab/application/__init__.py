@@ -12,7 +12,7 @@ from .campaign_models import (
     CampaignResultsReadModel,
 )
 from .campaign_queries import CampaignQueryService
-from .endpoint_discovery import probe_endpoint_connection
+from .endpoint_discovery import probe_endpoint_connection, probe_endpoint_profile
 from .evidence_models import (
     EvidenceContentReadModel,
     EvidenceContentState,
@@ -40,8 +40,8 @@ from .planning_models import (
 from .planning_queries import (
     CampaignPlanDigestMismatchError,
     CampaignPlanLaunchError,
-    UIQueryService,
 )
+from .target_queries import UIQueryService
 from .ui_models import (
     UI_READ_MODEL_VERSION,
     BaselineSummaryReadModel,
@@ -144,4 +144,5 @@ __all__ = [
     "UIQueryService",
     "UseCaseReadModel",
     "probe_endpoint_connection",
+    "probe_endpoint_profile",
 ]
