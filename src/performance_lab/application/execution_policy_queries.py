@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from performance_lab.domain import EvidenceMode
+from performance_lab.domain import EndpointProfile, EvidenceMode
 from performance_lab.run_config import StarterRunConfig
 
+from .evidence_models import EvidenceContentReadModel, EvidenceContentState, SampleEvidenceDetailReadModel
 from .run_jobs import starter_run_config_digest
 from .target_queries import UIQueryService as TargetUIQueryService
-from .ui_models import RunPreflightReadModel, RunPreflightRequest
+from .ui_models import RunPreflightReadModel, RunPreflightRequest, TargetSummaryReadModel
 
 
 class UIQueryService(TargetUIQueryService):
@@ -32,6 +33,55 @@ class UIQueryService(TargetUIQueryService):
         )
         return prepared.model_copy(update={"preview": preview})
 
-    def _campaign_run_config(self, **kwargs: object) -> StarterRunConfig:
-        config = super()._campaign_run_config(**kwargs)
+    def get_sample_evidence(
+        self,
+        run_id: str,
+        task_id: str,
+        sample_id: str,
+        attempt: int,
+    ) -> SampleEvidenceDetailReadModel:
+        detail = super().get_sample_evidence(run_id, task_id, sample_id, attempt)
+        reader = getattr(self.store, "get_sample_content", None)
+        if reader is None:
+            return detail
+        content = reader(run_id, task_id, sample_id, attempt)
+        if content is None:
+            return detail
+        response = (
+            EvidenceContentReadModel(
+                state=EvidenceContentState.RETAINED,
+                content=content.response,
+            )
+            if content.response is not None
+            else EvidenceContentReadModel(
+                state=EvidenceContentState.UNAVAILABLE,
+                reason="model_response_not_produced",
+            )
+        )
+        return detail.model_copy(
+            update={
+                "prompt": EvidenceContentReadModel(
+                    state=EvidenceContentState.RETAINED,
+                    content=content.prompt,
+                ),
+                "response": response,
+            }
+        )
+
+    def _campaign_run_config(
+        self,
+        *,
+        target: TargetSummaryReadModel,
+        endpoint: EndpointProfile,
+        model_id: str,
+        suite_id: str,
+        suite_version: str,
+    ) -> StarterRunConfig:
+        config = super()._campaign_run_config(
+            target=target,
+            endpoint=endpoint,
+            model_id=model_id,
+            suite_id=suite_id,
+            suite_version=suite_version,
+        )
         return config.model_copy(update={"evidence_mode": EvidenceMode.AGGREGATE_SAFE})
