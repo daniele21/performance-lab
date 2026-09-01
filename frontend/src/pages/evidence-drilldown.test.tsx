@@ -155,6 +155,22 @@ const sampleDetail: SampleEvidenceDetailReadModel = {
   definition_issues: [],
 };
 
+const retainedSampleDetail: SampleEvidenceDetailReadModel = {
+  ...sampleDetail,
+  prompt: {
+    ...API_IDENTITY,
+    state: "retained",
+    content: "Rendered prompt actually sent to the model",
+    reason: null,
+  },
+  response: {
+    ...API_IDENTITY,
+    state: "retained",
+    content: "Expected answer",
+    reason: null,
+  },
+};
+
 describe("evidence drilldown views", () => {
   it("keeps benchmark definition separate from execution results", () => {
     const markup = renderToStaticMarkup(<BenchmarkDetailView benchmark={benchmark} />);
@@ -166,14 +182,34 @@ describe("evidence drilldown views", () => {
     expect(markup).not.toContain("model-a");
   });
 
-  it("renders explicit retention and evaluator explanation states", () => {
+  it("renders explicit retention and evaluator explanation states without confusing benchmark input with prompt", () => {
     const markup = renderToStaticMarkup(<SampleEvidenceView detail={sampleDetail} />);
 
     expect(markup).toContain("model-a");
     expect(markup).toContain("Q4_K_M");
+    expect(markup).toContain("Execution");
+    expect(markup).toContain("Prompt sent to model");
+    expect(markup).toContain("Model output");
+    expect(markup).toContain("Expected output");
     expect(markup).toContain("Expected answer");
+    expect(markup).toContain("Original benchmark input");
+    expect(markup).toContain("It is not the prompt sent to the model.");
     expect(markup.match(/Content not retained/g)?.length).toBe(2);
     expect(markup).toContain("Evaluation explanation unavailable");
     expect(markup).toContain("client · sample · latency-v1");
+  });
+
+  it("puts the executed prompt before model output and expected output when content is retained", () => {
+    const markup = renderToStaticMarkup(<SampleEvidenceView detail={retainedSampleDetail} />);
+
+    const promptLabel = markup.indexOf("Prompt sent to model");
+    const modelOutputLabel = markup.indexOf("Model output");
+    const expectedOutputLabel = markup.indexOf("Expected output");
+
+    expect(promptLabel).toBeGreaterThanOrEqual(0);
+    expect(modelOutputLabel).toBeGreaterThan(promptLabel);
+    expect(expectedOutputLabel).toBeGreaterThan(modelOutputLabel);
+    expect(markup).toContain("Rendered prompt actually sent to the model");
+    expect(markup).toContain("Expected answer");
   });
 });
