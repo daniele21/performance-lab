@@ -94,7 +94,7 @@ test("J1/J8: packaged product completes, persists and drills into sample evidenc
   await page.goto("/#test-a-model");
   await expect(page.getByRole("heading", { name: "Test a model" })).toBeVisible();
 
-  await page.getByLabel("Model ID").fill("fixture-good");
+  await expect(page.getByLabel("Model", { exact: true })).toHaveValue("fixture-good");
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("heading", { name: "What do you want to learn?" })).toBeVisible();
 
