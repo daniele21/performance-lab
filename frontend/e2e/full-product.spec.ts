@@ -120,7 +120,10 @@ test("J1/J8: packaged product completes, persists and drills into sample evidenc
   await sampleEvidenceLink.click();
 
   await expect(page).toHaveURL(/#runs\/[^/]+\/samples\//);
-  await expect(page.getByRole("heading", { name: "Execution content" })).toBeVisible();
-  await expect(page.getByText("Content not retained").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Model exchange" })).toBeVisible();
+  await expect(page.getByText("Prompt sent to model", { exact: true })).toBeVisible();
+  await expect(page.getByText("Model output", { exact: true })).toBeVisible();
+  await expect(page.getByText("Expected output", { exact: true })).toBeVisible();
+  await expect(page.getByText("Content not retained")).toHaveCount(2);
   await expect(page.getByRole("heading", { name: "Evaluator evidence" })).toBeVisible();
 });

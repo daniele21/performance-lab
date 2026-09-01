@@ -52,6 +52,15 @@ function ContentPanel({ label, evidence }: { label: string; evidence: EvidenceCo
   );
 }
 
+function ValuePanel({ label, value }: { label: string; value: unknown }) {
+  return (
+    <div className="evidence-drilldown__panel">
+      <span className="evidence-drilldown__panel-label">{label}</span>
+      <pre className="evidence-drilldown__pre">{renderValue(value)}</pre>
+    </div>
+  );
+}
+
 export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailReadModel }) {
   const { run, sample, benchmark_case: benchmarkCase } = detail;
   const identity = run.identity;
@@ -70,7 +79,7 @@ export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailRea
 
         <div className="evidence-drilldown__summary-grid" aria-label="Sample evidence summary">
           <div>
-            <span>Outcome</span>
+            <span>Execution</span>
             <Status tone={sampleTone(sample.status)}>{sample.status}</Status>
           </div>
           <div>
@@ -107,36 +116,25 @@ export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailRea
 
         <section className="evidence-drilldown__section">
           <SectionHeader
-            title="Case context"
-            description="Authored benchmark definition is shown separately from retained execution content."
+            title="Model exchange"
+            description="The rendered prompt sent to the model, the model output and the benchmark expected output are kept visually distinct. Retention states remain explicit."
           />
-          {benchmarkCase ? (
+          <div className="evidence-drilldown__stack">
+            <ContentPanel label="Prompt sent to model" evidence={detail.prompt} />
             <div className="evidence-drilldown__content-grid">
-              <div className="evidence-drilldown__panel">
-                <span className="evidence-drilldown__panel-label">Benchmark input</span>
-                <pre className="evidence-drilldown__pre">{renderValue(benchmarkCase.input)}</pre>
-              </div>
-              <div className="evidence-drilldown__panel">
-                <span className="evidence-drilldown__panel-label">Expected output</span>
-                <pre className="evidence-drilldown__pre">{renderValue(benchmarkCase.expected)}</pre>
-              </div>
+              <ContentPanel label="Model output" evidence={detail.response} />
+              {benchmarkCase ? (
+                <ValuePanel label="Expected output" value={benchmarkCase.expected} />
+              ) : (
+                <div className="evidence-drilldown__panel">
+                  <span className="evidence-drilldown__panel-label">Expected output</span>
+                  <Status tone="unknown">Content unavailable</Status>
+                  <p className="evidence-drilldown__muted">
+                    The authored benchmark case definition is unavailable for this sample.
+                  </p>
+                </div>
+              )}
             </div>
-          ) : (
-            <EmptyState
-              title="Benchmark case definition unavailable"
-              description="The sample identity is retained, but inspectable authored case content is not available."
-            />
-          )}
-        </section>
-
-        <section className="evidence-drilldown__section">
-          <SectionHeader
-            title="Execution content"
-            description="Prompt and model response follow the evidence-retention contract; unavailable content is never reconstructed."
-          />
-          <div className="evidence-drilldown__content-grid">
-            <ContentPanel label="Retained execution prompt" evidence={detail.prompt} />
-            <ContentPanel label="Actual model response" evidence={detail.response} />
           </div>
         </section>
 
@@ -177,6 +175,21 @@ export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailRea
             <EmptyState
               title="No evaluator scores retained"
               description="This sample has no evaluator score evidence to display."
+            />
+          )}
+        </section>
+
+        <section className="evidence-drilldown__section">
+          <SectionHeader
+            title="Benchmark source context"
+            description="The authored benchmark input is source case data used to render the execution prompt. It is not the prompt sent to the model."
+          />
+          {benchmarkCase ? (
+            <ValuePanel label="Original benchmark input" value={benchmarkCase.input} />
+          ) : (
+            <EmptyState
+              title="Benchmark case definition unavailable"
+              description="The sample identity is retained, but inspectable authored case content is not available."
             />
           )}
         </section>
