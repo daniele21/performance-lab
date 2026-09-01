@@ -734,7 +734,9 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
           );
           return {
             ...current,
-            modelId: currentStillAvailable ? current.modelId : (result.models[0]?.model_id ?? ""),
+            modelId: currentStillAvailable
+              ? current.modelId
+              : (result.models[0]?.model_id ?? ""),
           };
         });
       })
@@ -744,7 +746,9 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
           current.targetId === targetId ? { ...current, modelId: "" } : current,
         );
         setProbeError(
-          error instanceof Error ? error.message : "Models could not be discovered for this target.",
+          error instanceof Error
+            ? error.message
+            : "Models could not be discovered for this target.",
         );
       })
       .finally(() => {
