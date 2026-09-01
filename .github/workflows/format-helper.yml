@@ -1,0 +1,30 @@
+name: Temporary formatter helper
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - name: Show canonical Prettier diff
+        run: |
+          pnpm --dir frontend exec prettier --write \
+            e2e/evidence-drilldown.spec.ts \
+            e2e/full-product.spec.ts \
+            e2e/visual-acceptance.spec.ts
+          git diff -- frontend/e2e/evidence-drilldown.spec.ts frontend/e2e/full-product.spec.ts frontend/e2e/visual-acceptance.spec.ts
