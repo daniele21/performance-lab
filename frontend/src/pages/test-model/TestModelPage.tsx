@@ -241,8 +241,8 @@ export function TestModelView({
                   ) : null}
 
                   {selection.targetId &&
-                  !probeLoading &&
-                  (probeError || (probe && (!probe.healthy || !probe.models.length))) ? (
+                    !probeLoading &&
+                    (probeError || (probe && (!probe.healthy || !probe.models.length))) ? (
                     <>
                       {probe?.warning ? (
                         <p className="test-model-discovery-warning">{probe.warning}</p>
