@@ -38,12 +38,26 @@ def local_server_root(connection: EndpointConnectionInput) -> HttpUrl:
 
 
 async def probe_endpoint_connection(connection: EndpointConnectionInput) -> EndpointProbeReadModel:
-    """Discover models/capabilities without letting the browser call the runtime directly."""
+    """Discover a user-entered local connection without exposing the runtime to the browser."""
     profile = EndpointProfile(
         profile_id="session-probe",
         base_url=connection.base_url,
         timeout_seconds=connection.timeout_seconds,
     )
+    return await probe_endpoint_profile(
+        profile,
+        endpoint_identity_value=endpoint_identity(connection),
+        local_connection=connection,
+    )
+
+
+async def probe_endpoint_profile(
+    profile: EndpointProfile,
+    *,
+    endpoint_identity_value: str,
+    local_connection: EndpointConnectionInput | None = None,
+) -> EndpointProbeReadModel:
+    """Discover models through a backend-owned endpoint profile, preserving auth semantics."""
     adapter = OpenAICompatibleAdapter(profile)
     try:
         passive = await adapter.probe()
@@ -53,8 +67,12 @@ async def probe_endpoint_connection(connection: EndpointConnectionInput) -> Endp
     capabilities = _capability_evidence(passive.capabilities, healthy=passive.healthy)
     runtime_parameters: dict[str, tuple[RuntimeParameterReadModel, ...]] = {}
     warning: str | None = None
-    if passive.healthy and connection.server_type == "local_llm_server":
-        runtime_parameters, warning = await _probe_local_llm_server_registry(connection)
+    if (
+        passive.healthy
+        and local_connection is not None
+        and local_connection.server_type == "local_llm_server"
+    ):
+        runtime_parameters, warning = await _probe_local_llm_server_registry(local_connection)
 
     models = tuple(
         DiscoveredModelReadModel(
@@ -69,7 +87,7 @@ async def probe_endpoint_connection(connection: EndpointConnectionInput) -> Endp
 
     return EndpointProbeReadModel(
         healthy=passive.healthy,
-        endpoint_identity=endpoint_identity(connection),
+        endpoint_identity=endpoint_identity_value,
         models=models,
         capabilities=capabilities,
         supported_generation_parameters=tuple(

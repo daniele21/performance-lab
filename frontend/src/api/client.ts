@@ -145,6 +145,14 @@ export function probeEndpoint(connection: EndpointConnectionInput, options?: Req
   );
 }
 
+export function probeTarget(targetId: string, options?: RequestOptions) {
+  return postJson<Record<string, never>, EndpointProbeReadModel>(
+    `/api/v1/targets/${encodeURIComponent(targetId)}/probe`,
+    {},
+    options,
+  );
+}
+
 export function getCampaignPlanning(options?: RequestOptions) {
   return getJson<CampaignPlanningContextReadModel>("/api/v1/campaign-planning", options);
 }

@@ -28,6 +28,7 @@ export {
   preflightRun,
   previewCampaignPlan,
   probeEndpoint,
+  probeTarget,
   subscribeCampaign,
   subscribeRunJob,
 } from "./client";

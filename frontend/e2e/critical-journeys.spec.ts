@@ -128,6 +128,23 @@ const targets = [
   },
 ];
 
+const targetProbe = {
+  ...API_IDENTITY,
+  healthy: true,
+  endpoint_identity: targets[0].endpoint_identity,
+  target: targets[0],
+  models: [
+    {
+      ...API_IDENTITY,
+      model_id: "model-candidate",
+      runtime_parameters: [],
+    },
+  ],
+  capabilities: [],
+  supported_generation_parameters: [],
+  warning: null,
+};
+
 const scenarios = [
   {
     ...API_IDENTITY,
@@ -303,6 +320,10 @@ async function installFixture(page: Page, options: FixtureOptions = {}): Promise
       await fulfillJson(route, targets);
       return;
     }
+    if (path === "/api/v1/targets/target-local/probe" && request.method() === "POST") {
+      await fulfillJson(route, targetProbe);
+      return;
+    }
     if (path === "/api/v1/scenarios") {
       await fulfillJson(route, scenarios);
       return;
@@ -378,7 +399,7 @@ async function installFixture(page: Page, options: FixtureOptions = {}): Promise
 
 async function completeEvaluation(page: Page) {
   await expect(page.getByRole("heading", { name: "Test a model" })).toBeVisible();
-  await page.getByLabel("Model ID").fill("model-candidate");
+  await expect(page.getByLabel("Model", { exact: true })).toHaveValue("model-candidate");
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("heading", { name: "What do you want to learn?" })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();

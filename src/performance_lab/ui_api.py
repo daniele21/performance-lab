@@ -39,6 +39,7 @@ from performance_lab.application import (
     TestedModelReadModel,
     UIQueryService,
     probe_endpoint_connection,
+    probe_endpoint_profile,
 )
 from performance_lab.application.campaign_jobs import (
     CampaignCapacityError,
@@ -109,6 +110,22 @@ def create_ui_app(
             discovered_models=result.models,
             supported_generation_parameters=result.supported_generation_parameters,
         )
+        return result.model_copy(update={"target": target})
+
+    @app.post("/api/v1/targets/{target_id}/probe", response_model=EndpointProbeReadModel)
+    async def probe_target_endpoint(target_id: str) -> EndpointProbeReadModel:
+        try:
+            target, endpoint, session_connection = queries.get_target_probe_context(target_id)
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail="target endpoint not found") from exc
+
+        if session_connection is not None:
+            result = await probe_endpoint_connection(session_connection)
+        else:
+            result = await probe_endpoint_profile(
+                endpoint,
+                endpoint_identity_value=target.endpoint_identity,
+            )
         return result.model_copy(update={"target": target})
 
     @app.get("/api/v1/campaign-planning", response_model=CampaignPlanningContextReadModel)
