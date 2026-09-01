@@ -47,11 +47,14 @@ The repository includes:
 The caller must set up Python and install Performance Lab before invoking it. Example:
 
 ```yaml
-- uses: actions/setup-python@v5
+- uses: astral-sh/setup-uv@v6
   with:
+    version: "0.12.5"
     python-version: "3.12"
 
-- run: python -m pip install -e .
+- run: uv sync --locked
+
+- run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
 - name: Performance regression gate
   id: performance_gate

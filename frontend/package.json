@@ -5,15 +5,15 @@
   "type": "module",
   "engines": {
     "node": "24.18.x",
-    "npm": "11.17.x"
+    "pnpm": "11.24.x"
   },
-  "packageManager": "npm@11.17.0",
+  "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc -b --pretty false",
-    "check": "npm run format:check && npm run lint && npm run typecheck",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:pre-real": "playwright test --config playwright.pre-real.config.ts",

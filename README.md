@@ -1,298 +1,240 @@
 # AI Performance Lab
 
-AI Performance Lab is a model- and runtime-agnostic evaluation system for answering one practical deployment question:
+AI Performance Lab is a model- and runtime-agnostic evaluation product for answering one practical deployment question:
 
 > **For my use case, which of the models available to me is the best fit for this device, and with which configuration?**
 
-Rather than ranking models in the abstract, Performance Lab evaluates **model × configuration × device** combinations against the requirements of a specific use case.
+Rather than ranking models in the abstract, Performance Lab evaluates **model × configuration × device** combinations against the requirements of a specific workload. It maps the selected use case to relevant benchmarks/datasets, runs candidates through an external inference service, keeps quality/runtime/resources as separate evidence dimensions and stores reproducible evidence behind the final decision.
 
-The use case determines what matters. Performance Lab maps it to relevant capabilities, benchmarks and evaluation datasets, runs candidate combinations through an external inference service, measures quality, runtime and resource behavior, and stores reproducible evidence that supports a deployment decision.
-
-The lab does not own model loading or inference runtimes. It connects to inference endpoints, executes reproducible evaluation suites, captures measurements, optionally correlates them with host/device/runtime telemetry, and compares resulting evidence across compatible runs.
+Performance Lab does **not** own model loading or inference-runtime lifecycle. It evaluates externally served endpoints and can optionally consume richer runtime identity/telemetry when an integration exposes it.
 
 ## Product question
 
 > **Given my target use case, target device and available models/configurations, which combination gives me the best evidence-backed trade-off for what I actually need?**
 
-The goal is not another generic LLM leaderboard. The goal is to turn use-case-relevant benchmark and runtime evidence into a practical deployment decision, with the trade-offs visible rather than hidden in a universal score.
+The goal is not another generic LLM leaderboard. Recommendations must remain traceable to compatible evidence and an explicit decision policy; unavailable or non-comparable evidence is never repaired into a fake score.
 
 ## How it works
 
-**Use case → required capabilities → relevant benchmarks/datasets → candidate model/configuration runs → quality + runtime + resource comparison → evidence-backed decision**
+**Use case → relevant benchmarks/datasets → candidate model/configuration runs → quality + runtime + resource evidence → compatibility → evidence-backed decision**
 
-For example, document summarization may emphasize factual consistency, instruction following and long-context behavior, while structured extraction may emphasize field accuracy, schema adherence and hallucination resistance. User-provided datasets can represent the real workload when generic benchmarks are insufficient.
+Core principles:
 
-## Core principles
+- **Use case first.** Benchmark relevance comes from the workload objective.
+- **Inference is external.** The lab evaluates endpoints rather than embedding a model runtime.
+- **Execution identity is explicit.** Model name alone is not enough; quantization, runtime/configuration, endpoint, dataset/evaluator and hardware identity remain part of reproducible evidence when known.
+- **Quality, runtime and resources stay separate.** There is no universal opaque score.
+- **Compatibility comes before ranking/deltas.** Evidence is compared only where the relevant identities permit it.
+- **Unknown stays unknown.** Missing identity, telemetry or retained content is never fabricated as zero.
+- **Regression testing is a first-class secondary use case.** The same immutable evidence can gate model/runtime replacement changes.
 
-- **Use case first.** Benchmarks and datasets are selected because they are relevant to the workload objective, not because they are popular in isolation.
-- **Inference is external.** The lab evaluates endpoints; it does not embed a model runtime in its core.
-- **A model name is not a benchmark identity.** Results belong to a complete execution fingerprint: model, quantization, runtime, effective serving configuration, generation configuration, endpoint, hardware, dataset snapshot and evaluator version.
-- **Quality, runtime and resources are separate evidence dimensions.** A single opaque score must never hide trade-offs.
-- **Black-box first, instrumentation optional.** Any compatible inference endpoint can be evaluated; richer host/runtime measurements and first-party identity are optional integrations.
-- **Reproducibility before leaderboard aesthetics.** Runs are versioned, immutable and comparable only when their relevant identities are compatible.
-- **Use-case-aligned evaluation matters more than generic ranking.** General-purpose suites, workload packs and user-provided datasets share the same execution model.
-- **Recommendations stay evidence-backed.** A preferred model/configuration must expose the evidence and constraints behind the decision rather than becoming an unexplained winner.
-- **Regression testing is a first-class secondary use case.** The same evidence supports replacement validation, regression analysis and deterministic CI gates.
+## Supported inference endpoint
 
-## What can be evaluated
-
-The current executable slice targets text-generation endpoints through the reference OpenAI-compatible adapter. The architecture remains extensible to other transports and later task families such as ASR, embeddings, reranking and vision.
-
-A black-box endpoint only needs the inference contract used by the adapter. Runtime-specific telemetry and first-party identity discovery are optional.
-
-### Minimum inference contract
-
-For the standard executable path, expose:
+The current executable product targets text-generation endpoints through the OpenAI-compatible adapter. The minimum inference surface is:
 
 ```text
 GET  /v1/models
 POST /v1/chat/completions
 ```
 
-`POST /v1/chat/completions` must accept an OpenAI-style `messages` request and return the selected model's completion. Streaming/token usage/capability details are discovered when available rather than assumed.
+For a non-streaming response, `choices[0].message.content` is the required model output. `model`, `finish_reason` and token usage are consumed when available; provider-specific identity/configuration fields are never guessed into the execution fingerprint.
 
-The minimum model-list response consumed by Performance Lab is:
-
-```json
-{
-  "data": [
-    {"id": "my-model"}
-  ]
-}
-```
-
-For a non-streaming chat completion, the only response field required to score the model output is `choices[0].message.content` as text:
-
-```json
-{
-  "model": "my-model",
-  "choices": [
-    {
-      "message": {
-        "role": "assistant",
-        "content": "The model answer"
-      },
-      "finish_reason": "stop"
-    }
-  ],
-  "usage": {
-    "prompt_tokens": 42,
-    "completion_tokens": 17
-  }
-}
-```
-
-Current consumption rules are deliberately narrow:
-
-| Response field | Status | Performance Lab use |
-| --- | --- | --- |
-| `choices[0].message.content` | **required** | model output passed to evaluators |
-| `model` | optional | normalized response model identifier |
-| `choices[0].finish_reason` | optional | normalized completion metadata |
-| `usage.prompt_tokens` | optional | observed input-token count |
-| `usage.completion_tokens` | optional | observed output-token count / token-based performance evidence |
-| provider-specific extra fields | ignored unless explicitly adapted | never guessed into the fingerprint |
-
-For streaming, the adapter requests `stream_options.include_usage=true` and consumes Server-Sent Events with OpenAI-style `data:` frames. Text arrives through `choices[0].delta.content`; `finish_reason` and `usage` may arrive in later frames, followed by `data: [DONE]`.
-
-A compact example is:
+`daniele21/local-llm-server` can additionally expose:
 
 ```text
-data: {"choices":[{"delta":{"content":"hel"},"finish_reason":null}]}
-
-data: {"choices":[{"delta":{"content":"lo"},"finish_reason":"stop"}]}
-
-data: {"choices":[],"usage":{"prompt_tokens":3,"completion_tokens":2}}
-
-data: [DONE]
+GET /v1/runtime/identity   # stable execution identity
+GET /status                # dynamic runtime telemetry
 ```
 
-These are **wire-response fields**, not the complete experiment identity. Quantization, artifact revision/digest, runtime name/version/configuration and hardware are not inferred from arbitrary response metadata. If they are not supplied through an explicit identity/configuration contract, they remain `unknown` in the execution fingerprint.
+Those endpoints enrich first-party evidence but are not required for generic black-box evaluation. See [`docs/local-llm-server-integration.md`](docs/local-llm-server-integration.md) and [`docs/local-llm-identity-contract.md`](docs/local-llm-identity-contract.md).
 
-### `local-llm-server` integration
+## How to use locally
 
-`daniele21/local-llm-server` provides the OpenAI-compatible inference surface above and two optional first-party evidence surfaces with deliberately different responsibilities:
+### 1. Use the current integration branch
 
-```text
-GET /v1/runtime/identity   # stable execution identity, frozen before the run
-GET /status                # dynamic runtime telemetry sampled during the run
-```
-
-Neither endpoint is required for generic black-box evaluation.
-
-#### Execution identity
-
-The shared versioned producer/consumer contract is `local-llm-identity-v1`. Performance Lab strictly validates the identity document and can map:
-
-- model ID, revision, artifact digest and quantization;
-- backend/runtime name and version;
-- effective serving-configuration digest;
-- non-sensitive machine/CPU/accelerator/memory/OS identity.
-
-These fields are frozen into `ExecutionFingerprint` before evaluation begins. Performance Lab does not infer quantization from filenames or reinterpret arbitrary Local LLM Server response fields.
-
-Identity can be requested explicitly and made mandatory for evidence-grade campaigns:
-
-```json
-{
-  "local_llm_server_identity": {
-    "base_url": "http://127.0.0.1:1235",
-    "model_id": "my-model",
-    "timeout_seconds": 2.0,
-    "required": true
-  }
-}
-```
-
-When `local_llm_server_telemetry` is configured and the explicit identity block is omitted, the runner also attempts identity discovery from the same server root on a best-effort basis. This keeps older Local LLM Server versions usable: failure to discover optional identity falls back to the normal honest unknown-field behavior.
-
-If explicit run-config hardware and first-party server hardware both provide the same field but disagree, the run is rejected before the fingerprint is frozen.
-
-See [`docs/local-llm-identity-contract.md`](docs/local-llm-identity-contract.md) for the exact mapping, selection rules, compatibility behavior and acceptance contract.
-
-#### Runtime telemetry
-
-Performance Lab can collect runtime-native evidence by polling:
-
-```text
-GET /status
-```
-
-The useful selected-model status fields currently consumed are:
-
-```json
-{
-  "active_requests": 1,
-  "max_concurrent_requests": 1,
-  "phase": "generating",
-  "output_chunks": 12,
-  "output_characters": 640,
-  "chunks_per_second": 18.4
-}
-```
-
-`/status` may expose that object directly or under `models[model_id]` together with `default_model`. `chunks_per_second` is observational runtime evidence and is deliberately **not** relabeled as token throughput.
-
-See [`docs/local-llm-server-integration.md`](docs/local-llm-server-integration.md) for the complete inference/telemetry setup and limitations.
-
-## Quick start
-
-Requires Python 3.12+.
+`dev` is the canonical integration line; `main` is stable/release-oriented and is promoted deliberately after FULL validation.
 
 ```bash
-python -m pip install -e ".[dev]"
-python scripts/validate.py
+git clone https://github.com/daniele21/performance-lab.git
+cd performance-lab
+git checkout dev
+git pull --ff-only origin dev
 ```
 
-Create a run config, for example for `local-llm-server` running on port `1235`:
+### 2. Install the pinned toolchain
+
+Repository development has one dependency/environment path:
+
+- `uv 0.12.5`;
+- Python `3.12` by default (`.python-version`);
+- Node `24.18.0` (`frontend/.nvmrc`);
+- pnpm `11.24.0` (`frontend/package.json#packageManager`);
+- `uv.lock` and `frontend/pnpm-lock.yaml` are the only dependency lockfiles.
+
+Install `uv` and Node/Corepack first, then from the repository root run:
+
+```bash
+uv python install 3.12
+uv sync --extra dev --locked
+
+corepack enable
+corepack install --global pnpm@11.24.0
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend exec playwright install chromium
+```
+
+`uv` creates and owns the repository `.venv`. **Do not create/activate another virtualenv** and do not use `pip install -e`, npm or a second lockfile for repository setup. Canonical commands execute through `uv run`, so manual activation is unnecessary.
+
+Verify the environment:
+
+```bash
+uv run --extra dev --locked python scripts/doctor.py
+```
+
+### 3. Configure the inference target
+
+Probe the endpoint first:
+
+```bash
+uv run --extra dev --locked performance-lab probe \
+  --base-url http://127.0.0.1:1235/v1/ \
+  --model my-model
+```
+
+Create `local-run.json`:
 
 ```json
 {
   "schema_version": 1,
-  "target_id": "local-llm-server-local-model",
+  "target_id": "local-model",
   "endpoint_identity": "127.0.0.1:1235",
   "endpoint": {
-    "profile_id": "local-llm-server",
+    "profile_id": "local-endpoint",
     "base_url": "http://127.0.0.1:1235/v1/",
     "model_selector": "my-model"
   },
   "model_id": "my-model",
-  "store_path": ".performance-lab/runs.sqlite3",
-  "use_host_telemetry": true,
-  "local_llm_server_identity": {
-    "base_url": "http://127.0.0.1:1235",
-    "model_id": "my-model",
-    "timeout_seconds": 2.0,
-    "required": true
-  },
-  "local_llm_server_telemetry": {
-    "base_url": "http://127.0.0.1:1235",
-    "model_id": "my-model",
-    "sample_interval_seconds": 0.05,
-    "timeout_seconds": 2.0
-  }
+  "store_path": ".performance-lab/runs.sqlite3"
 }
 ```
 
-Then execute one controlled run:
+For Local LLM Server, the same run config can add explicit identity and telemetry blocks. See [`docs/run-config-reference.md`](docs/run-config-reference.md) for all supported fields.
+
+### 4. Run the built browser product — recommended
+
+For manual product/UX testing, use the assembled built frontend rather than Vite:
 
 ```bash
-performance-lab run --config local-llm-server-run.json
+pnpm --dir frontend run build
+
+uv run --extra dev --locked performance-lab-ui \
+  --config local-run.json \
+  --assets frontend/dist
 ```
 
-The run is persisted in SQLite and exported as a portable `.plab.zip` evidence bundle. The execution fingerprint records the endpoint/model/runtime-config/generation/dataset/evaluator/hardware/telemetry identity actually known at run start. Unobserved fields remain unknown rather than being guessed.
+Open:
 
-### Run the local browser product
+```text
+http://127.0.0.1:8765
+```
 
-From a repository checkout, build the frontend and serve it together with the loopback API:
+The UI and API are served by the same loopback-owned process. Stop it with `Ctrl-C`; model serving remains external.
+
+### 5. Frontend development mode — optional
+
+Run the API and Vite separately.
+
+Terminal 1:
 
 ```bash
-npm --prefix frontend ci
-npm --prefix frontend run build
-performance-lab-ui --config local-llm-server-run.json --assets frontend/dist
+uv run --extra dev --locked performance-lab-ui \
+  --config local-run.json \
+  --port 8765
 ```
 
-Then open the loopback address printed by `performance-lab-ui`. The primary **Find best setup** journey is executable: choose a versioned use case, select candidate models on one target/device, review the backend-owned benchmark plan and frozen digest, start the campaign, follow reconnectable progress, and inspect results backed by immutable Runs.
+Terminal 2:
 
-Campaign execution revalidates the exact frozen plan on the server before launch. Candidate identity remains explicit, including `unknown` quantization/runtime fields when the connected runtime cannot report them. Parameter sweeps stay unavailable unless the runtime contract supplies bounded ranges.
+```bash
+pnpm --dir frontend run dev
+```
 
-Results show compatibility and the explicit versioned decision policy before any recommendation. The current `strict-quality-dominance@1.0.0` policy only recommends a unique candidate when comparable quality evidence shows it is no worse on every reported quality metric and strictly better on at least one metric against every alternative; it does not create a universal weighted score. Campaign Results also expose retained benchmark case identities: opening a case compares that exact `(task_id, sample_id)` across candidate Runs, preserves each model/quantization/configuration/Run/sample-attempt identity, and keeps unavailable or non-comparable evidence explicit rather than inferring a case-level winner.
+Open `http://127.0.0.1:5173`. Vite proxies `/api` to `http://127.0.0.1:8765`; both listeners bind to loopback and use strict ports.
 
-## Current implemented baseline
+### 6. CLI-only evaluation — optional
 
-The repository now includes:
+```bash
+uv run --extra dev --locked performance-lab run --config local-run.json
+```
 
-- OpenAI-compatible probe, generation and streaming adapter boundaries;
-- versioned execution fingerprints and compatibility rules, including optional effective runtime-config identity;
-- deterministic local datasets, reusable custom mappings, a general diagnostic suite and a structured-extraction workload pack;
-- deterministic evaluators plus optional provenance-rich rubric/LLM judging;
-- single-request, repeatability and concurrent-load performance protocols;
-- host, generic instrumented and `local-llm-server` runtime telemetry boundaries;
-- strict `local-llm-identity-v1` consumption for first-party model/runtime/hardware identity;
-- immutable SQLite evidence, retention policy and portable bundles;
-- compatible run comparison, explicit immutable baselines and versioned regression policies;
-- executable `run`, `regress` and `regress-ci` flows with machine-readable results and deterministic exit codes;
-- a reusable GitHub Actions regression integration;
-- a local browser product with Overview, executable Find best setup planning/campaign/results, Case Comparison Across Candidates, Test a model, Live Run, Runs/Run Detail, Compare, Library and Settings;
-- server-owned Campaign lifecycle with frozen-plan revalidation, bounded execution, cancellation/recovery, immutable Run grouping and compatibility-aware policy-backed results;
-- benchmark, sample and same-case cross-candidate evidence drill-down with explicit content-retention, evaluator-explanation and non-comparability states;
-- browser acceptance for J0-J9 where the corresponding journey is executable, with packaged-product evidence for J0, J1, J8 and J9;
-- unique build/source identity, immutable packaged artifacts, manifest/checksums, build delta, bounded retention and built-product smoke/cleanup;
-- constrained CI dependency snapshots validated on Python 3.12 and 3.13.
+A completed run is persisted in SQLite and exported as a portable `.plab.zip` evidence bundle.
 
-The next product UX/UI capability is **UXUI-09 product hardening** across the now-complete J0-J9 journey surface. Representative real-model/runtime/device evidence remains a separate required track before making hardware-specific deployment claims.
-
-See [`docs/current-state.md`](docs/current-state.md) for the operational ledger and [`docs/features/same-case-candidate-comparison.md`](docs/features/same-case-candidate-comparison.md) for the same-case comparison contract.
-
-## Documentation
-
-Documentation uses progressive disclosure: one canonical source owns each kind of truth.
-
-| Question | Canonical source |
-| --- | --- |
-| What is integrated, blocked or next? | [`docs/current-state.md`](docs/current-state.md) |
-| Which active coordinated workstreams and gates remain? | [`docs/workstreams/README.md`](docs/workstreams/README.md) |
-| Which capability milestones come next? | [`docs/roadmap.md`](docs/roadmap.md) |
-| What architecture and ownership boundaries should implementation preserve? | [`docs/architecture.md`](docs/architecture.md) |
-| How should benchmarks, datasets and metrics behave? | [`docs/evaluation-and-benchmarking.md`](docs/evaluation-and-benchmarking.md) |
-| What telemetry is required and optional? | [`docs/telemetry.md`](docs/telemetry.md) |
-| How does `local-llm-server` connect to Performance Lab? | [`docs/local-llm-server-integration.md`](docs/local-llm-server-integration.md) |
-| How is Local LLM Server identity mapped into `ExecutionFingerprint`? | [`docs/local-llm-identity-contract.md`](docs/local-llm-identity-contract.md) |
-| What is required before a task, milestone or release is considered done? | [`docs/definition-of-done.md`](docs/definition-of-done.md) |
-| Where is all active documentation indexed? | [`docs/README.md`](docs/README.md) |
+For the full first-run walkthrough, validation commands and regression workflow, use [`docs/getting-started.md`](docs/getting-started.md).
 
 ## Validation
 
-The shared local/CI repository gate runs:
+Canonical commands live in [`.engineering/commands.json`](.engineering/commands.json). Common local gates are:
 
-```text
-ruff format --check
-ruff check
-mypy --strict
-pytest
+```bash
+uv run --extra dev --locked python scripts/validate.py
+pnpm --dir frontend run check
+pnpm --dir frontend run test
+pnpm --dir frontend run build
 ```
 
-CI validates the supported Python matrix using a committed dependency-constraint snapshot to reduce resolver drift. Passing repository tests is implementation evidence; it is not a substitute for representative model/device benchmark evidence.
+Complete deterministic product E2E:
+
+```bash
+uv run --extra dev --locked python -m pytest tests/e2e -v --tb=short
+```
+
+PRE_REAL browser evidence:
+
+```bash
+uv run --extra dev --locked python scripts/pre_real_e2e.py \
+  --output-root build/pre-real-e2e
+```
+
+CI consumes the same `uv.lock` on Python 3.12/3.13 and the same frozen `pnpm-lock.yaml`. Toolchain/dependency changes require FULL validation.
+
+Green hosted fixtures do not prove representative hardware/model behavior; real runtime/model/device resource and telemetry claims remain `RUNTIME-1` evidence.
+
+## Current product surface
+
+The integrated browser product includes:
+
+- Overview;
+- **Find best setup** use-case-first planning, campaign execution and decision results;
+- **Test a model** and reconnectable Live Run;
+- Runs / Run Detail with separate Quality, Performance and Resources evidence;
+- Compare with compatibility-before-delta semantics;
+- benchmark, sample and same-case cross-candidate evidence drill-down;
+- Library surfaces for benchmarks, datasets, evaluators, baselines and regression policies;
+- Settings for model connections, devices/targets and advanced product-owned configuration;
+- immutable SQLite evidence, portable bundles, explicit baselines and regression policies;
+- browser J0-J9 acceptance plus assembled packaged-product evidence.
+
+The current visual system is the v0.6 **Precision Instrument** experience. Final representative-human UX acceptance and representative real-model/runtime/device evidence remain separate evidence gates; see [`docs/current-state.md`](docs/current-state.md).
+
+## Dependency updates
+
+Python dependency changes update `pyproject.toml` + `uv.lock`. Frontend dependency changes update `frontend/package.json` + `frontend/pnpm-lock.yaml`.
+
+Do not hand-edit lockfiles or add parallel `requirements` constraints, `package-lock.json` or another package-manager path to work around resolution problems.
+
+## Documentation
+
+| Question | Canonical source |
+| --- | --- |
+| First local setup / run | [`docs/getting-started.md`](docs/getting-started.md) |
+| Current integrated/blocked/next state | [`docs/current-state.md`](docs/current-state.md) |
+| Run configuration | [`docs/run-config-reference.md`](docs/run-config-reference.md) |
+| CLI commands | [`docs/cli-reference.md`](docs/cli-reference.md) |
+| Evidence/store/bundles | [`docs/output-and-evidence-reference.md`](docs/output-and-evidence-reference.md) |
+| Architecture/ownership | [`docs/architecture.md`](docs/architecture.md) |
+| Evaluation semantics | [`docs/evaluation-and-benchmarking.md`](docs/evaluation-and-benchmarking.md) |
+| Local LLM Server integration | [`docs/local-llm-server-integration.md`](docs/local-llm-server-integration.md) |
+| Troubleshooting | [`docs/troubleshooting.md`](docs/troubleshooting.md) |
+| Documentation index | [`docs/README.md`](docs/README.md) |
 
 ## License
 

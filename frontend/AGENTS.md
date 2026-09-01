@@ -20,11 +20,11 @@ Read [`../design/README.md`](../design/README.md), [`../design/ux-contract.json`
 While iterating, use the applicable native scripts:
 
 ```text
-npm --prefix frontend run check
-npm --prefix frontend run test
-npm --prefix frontend run build
+pnpm --dir frontend run check
+pnpm --dir frontend run test
+pnpm --dir frontend run build
 ```
 
-For affected J1-J6 browser behavior, use `npm --prefix frontend run test:e2e` when selected by blast radius. For package/assembled-product J1, the stronger `packaged-product-fixture` path is `python scripts/package_release.py --require-full-product-e2e` (or the Built Product CI job), which exercises the packaged wheel, built frontend, real loopback API/SQLite and Chromium against the deterministic inference fixture.
+For affected J1-J6 browser behavior, use `pnpm --dir frontend run test:e2e` when selected by blast radius. For package/assembled-product J1, the stronger `packaged-product-fixture` path is `uv run --extra dev --locked python scripts/package_release.py --require-full-product-e2e` (or the Built Product CI job), which exercises the packaged wheel, built frontend, real loopback API/SQLite and Chromium against the deterministic inference fixture.
 
 Use repository-level `.engineering/commands.json`, the validation-profile selector and preflight for assembled validation. Real runtime/model/device claims remain outside browser E2E and require the declared `RUNTIME-1` real-environment evidence.

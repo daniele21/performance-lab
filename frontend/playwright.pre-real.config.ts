@@ -26,7 +26,7 @@ export default defineConfig({
     video: "on",
   },
   webServer: {
-    command: "npm run build && npm run preview -- --port 4173 --strictPort",
+    command: "pnpm run build && pnpm run preview -- --port 4173 --strictPort",
     port: 4173,
     reuseExistingServer: false,
     timeout: 120_000,

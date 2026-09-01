@@ -19,12 +19,12 @@ FULL_PREFIXES = (
 )
 FULL_FILES = {
     "pyproject.toml",
-    "requirements/ci-constraints.txt",
+    "uv.lock",
+    ".python-version",
     "frontend/package.json",
-    "frontend/package-lock.json",
+    "frontend/pnpm-lock.yaml",
     "frontend/.nvmrc",
     "scripts/select_validation_profile.py",
-    "scripts/validate_ci_constraints.py",
     "scripts/verify_repository.py",
     "scripts/verify_operations.py",
     "scripts/verify_e2e.py",
@@ -146,7 +146,8 @@ def select(paths: Iterable[str], *, promotion: bool = False, force_full: bool = 
         reason = "non-executable repository metadata change"
 
     python_affected = any(
-        path.startswith(("src/", "tests/", "scripts/", "requirements/")) or path == "pyproject.toml"
+        path.startswith(("src/", "tests/", "scripts/"))
+        or path in {"pyproject.toml", "uv.lock", ".python-version"}
         for path in changed
     )
     frontend_affected = any(path.startswith(("frontend/", "design/")) for path in changed)

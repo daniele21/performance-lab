@@ -11,7 +11,7 @@ Performance Lab is contract-first and evidence-first. Changes should preserve th
 5. Read the relevant bounded [`docs/workstreams/`](docs/workstreams/) plan only for coordinated work.
 6. For meaningful UI/UX changes, read [`design/ux-contract.json`](design/ux-contract.json) and [`design/brand-kit.json`](design/brand-kit.json) before editing components.
 
-Python 3.12+ is required. Frontend development uses the exact Node/npm/dependency versions declared under `frontend/` and the operating contract.
+Python 3.12+ is required. Frontend development uses the exact Node/pnpm/dependency versions declared under `frontend/` and the operating contract.
 
 ## Change discipline
 
@@ -31,7 +31,7 @@ Python 3.12+ is required. Frontend development uses the exact Node/npm/dependenc
 While iterating, run the narrowest useful gate. Before publication, use `skills/preflight-change/SKILL.md` and the automatic selector rather than choosing full CI by habit:
 
 ```text
-python scripts/select_validation_profile.py --base <base-sha> --head <head-sha>
+uv run --extra dev --locked python scripts/select_validation_profile.py --base <base-sha> --head <head-sha>
 ```
 
 The selector resolves `LEAN`, `SCOPED`, `STRONG` or `FULL`, reports why, and fails safe to stronger validation for unknown executable scope. Engineering/CI/dependency/toolchain/selector changes and `dev -> main` promotion require `FULL`.

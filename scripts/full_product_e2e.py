@@ -13,7 +13,6 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
-import venv
 import zipfile
 from pathlib import Path
 
@@ -102,11 +101,45 @@ def install_wheel(extracted: Path, root: Path) -> Path:
     wheels = tuple((extracted / "python").glob("*.whl"))
     if len(wheels) != 1:
         raise RuntimeError(f"expected exactly one packaged wheel, found {len(wheels)}")
+
     environment = root / "venv"
-    venv.EnvBuilder(with_pip=True, system_site_packages=True, clear=True).create(environment)
-    python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
     subprocess.run(
-        [str(python), "-m", "pip", "install", "--no-deps", str(wheels[0])],
+        ["uv", "venv", "--python", sys.executable, str(environment)],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+
+    requirements = root / "runtime-requirements.txt"
+    subprocess.run(
+        [
+            "uv",
+            "export",
+            "--locked",
+            "--extra",
+            "ui",
+            "--no-dev",
+            "--no-emit-project",
+            "--format",
+            "requirements-txt",
+            "--output-file",
+            str(requirements),
+        ],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["uv", "pip", "sync", "--python", str(python), str(requirements)],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["uv", "pip", "install", "--python", str(python), "--no-deps", str(wheels[0])],
         check=True,
         text=True,
         capture_output=True,
@@ -209,7 +242,7 @@ def run_full_product_e2e(artifact: Path) -> None:
                 f"http://{HOST}:{fixture_port}/v1/"
             )
             subprocess.run(
-                ["npm", "--prefix", "frontend", "run", "test:e2e:full-product"],
+                ["pnpm", "--dir", "frontend", "run", "test:e2e:full-product"],
                 cwd=ROOT,
                 env=environment,
                 check=True,

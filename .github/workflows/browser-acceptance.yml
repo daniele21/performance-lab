@@ -41,26 +41,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+          run_install: false
       - uses: actions/setup-node@v4
         with:
           node-version-file: frontend/.nvmrc
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Pin npm
-        run: npm install --global npm@11.17.0
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          python-version: "3.12"
+          enable-cache: true
       - name: Install frozen frontend dependencies
-        run: npm --prefix frontend ci
+        run: pnpm --dir frontend install --frozen-lockfile
       - name: Install Chromium
-        run: npm --prefix frontend exec -- playwright install --with-deps chromium
+        run: pnpm --dir frontend exec playwright install --with-deps chromium
       - name: Check frontend
-        run: npm --prefix frontend run check
+        run: pnpm --dir frontend run check
       - name: Test frontend components
-        run: npm --prefix frontend run test
+        run: pnpm --dir frontend run test
       - name: Run critical browser journeys
-        run: npm --prefix frontend run test:e2e
+        run: pnpm --dir frontend run test:e2e
       - name: Verify required UI E2E screenshots and videos
         run: >-
-          python scripts/verify_e2e_media.py
+          uv run --no-project python scripts/verify_e2e_media.py
           frontend/test-results/results.json
           J0 J1 J2 J3 J4 J5 J6 J7 J8 J9
       - name: Upload bounded browser E2E evidence

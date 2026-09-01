@@ -4,51 +4,86 @@ Status: active
 Document type: operational-guide
 Owner: developer experience
 Canonical scope: operations.getting-started
-Read when: installing Performance Lab, probing an endpoint, or running a first reproducible evaluation
-Last reviewed: 2026-08-15
+Read when: installing Performance Lab or running the local browser product
+Last reviewed: 2026-09-01
 
-This guide is the shortest supported path from a clean checkout to a persisted evaluation run and a comparable regression workflow.
+This is the shortest supported path from a clean checkout to the current local browser product. `dev` is the canonical integration branch; `main` is release-oriented and is promoted deliberately after FULL validation.
 
-## 1. Install and validate
+## 1. Prerequisites
 
-Performance Lab requires Python 3.12+.
+Performance Lab uses one locked local toolchain:
+
+- `uv 0.12.5` for Python installation, dependency locking, the repository `.venv`, command execution and builds;
+- Python `3.12` as the default local line from `.python-version`;
+- Node `24.18.0` from `frontend/.nvmrc`;
+- pnpm `11.24.0` from `frontend/package.json#packageManager`;
+- `uv.lock` and `frontend/pnpm-lock.yaml` as the only dependency lockfiles.
+
+Install `uv` and a Node version manager/Corepack before continuing. Do not create a second virtual environment and do not use `pip install -e`, npm or an alternate lockfile for repository setup.
+
+## 2. Checkout the current product
 
 ```bash
-python -m pip install -e ".[dev]"
-python scripts/validate.py
+git clone https://github.com/daniele21/performance-lab.git
+cd performance-lab
+git checkout dev
+git pull --ff-only origin dev
 ```
 
-The repository gate runs formatting/linting, strict typing and tests. Passing it proves implementation consistency, not representative model/device performance.
+If the repository is already cloned:
 
-## 2. Verify an inference endpoint
+```bash
+git fetch origin
+git checkout dev
+git pull --ff-only origin dev
+```
 
-Performance Lab's reference adapter expects an OpenAI-compatible endpoint with at least:
+## 3. Create the locked environments
+
+From the repository root:
+
+```bash
+uv python install 3.12
+uv sync --extra dev --locked
+
+corepack enable
+corepack install --global pnpm@11.24.0
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend exec playwright install chromium
+```
+
+`uv sync` creates and owns `.venv`. You do **not** need to activate it: canonical Python commands use `uv run --extra dev --locked ...`, which executes against the locked repository environment.
+
+Verify the toolchain and environment:
+
+```bash
+uv run --extra dev --locked python scripts/doctor.py
+```
+
+The doctor should report the repository `.venv`, `uv.lock`, Node, pnpm and `frontend/pnpm-lock.yaml` as `OK`.
+
+## 4. Connect an inference endpoint
+
+The reference adapter expects an OpenAI-compatible endpoint with at least:
 
 ```text
 GET  /v1/models
 POST /v1/chat/completions
 ```
 
-Probe it before creating a run:
+Probe the endpoint before running the UI:
 
 ```bash
-performance-lab probe \
+uv run --extra dev --locked performance-lab probe \
   --base-url http://127.0.0.1:1235/v1/ \
   --model my-model
 ```
 
-For machine-readable automation:
+A healthy probe confirms the minimum inference path, not optional streaming, token-usage or runtime-identity capabilities.
 
-```bash
-performance-lab probe \
-  --base-url http://127.0.0.1:1235/v1/ \
-  --model my-model \
-  --json
-```
+## 5. Create a local run config
 
-A healthy probe does not imply that every optional capability is supported. Streaming, token usage, seed and structured output remain evidence-based capabilities.
-
-## 3. Create a minimal run config
+Save this as `local-run.json` and replace the endpoint/model values with the service you are testing:
 
 ```json
 {
@@ -60,136 +95,117 @@ A healthy probe does not imply that every optional capability is supported. Stre
     "base_url": "http://127.0.0.1:1235/v1/",
     "model_selector": "my-model"
   },
-  "model_id": "my-model"
+  "model_id": "my-model",
+  "store_path": ".performance-lab/runs.sqlite3"
 }
 ```
 
-Fields omitted here use version-1 defaults, including the local SQLite store and bundled diagnostic suite. Read [`run-config-reference.md`](run-config-reference.md) before relying on defaults for a controlled evidence campaign.
+For Local LLM Server, add the optional first-party identity and telemetry blocks described in [`local-llm-server-integration.md`](local-llm-server-integration.md). The inference base URL includes `/v1/`; identity/status use the server root.
 
-## 4. Run the bundled diagnostic suite
+## 6. Run the built local product — recommended for manual testing
 
-Save the config as `run.json`, then execute:
-
-```bash
-performance-lab run --config run.json
-```
-
-A successful run prints the status, fingerprint ID, SQLite store path and portable bundle path.
-
-Machine-readable form:
+Build the same frontend artifact used by the assembled product:
 
 ```bash
-performance-lab run --config run.json --json
+pnpm --dir frontend run build
 ```
 
-With the current `general-diagnostic-starter` v1 suite, a representative pointer object is:
+Serve the built frontend and Performance Lab API from one loopback-owned process:
 
-```json
-{
-  "run_id": "run-...",
-  "status": "succeeded",
-  "fingerprint_id": "...",
-  "store_path": ".performance-lab/runs.sqlite3",
-  "bundle_path": ".performance-lab/artifacts/run-....plab.zip",
-  "sample_count": 23
-}
+```bash
+uv run --extra dev --locked performance-lab-ui \
+  --config local-run.json \
+  --assets frontend/dist
 ```
 
-The suite contains 20 unique authored records but produces 23 `SampleExecution` records because the three structured records are evaluated by two separate tasks: JSON schema adherence and field accuracy. Future suite versions may change that count.
-
-The durable evidence lives in the store/bundle, not in terminal text. See [`output-and-evidence-reference.md`](output-and-evidence-reference.md).
-
-## 5. Use Local LLM Server for richer identity and telemetry
-
-A black-box OpenAI-compatible endpoint is enough for evaluation. Local LLM Server can additionally provide:
+Open:
 
 ```text
-GET /v1/runtime/identity   -> frozen execution identity
-GET /status                -> sampled dynamic runtime telemetry
+http://127.0.0.1:8765
 ```
 
-Example:
+Use this mode for product/UX review because it exercises the built frontend with the real local API composition instead of the Vite development server.
 
-```json
-{
-  "schema_version": 1,
-  "target_id": "local-llm-server-my-model",
-  "endpoint_identity": "127.0.0.1:1235",
-  "endpoint": {
-    "profile_id": "local-llm-server",
-    "base_url": "http://127.0.0.1:1235/v1/",
-    "model_selector": "my-model"
-  },
-  "model_id": "my-model",
-  "use_host_telemetry": true,
-  "local_llm_server_identity": {
-    "base_url": "http://127.0.0.1:1235",
-    "model_id": "my-model",
-    "timeout_seconds": 2.0,
-    "required": true
-  },
-  "local_llm_server_telemetry": {
-    "base_url": "http://127.0.0.1:1235",
-    "model_id": "my-model",
-    "sample_interval_seconds": 0.05,
-    "timeout_seconds": 2.0
-  }
-}
-```
+Stop it with `Ctrl-C`. The process owns only the loopback listener; model serving remains external.
 
-The two base URL forms are intentional: OpenAI inference uses `/v1/`; Local LLM Server identity/status configuration uses the server root.
+## 7. Run development mode — optional
 
-## 6. Inspect a run
+Use two terminals when actively changing the frontend.
 
-`performance-lab inspect` accepts a Run JSON or ExecutionFingerprint JSON. A portable bundle contains `manifest.json` and `run.json`, so one simple workflow is:
+Terminal 1 — Performance Lab API:
 
 ```bash
-unzip -p .performance-lab/artifacts/<run-id>.plab.zip run.json > /tmp/performance-lab-run.json
-performance-lab inspect /tmp/performance-lab-run.json
+uv run --extra dev --locked performance-lab-ui \
+  --config local-run.json \
+  --port 8765
 ```
 
-Use `--json` when another tool will consume the output.
-
-## 7. Run a baseline/candidate regression
-
-After two completed runs exist in the same store, create a versioned regression policy and execute:
+Terminal 2 — Vite:
 
 ```bash
-performance-lab regress \
+pnpm --dir frontend run dev
+```
+
+Open:
+
+```text
+http://127.0.0.1:5173
+```
+
+Vite binds to loopback and proxies `/api` to `http://127.0.0.1:8765`. Both development servers use strict ports and fail on collision instead of silently choosing another port.
+
+## 8. Validate the checkout
+
+Canonical repository checks are defined in [`.engineering/commands.json`](../.engineering/commands.json). The common local gates are:
+
+```bash
+uv run --extra dev --locked python scripts/validate.py
+pnpm --dir frontend run check
+pnpm --dir frontend run test
+pnpm --dir frontend run build
+```
+
+Complete deterministic product E2E:
+
+```bash
+uv run --extra dev --locked python -m pytest tests/e2e -v --tb=short
+```
+
+PRE_REAL browser evidence:
+
+```bash
+uv run --extra dev --locked python scripts/pre_real_e2e.py \
+  --output-root build/pre-real-e2e
+```
+
+These fixture/hosted environments do not prove real model/device performance; representative runtime/device evidence remains a separate `RUNTIME-1` requirement.
+
+## 9. Run from the CLI without the browser
+
+A single evaluation can be started directly from the same config:
+
+```bash
+uv run --extra dev --locked performance-lab run --config local-run.json
+```
+
+The run is persisted in SQLite and exported as a portable `.plab.zip` evidence bundle. Use `--json` for machine-readable output.
+
+To compare a baseline and candidate after two completed compatible runs:
+
+```bash
+uv run --extra dev --locked performance-lab regress \
   --store .performance-lab/runs.sqlite3 \
   --baseline-run <baseline-run-id> \
   --candidate-run <candidate-run-id> \
   --policy regression-policy.json
 ```
 
-Performance Lab evaluates fingerprint compatibility before thresholds. A model/runtime change can be the experimental variable; dataset/evaluator/protocol/hardware differences may make particular dimensions non-comparable.
+Compatibility is evaluated before thresholds or deltas.
 
-## 8. Gate a change in CI
+## 10. Updating dependencies
 
-```bash
-performance-lab regress-ci \
-  --store .performance-lab/runs.sqlite3 \
-  --baseline-run <baseline-run-id> \
-  --candidate-run <candidate-run-id> \
-  --policy regression-policy.json \
-  --artifact performance-lab-regression.json
-```
+Python dependency changes update `pyproject.toml` and `uv.lock` together. Frontend dependency changes update `frontend/package.json` and `frontend/pnpm-lock.yaml` together.
 
-Exit codes distinguish `PASS`, `FAIL`, execution error, `NOT_COMPARABLE` and `NOT_EVALUATED`. See [`cli-reference.md`](cli-reference.md) and [`ci-regression.md`](ci-regression.md).
+Do not hand-edit lockfiles and do not introduce a parallel requirements constraints file, `package-lock.json` or another package-manager path. Toolchain/dependency changes require the repository's FULL validation profile.
 
-## 9. Evidence checklist for a real campaign
-
-Retain together:
-
-1. run config;
-2. endpoint/server revision and configuration;
-3. immutable `ExecutionFingerprint`;
-4. `.plab.zip` bundle;
-5. relevant identity/telemetry protocol versions;
-6. baseline/candidate run IDs;
-7. regression policy ID/version;
-8. CI JSON artifact when gating a change.
-
-Do not call a model/runtime comparison representative solely because deterministic fixtures and CI are green.
-
-If the workflow fails, use [`troubleshooting.md`](troubleshooting.md).
+For configuration details see [`run-config-reference.md`](run-config-reference.md). For evidence outputs see [`output-and-evidence-reference.md`](output-and-evidence-reference.md). For failures see [`troubleshooting.md`](troubleshooting.md).

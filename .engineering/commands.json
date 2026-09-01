@@ -4,37 +4,46 @@
   "commands": {
     "setup": {
       "status": "required",
-      "run": "python -m pip install \"pip==26.2.1\" && python -m pip install -c requirements/ci-constraints.txt -e \".[dev]\" && npm install --global npm@11.17.0 && npm --prefix frontend ci && npm --prefix frontend exec -- playwright install chromium"
+      "run": "uv python install 3.12 && uv sync --extra dev --locked && corepack enable && corepack install --global pnpm@11.24.0 && pnpm --dir frontend install --frozen-lockfile && pnpm --dir frontend exec playwright install chromium"
     },
-    "doctor": {"status": "recommended", "run": "python scripts/doctor.py"},
-    "dev": {"status": "recommended", "run": "npm --prefix frontend run dev"},
+    "doctor": {
+      "status": "recommended",
+      "run": "uv run --extra dev --locked python scripts/doctor.py"
+    },
+    "dev": {"status": "recommended", "run": "pnpm --dir frontend run dev"},
     "check": {
       "status": "required",
-      "run": "python scripts/validate.py && npm --prefix frontend run check"
+      "run": "uv run --extra dev --locked python scripts/validate.py && pnpm --dir frontend run check"
     },
     "test": {
       "status": "required",
-      "run": "python -m pytest --ignore=tests/e2e && npm --prefix frontend run test"
+      "run": "uv run --extra dev --locked python -m pytest --ignore=tests/e2e && pnpm --dir frontend run test"
     },
     "e2e": {
       "status": "required",
-      "run": "python -m pytest tests/e2e -v --tb=short"
+      "run": "uv run --extra dev --locked python -m pytest tests/e2e -v --tb=short"
     },
     "pre_real_e2e": {
       "status": "required",
-      "run": "python scripts/pre_real_e2e.py --output-root build/pre-real-e2e"
+      "run": "uv run --extra dev --locked python scripts/pre_real_e2e.py --output-root build/pre-real-e2e"
     },
-    "build": {"status": "required", "run": "npm --prefix frontend run build"},
-    "smoke": {"status": "recommended", "run": "python scripts/smoke_release.py"},
+    "build": {"status": "required", "run": "pnpm --dir frontend run build"},
+    "smoke": {
+      "status": "recommended",
+      "run": "uv run --extra dev --locked python scripts/smoke_release.py"
+    },
     "package": {
       "status": "recommended",
-      "run": "python scripts/package_release.py --require-full-product-e2e"
+      "run": "uv run --extra dev --locked python scripts/package_release.py --require-full-product-e2e"
     },
     "stop": {
       "status": "recommended",
       "run": "Ctrl-C the foreground performance-lab-ui process; release smoke and packaged E2E verify listener cleanup"
     },
-    "clean": {"status": "required", "run": "python scripts/clean.py"}
+    "clean": {
+      "status": "required",
+      "run": "uv run --extra dev --locked python scripts/clean.py"
+    }
   },
   "publication_gate": {
     "agent_preflight_required": true,
@@ -58,7 +67,7 @@
   "validation_profiles": {
     "default": "auto",
     "profiles": ["lean", "scoped", "strong", "full"],
-    "selector": "python scripts/select_validation_profile.py --base \"$BASE_SHA\" --head \"$HEAD_SHA\"",
+    "selector": "uv run --extra dev --locked python scripts/select_validation_profile.py --base \"$BASE_SHA\" --head \"$HEAD_SHA\"",
     "unknown_executable_paths_fail_safe": true,
     "selector_changes_force_full": true,
     "promotion_validation_full": true,

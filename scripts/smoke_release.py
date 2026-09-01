@@ -12,7 +12,6 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
-import venv
 import zipfile
 from pathlib import Path
 
@@ -136,6 +135,43 @@ def create_smoke_config(path: Path, store_path: Path) -> None:
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
+def install_locked_runtime(environment: Path, requirements: Path) -> Path:
+    subprocess.run(
+        ["uv", "venv", "--python", sys.executable, str(environment)],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+    subprocess.run(
+        [
+            "uv",
+            "export",
+            "--locked",
+            "--extra",
+            "ui",
+            "--no-dev",
+            "--no-emit-project",
+            "--format",
+            "requirements-txt",
+            "--output-file",
+            str(requirements),
+        ],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["uv", "pip", "sync", "--python", str(python), str(requirements)],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return python
+
+
 def smoke(artifact: Path) -> None:
     if not artifact.is_file():
         raise RuntimeError(f"artifact does not exist: {artifact}")
@@ -149,11 +185,10 @@ def smoke(artifact: Path) -> None:
         manifest = verify_payload(extracted)
 
         environment = root / "venv"
-        venv.EnvBuilder(with_pip=True, system_site_packages=True, clear=True).create(environment)
-        python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+        python = install_locked_runtime(environment, root / "runtime-requirements.txt")
         wheel = next((extracted / "python").glob("*.whl"))
         subprocess.run(
-            [str(python), "-m", "pip", "install", "--no-deps", str(wheel)],
+            ["uv", "pip", "install", "--python", str(python), "--no-deps", str(wheel)],
             check=True,
             text=True,
             capture_output=True,
