@@ -4,7 +4,7 @@
   "commands": {
     "setup": {
       "status": "required",
-      "run": "uv python install 3.12 && uv sync --extra dev --locked && corepack enable && pnpm --dir frontend install --frozen-lockfile && pnpm --dir frontend exec playwright install chromium"
+      "run": "uv python install 3.12 && uv sync --extra dev --locked && corepack enable && corepack install --global pnpm@11.24.0 && pnpm --dir frontend install --frozen-lockfile && pnpm --dir frontend exec playwright install chromium"
     },
     "doctor": {
       "status": "recommended",
