@@ -34,6 +34,7 @@ export const SECONDARY_NAVIGATION = {
   Settings: [
     { label: "Model connections", href: "#model-connections" },
     { label: "Devices / targets", href: "#devices-targets" },
+    { label: "Appearance", href: "#appearance" },
     {
       label: "Evidence retention",
       href: null,

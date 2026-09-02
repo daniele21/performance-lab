@@ -9,9 +9,37 @@
     "app_icon": "docs/assets/brand/app-icon.webp",
     "favicon": "docs/assets/brand/mark.svg"
   },
-  "themes": {"light": false, "dark": true},
+  "themes": {
+    "default": "light",
+    "light": true,
+    "dark": true,
+    "system": true
+  },
   "tokens": {
     "colors": {
+      "surface": "#F6F8FA",
+      "surface_elevated": "#FFFFFF",
+      "surface_subtle": "#EFF2F5",
+      "surface_raised": "#FFFFFF",
+      "text_primary": "#171A1F",
+      "text_secondary": "#5D6672",
+      "text_tertiary": "#818B98",
+      "primary": "#247F91",
+      "secondary": "#6959D9",
+      "quality": "#26899B",
+      "performance": "#7059D6",
+      "resources": "#3F78AD",
+      "success": "#217A55",
+      "warning": "#9A6317",
+      "error": "#C44754",
+      "evidence_unknown": "#707A86",
+      "evidence_unavailable": "#A2A9B2",
+      "border": "#D6DCE4",
+      "border_subtle": "#E6EAF0",
+      "border_strong": "#B9C2CE",
+      "focus": "#176F80"
+    },
+    "dark_colors": {
       "surface": "#080A0D",
       "surface_elevated": "#0E1116",
       "surface_subtle": "#141820",
@@ -51,10 +79,10 @@
     "borders": "border_subtle separates low-priority regions; border is the default interactive/data separator; border_strong is reserved for focus, selected or deliberately emphasized boundaries"
   },
   "style": {
-    "direction": "Precision Instrument: calm, neutral graphite, evidence-first, high-density without visual noise",
+    "direction": "Precision Instrument: light-first, calm off-white workspace, neutral graphite text, evidence-first, high-density without visual noise; dark remains an optional user preference.",
     "reference_qualities": "Linear hierarchy and restraint; Raycast polish and compact control treatment; Vercel neutral technical precision. Never copy brand-specific chrome or identity.",
     "accent_usage": "primary accent is sparse and semantic: focus, selected state, key evidence affordance or primary action. Do not use accent simultaneously for generic links, progress, navigation, cards and decorative emphasis.",
-    "surface_language": "prefer hierarchy from spacing, typography and controlled depth before borders; avoid repeated equal-weight bordered cards",
+    "surface_language": "Light is canonical: use an off-white canvas, white raised surfaces and a quiet light sidebar. Prefer hierarchy from spacing, typography and controlled depth before borders. Dark preserves the same composition and semantic roles rather than becoming a separate design.",
     "evidence_language": "Quality, Performance and Resources keep distinct semantic identifiers. Rails/markers may encode availability, trustworthy ranges, confidence or relative position only when the evidence supports that encoding; never imply an invented normalized score and never render unknown/unavailable/not-comparable as zero.",
     "iconography": "simple outline icons with consistent 1.5-2px stroke; compact and quiet; never decorative when text is clearer",
     "motion": "short functional transitions only; motion communicates feedback, continuity, progress or state change and honors reduced-motion preferences",
@@ -63,7 +91,12 @@
     "premium_quality_bar": "no accidental wrapping, inconsistent baselines, oversized CTA treatment, noisy dividers, ambiguous disabled states or visually equal hierarchy between primary decisions and secondary diagnostics"
   },
   "motion_tokens": {
-    "durations": {"instant": "0ms", "fast": "100ms", "standard": "140ms", "large": "220ms"},
+    "durations": {
+      "instant": "0ms",
+      "fast": "100ms",
+      "standard": "140ms",
+      "large": "220ms"
+    },
     "easing": {
       "enter": "cubic-bezier(0.2, 0, 0, 1)",
       "exit": "cubic-bezier(0.4, 0, 1, 1)",

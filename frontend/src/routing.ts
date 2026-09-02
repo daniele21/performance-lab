@@ -25,7 +25,10 @@ export type AppRoute =
       kind: "library";
       section: "benchmarks" | "datasets" | "evaluators" | "baselines" | "regression-policies";
     }
-  | { kind: "settings"; section: "model-connections" | "devices-targets" | "advanced" }
+  | {
+      kind: "settings";
+      section: "model-connections" | "devices-targets" | "appearance" | "advanced";
+    }
   | { kind: "not-found"; path: string };
 
 function decodePathSegment(value: string) {
@@ -134,7 +137,7 @@ export function parseHash(hash: string): AppRoute {
   if (raw === "model-connections" || raw === "endpoints") {
     return { kind: "settings", section: "model-connections" };
   }
-  if (raw === "devices-targets" || raw === "advanced") {
+  if (raw === "devices-targets" || raw === "appearance" || raw === "advanced") {
     return { kind: "settings", section: raw };
   }
 
