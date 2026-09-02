@@ -277,7 +277,7 @@ const campaign = {
   error_message: null,
 };
 
-test("J0 campaign: reviewed plan executes and produces policy-backed results", async ({ page }) => {
+test("J0 campaign: four-stage setup executes and produces policy-backed results", async ({ page }) => {
   await page.route("**/api/v1/campaign-planning", async (route) => {
     await route.fulfill({
       status: 200,
@@ -326,32 +326,37 @@ test("J0 campaign: reviewed plan executes and produces policy-backed results", a
 
   await page.goto("/#find-best-setup");
   await expect(page.getByRole("heading", { name: "Find best setup" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What do you want to optimize?" })).toBeVisible();
+  await expect(page.getByText("Draft", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
 
+  await expect(page.getByRole("heading", { name: "Select models to compare" })).toBeVisible();
+  await expect(page.getByText("2 eligible models found", { exact: true })).toBeVisible();
   await expect(page.getByText("model-a", { exact: true })).toBeVisible();
   await expect(page.getByText("model-b", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
 
+  await expect(page.getByRole("heading", { name: "How thoroughly should we search?" })).toBeVisible();
   await expect(page.getByRole("radio", { name: /Quick/ })).toBeDisabled();
   await expect(
     page.getByText("will not invent sweep domains", { exact: false }).first(),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Build benchmark plan" }).click();
+  await expect(page.getByRole("radio", { name: /Single configuration/ })).toBeChecked();
+  await page.getByRole("button", { name: "Continue" }).click();
 
-  await expect(page.getByRole("heading", { name: "Benchmark plan" })).toBeVisible();
-  await expect(page.getByText("23", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Review campaign" }).click();
-
-  await expect(page.getByRole("heading", { name: "Campaign review / estimate" })).toBeVisible();
-  await expect(page.getByText("Ready to run")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Review your evaluation" })).toBeVisible();
+  await expect(page.getByText("Ready to evaluate", { exact: true })).toBeVisible();
+  await expect(page.getByText("2", { exact: true }).first()).toBeVisible();
+  await page.getByText("Technical details (advanced)", { exact: true }).click();
   await expect(page.getByText(PLAN_DIGEST)).toBeVisible();
   await expect(page.getByText("strict-quality-dominance@1.0.0")).toBeVisible();
-  await page.getByRole("button", { name: "Start evaluation campaign" }).click();
+  await page.getByRole("button", { name: "Start evaluation" }).click();
 
   await expect(page).toHaveURL(/#campaigns\/campaign-1$/);
-  await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Evaluation complete" })).toBeVisible();
   await expect(page.getByLabel("Campaign results")).toBeVisible();
-  await expect(page.getByText("No hidden weights · No universal score")).toBeVisible();
+  await expect(page.getByText("No hidden weights · No universal score", { exact: false })).toBeVisible();
+  await expect(page.getByText("Recommended setup", { exact: true })).toBeVisible();
   await expect(page.getByText("model-a", { exact: true }).last()).toBeVisible();
   await expect(page.getByText("Comparable", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Inspect recommended Run" })).toBeVisible();
