@@ -37,21 +37,29 @@ real target/device -> discover one real model -> Test a model -> real inference
 -> Run Detail -> sample evidence -> retained .plab.zip
 ```
 
-VALUE-01 is accepted only with current applicable PRE_REAL/Built Product readiness plus retained `real-runtime-device` evidence. It is intentionally smaller than the whole M1-M6 evidence campaign: the goal is to unlock one real usable loop first, then extend based on evidence and feedback.
+VALUE-01 is **ACTIVE** and is being closed through three independent software/evidence lanes plus one real-environment convergence gate:
+
+- **VALUE-01A / #117** — real built-browser journey against Local LLM Server;
+- **VALUE-01B / #118** — retained evidence completeness/portability verifier;
+- **VALUE-01C / #119** — exact-head PRE_REAL-gated operator entry point and retained run manifest;
+- **VALUE-01D / #120** — representative device execution after A/B/C are integrated.
+
+A/B/C are deliberately parallel and start from the same `dev` integration base; D is the only convergence point. VALUE-01 becomes DONE only after retained `real-runtime-device` evidence passes the integrated A/B/C gates.
 
 ## Active work
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
-| [Incremental value delivery](workstreams/incremental-value-delivery.md) | VALUE-01 READY; VALUE-02..08 dependency-gated | execute one retained real single-model evidence loop |
+| [Incremental value delivery](workstreams/incremental-value-delivery.md) | VALUE-01 ACTIVE; A/B/C parallel, D blocked on integration | merge deterministic A/B/C lanes, then execute #120 on representative hardware |
 | [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | automated product/visual acceptance PASS | representative human accessibility/usability acceptance; then finalize/delete |
-| [Representative device evidence](workstreams/representative-device-evidence.md) | real-environment evidence READY | supplies protocol/artifacts for VALUE-01 and later VALUE-02/04/05/06 |
+| [Representative device evidence](workstreams/representative-device-evidence.md) | EVID-001 ACTIVE through VALUE-01 | #120 retained real run supplies the first representative artifact set |
 | [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 evidence-blocked / MIG-003 blocked | EV-3 + real PL replacement evidence; consumed by VALUE-07 |
 
 ## Delivery model
 
 - M1-M9 in [`roadmap.md`](roadmap.md) are capability/maturity coverage, not the implementation order.
 - VALUE slices are vertical user outcomes. After VALUE-02, configuration optimization, device-aware evidence and distribution may proceed in parallel when ownership does not conflict.
+- Within a VALUE slice, parallelize only explicit non-conflicting owners and converge through one integration/evidence gate; do not create competing implementations of the same contract.
 - Do not build broad subsystems in anticipation of later slices; add only the capability needed to close the current value loop.
 - Feedback from an accepted slice may reshape later slices without weakening evidence/ownership invariants.
 
@@ -62,7 +70,7 @@ VALUE-01 is accepted only with current applicable PRE_REAL/Built Product readine
 
 ## Evidence still required
 
-- VALUE-01 retained real target/model/device execution and portable evidence bundle;
+- VALUE-01D retained real target/model/device execution after A/B/C integration;
 - later VALUE-02/04/05/06 real decision, telemetry/repeatability and regression evidence;
 - representative human accessibility/usability acceptance before a reference-grade human UX claim;
 - LLS EV-3 + real PL replacement run + post-disable cross-repository smoke before VALUE-07 cutover;
