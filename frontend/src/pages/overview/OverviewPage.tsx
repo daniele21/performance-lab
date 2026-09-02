@@ -181,8 +181,8 @@ export function OverviewView({ models, runs, onFindBestSetup, onTestModel }: Ove
             <h2 id="overview-decision-title">Find the best setup for your goal</h2>
             <p>
               Tell Performance Lab what the model needs to do and where it has to run. We'll compare
-              eligible models, quantizations and configurations, then explain the best evidence-backed
-              fit.
+              eligible models, quantizations and configurations, then explain the best
+              evidence-backed fit.
             </p>
             <ul>
               <li>Start from the workload and target device.</li>

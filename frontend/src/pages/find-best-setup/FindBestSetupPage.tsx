@@ -37,7 +37,9 @@ function unknown(value: string | null) {
   return value ?? "Unknown";
 }
 
-function preferredStrategy(target: CampaignTargetPlanningReadModel | undefined): CampaignSearchStrategy {
+function preferredStrategy(
+  target: CampaignTargetPlanningReadModel | undefined,
+): CampaignSearchStrategy {
   if (!target) return "fixed";
   const standard = target.configuration_search_options.find(
     (option) => option.strategy === "standard" && option.available,
@@ -47,7 +49,9 @@ function preferredStrategy(target: CampaignTargetPlanningReadModel | undefined):
     (option) => option.strategy === "fixed" && option.available,
   );
   if (fixed) return fixed.strategy;
-  return target.configuration_search_options.find((option) => option.available)?.strategy ?? "fixed";
+  return (
+    target.configuration_search_options.find((option) => option.available)?.strategy ?? "fixed"
+  );
 }
 
 function formatDuration(seconds: number | null, reason: string) {
@@ -85,7 +89,8 @@ export function FindBestSetupView({
     [context.use_cases, useCaseId],
   );
   const selectedStrategy = useMemo(
-    () => target?.configuration_search_options.find((option) => option.strategy === strategy) ?? null,
+    () =>
+      target?.configuration_search_options.find((option) => option.strategy === strategy) ?? null,
     [strategy, target],
   );
 
@@ -144,7 +149,9 @@ export function FindBestSetupView({
     } catch (error: unknown) {
       setPreview(null);
       setPreviewState("error");
-      setPreviewError(error instanceof Error ? error.message : "Evaluation plan could not be built.");
+      setPreviewError(
+        error instanceof Error ? error.message : "Evaluation plan could not be built.",
+      );
     }
   };
 
@@ -194,7 +201,9 @@ export function FindBestSetupView({
     target?.configuration_search_options.filter((option) =>
       PRIMARY_SEARCH_STRATEGIES.includes(option.strategy),
     ) ?? [];
-  const fixedOption = target?.configuration_search_options.find((option) => option.strategy === "fixed");
+  const fixedOption = target?.configuration_search_options.find(
+    (option) => option.strategy === "fixed",
+  );
   const customOption = target?.configuration_search_options.find(
     (option) => option.strategy === "custom",
   );
@@ -379,7 +388,9 @@ export function FindBestSetupView({
                       <span>
                         <strong>
                           {option.title}
-                          {option.strategy === "standard" && option.available ? " · Recommended" : ""}
+                          {option.strategy === "standard" && option.available
+                            ? " · Recommended"
+                            : ""}
                         </strong>
                         <small>{option.description}</small>
                         {option.blocked_reason ? <small>{option.blocked_reason}</small> : null}
@@ -388,10 +399,7 @@ export function FindBestSetupView({
                   ))}
 
                   {showFixedFallback && fixedOption ? (
-                    <label
-                      className="best-setup-optimization"
-                      data-selected={strategy === "fixed"}
-                    >
+                    <label className="best-setup-optimization" data-selected={strategy === "fixed"}>
                       <input
                         type="radio"
                         name="search-strategy"
@@ -402,8 +410,9 @@ export function FindBestSetupView({
                       <span>
                         <strong>Single configuration</strong>
                         <small>
-                          This target has no evidence-backed sweep ranges, so Performance Lab can run
-                          the authored benchmark configuration without inventing parameter domains.
+                          This target has no evidence-backed sweep ranges, so Performance Lab can
+                          run the authored benchmark configuration without inventing parameter
+                          domains.
                         </small>
                       </span>
                     </label>
@@ -428,7 +437,9 @@ export function FindBestSetupView({
                         <span>
                           <strong>{customOption.title}</strong>
                           <small>{customOption.description}</small>
-                          {customOption.blocked_reason ? <small>{customOption.blocked_reason}</small> : null}
+                          {customOption.blocked_reason ? (
+                            <small>{customOption.blocked_reason}</small>
+                          ) : null}
                         </span>
                       </label>
                     ) : null}
@@ -485,7 +496,10 @@ export function FindBestSetupView({
               </>
             ) : null}
 
-            {step === 3 && preview?.estimate && preview.configuration_search && preview.benchmark_plan ? (
+            {step === 3 &&
+            preview?.estimate &&
+            preview.configuration_search &&
+            preview.benchmark_plan ? (
               <>
                 <SectionHeader
                   title="Review your evaluation"
@@ -550,8 +564,9 @@ export function FindBestSetupView({
                     <div>
                       <dt>Datasets</dt>
                       <dd>
-                        {preview.benchmark_plan.datasets.map((item) => item.dataset_id).join(", ") ||
-                          "None"}
+                        {preview.benchmark_plan.datasets
+                          .map((item) => item.dataset_id)
+                          .join(", ") || "None"}
                       </dd>
                     </div>
                     <div>
@@ -566,7 +581,9 @@ export function FindBestSetupView({
                     <dl className="best-setup-detail-list">
                       <div>
                         <dt>Target endpoint</dt>
-                        <dd>{preview.target?.endpoint_identity ?? target.target.endpoint_identity}</dd>
+                        <dd>
+                          {preview.target?.endpoint_identity ?? target.target.endpoint_identity}
+                        </dd>
                       </div>
                       <div>
                         <dt>Search strategy</dt>

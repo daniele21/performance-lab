@@ -277,7 +277,9 @@ const campaign = {
   error_message: null,
 };
 
-test("J0 campaign: four-stage setup executes and produces policy-backed results", async ({ page }) => {
+test("J0 campaign: four-stage setup executes and produces policy-backed results", async ({
+  page,
+}) => {
   await page.route("**/api/v1/campaign-planning", async (route) => {
     await route.fulfill({
       status: 200,
@@ -336,7 +338,9 @@ test("J0 campaign: four-stage setup executes and produces policy-backed results"
   await expect(page.getByText("model-b", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  await expect(page.getByRole("heading", { name: "How thoroughly should we search?" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "How thoroughly should we search?" }),
+  ).toBeVisible();
   await expect(page.getByRole("radio", { name: /Quick/ })).toBeDisabled();
   await expect(
     page.getByText("will not invent sweep domains", { exact: false }).first(),
@@ -355,7 +359,9 @@ test("J0 campaign: four-stage setup executes and produces policy-backed results"
   await expect(page).toHaveURL(/#campaigns\/campaign-1$/);
   await expect(page.getByRole("heading", { name: "Evaluation complete" })).toBeVisible();
   await expect(page.getByLabel("Campaign results")).toBeVisible();
-  await expect(page.getByText("No hidden weights · No universal score", { exact: false })).toBeVisible();
+  await expect(
+    page.getByText("No hidden weights · No universal score", { exact: false }),
+  ).toBeVisible();
   await expect(page.getByText("Recommended setup", { exact: true })).toBeVisible();
   await expect(page.getByText("model-a", { exact: true }).last()).toBeVisible();
   await expect(page.getByText("Comparable", { exact: true })).toBeVisible();

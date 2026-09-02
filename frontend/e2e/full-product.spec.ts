@@ -39,7 +39,9 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
   await expect(page.getByText("fixture-bad", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  await expect(page.getByRole("heading", { name: "How thoroughly should we search?" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "How thoroughly should we search?" }),
+  ).toBeVisible();
   await expect(page.getByRole("radio", { name: /Quick/ })).toBeDisabled();
   await expect(page.getByRole("radio", { name: /Single configuration/ })).toBeChecked();
   await page.getByRole("button", { name: "Continue" }).click();
@@ -54,7 +56,9 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
   await expect(page.getByRole("heading", { name: "Evaluation complete" })).toBeVisible({
     timeout: 120_000,
   });
-  await expect(page.getByText("No hidden weights · No universal score", { exact: false })).toBeVisible();
+  await expect(
+    page.getByText("No hidden weights · No universal score", { exact: false }),
+  ).toBeVisible();
   await expect(page.getByText("No single recommended setup")).toBeVisible();
   await expect(
     page.getByText(
