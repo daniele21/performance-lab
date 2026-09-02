@@ -1,16 +1,4 @@
-<p align="center">
-  <img src="docs/assets/brand/app-icon.webp" width="128" alt="Performance Lab logo">
-</p>
-
-<h1 align="center">Performance Lab</h1>
-
-<p align="center">
-  <strong>Choose the right model for the job — on the device that has to run it.</strong>
-</p>
-
-<p align="center">
-  Use-case-first evaluation for <strong>model × configuration × device</strong> decisions, grounded in quality, performance and resource evidence.
-</p>
+![Performance Lab — choose the right model for the job](docs/assets/readme/performance-lab-hero.svg)
 
 <p align="center">
   <a href="#why-performance-lab">Why</a> ·
