@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
   "golden_type": "accepted-implementation-screenshot",
-  "status": "approved-v0.6-automated-visual-regression-baseline",
+  "status": "candidate-desktop-ux-automated-visual-regression-baseline",
   "viewport": {
     "width": 1536,
     "height": 960,
     "class": "desktop-standard"
   },
   "capture": {
-    "source_head_sha": "afa3fa2dc2d82acccdd86338806e3923636ab476",
-    "browser_capture_run_id": 33445799989,
-    "artifact_id": 9777981789,
-    "artifact_name": "pvr08-target-candidate-33445799989-1",
-    "artifact_sha256": "5575bb27b4858260e22226754776647954fed7fa912fcd30dce65822c2820a84",
+    "source_head_sha": "HEAD^",
+    "browser_capture_run_id": 33633046893,
+    "artifact_id": 9847625651,
+    "artifact_name": "desktop-ux-golden-candidate-33633046893-1",
+    "artifact_sha256": "afcdbe4be1cd51ed6b482ce477a4797fe3884088c63279181c88bc3f28da5aca",
     "platform": "GitHub-hosted Ubuntu 24.04",
     "locale": "en-US",
     "timezone": "UTC",
@@ -20,13 +20,13 @@
     "reduced_motion": "reduce"
   },
   "review": {
-    "method": "second independent CI capture matched byte-for-byte against the approved bounded v0.6 target set",
-    "decision": "accepted for bounded automated visual regression",
+    "method": "agent-inspected real implementation captures; independent browser acceptance match pending",
+    "decision": "candidate pending independent CI match",
     "human_reference_grade_claim": false
   },
   "source_of_truth": "design/ux-contract.json",
   "ux_contract_version": "0.5.0",
-  "design_target_root": "design/reference/visual-targets/desktop-standard-v0.6",
+  "design_target_root": "design/ux-contract.json + representative-human approved desktop hierarchy",
   "goldens": {
     "benchmark-detail": {
       "file": "benchmark-detail.png",
@@ -34,20 +34,20 @@
     },
     "campaign-results": {
       "file": "campaign-results.png",
-      "sha256": "6c308a2f01d0fcf38f52411c05db2f2832bb4051051121c9f75fd8c09fcae310"
+      "sha256": "1b08f3413754ae9ceac6a79dc244b0cb4bded6482150379f6a79b4751dea57fa"
     },
     "overview": {
       "file": "overview.png",
-      "sha256": "e534c8ce7bee81ece8af7d89da674ad80585932d7d9ef3ed3410e919f202d6ad"
+      "sha256": "29f16a8d979907a8bb9264061cd0f23858a4540a9251c847495439cf6af76605"
     },
     "sample-evidence-detail": {
       "file": "sample-evidence-detail.png",
-      "sha256": "c1f351ed74d3f8d15ccc5acd9bfe3f863953f588f55bde64f995c852c1d3edb2"
+      "sha256": "54925ec2d9288941fd1571c47413e1094c1a5e5827f879043a20ae23bf694ba2"
     },
     "test-a-model-review": {
       "file": "test-a-model-review.png",
       "sha256": "e7fb30fb5b025433c54ae5d3831633416176af55d195a9e7c4f76a8797421aab"
     }
   },
-  "scope_note": "These five stable surfaces are v0.6 automated visual-regression goldens. They do not substitute for PRE_REAL J0-J9 or final human accessibility/usability review."
+  "scope_note": "Five stable automated visual-regression goldens. Overview and Campaign Results were refreshed from the real implementation after representative-human hierarchy feedback; independent CI match is required before approval. This does not substitute for final human accessibility/usability review."
 }
