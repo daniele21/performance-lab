@@ -1,6 +1,6 @@
 # Product UX/UI convergence
 
-Status: active — representative human hierarchy feedback reopened implementation
+Status: active — refreshed implementation automated evidence passed; representative-human acceptance pending
 Owner: product experience / browser UI
 Read when: coordinating final UX/UI acceptance
 
@@ -31,8 +31,8 @@ Keep Performance Lab a calm precision instrument around the product question:
 | PVR-09A | Prior browser/PRE_REAL/packaged media evidence | HISTORICAL — invalidated for changed surfaces |
 | PVR-09B | Prior agent inspection of retained final media | HISTORICAL — invalidated for changed surfaces |
 | PVR-09C | Representative human accessibility/usability acceptance | FAIL — hierarchy/progressive disclosure feedback |
-| PVR-10 | Four-stage decision hierarchy + desktop implementation refresh | IN PROGRESS |
-| PVR-11 | Fresh browser/PRE_REAL/visual + representative-human acceptance | PENDING |
+| PVR-10 | Four-stage decision hierarchy + desktop implementation refresh | DONE |
+| PVR-11 | Fresh browser/PRE_REAL/visual + representative-human acceptance | AUTOMATED PRODUCT/VISUAL PASS — final exact-head confirmation + representative-human acceptance pending |
 
 ## Representative-human feedback that reopened the slice
 
@@ -42,7 +42,7 @@ This is a blocking product-comprehension issue under the PVR-09 acceptance contr
 
 ## PVR-10 settled structural correction
 
-The approved desktop direction is now:
+The approved desktop direction is now implemented as follows:
 
 - **Overview:** decision-first. `Find best setup` and the product question dominate; Recent evaluations follow; Tested models/evidence inventory is quieter and later.
 - **Find best setup setup flow:** exactly four user-decision stages: `Goal -> Models -> Optimization -> Review`.
@@ -68,9 +68,19 @@ The previous validation runs remain historical evidence only:
 
 Because PVR-10 materially changes Overview, Find best setup, Campaign and Campaign Results, affected previous visual/readiness evidence is invalidated by design. Unchanged product/runtime invariants are not invalidated merely by the UX rewrite.
 
+## Refreshed automated evidence
+
+The PVR-10 product tree has passed the repository-owned deterministic frontend gates, the packaged-product workflow and the complete browser journey suite. The only initial Browser Acceptance failure was the intentionally stale Overview visual baseline; no functional journey failed.
+
+Overview and Campaign Results were then recaptured from the real Playwright implementation with a bounded guard that allowed only those two intended golden files to change. The resulting candidate images were inspected and an independent Browser Acceptance run reproduced the committed baseline without snapshot updates while passing all browser journeys and required media verification.
+
+`design/reference/visual-goldens/desktop-standard/manifest.json` owns the exact capture and independent-acceptance provenance. The approved automated baseline deliberately keeps `human_reference_grade_claim` false.
+
+A final exact-head deterministic confirmation is still required after the documentation/provenance edits in this workstream. That confirmation does not replace representative-human accessibility/usability review.
+
 ## PVR-11 acceptance gate
 
-After PVR-10 implementation reaches exact-head deterministic validation, fresh browser/PRE_REAL media and representative-human review must answer:
+Fresh automated evidence is now available. Representative-human review must still answer:
 
 1. Is the primary decision obvious on Overview without internal architecture knowledge?
 2. Does Find best setup read as four user decisions rather than backend lifecycle objects?
@@ -85,19 +95,18 @@ After PVR-10 implementation reaches exact-head deterministic validation, fresh b
 
 A PASS may include non-blocking polish notes. Any issue that changes task comprehension, evidence truthfulness, accessibility, recovery or supported-layout operability reopens the owning implementation slice.
 
-Until this evidence exists, `human_reference_grade_claim` stays `false`.
+Until this representative-human evidence exists, `human_reference_grade_claim` stays `false`.
 
 Physical/model/runtime device evidence is a separate `REAL_ENVIRONMENT` / `RUNTIME-1` concern and must not be inferred from browser acceptance.
 
 ## Completion
 
-After fresh automated exact-head evidence and representative-human PASS:
+After final exact-head automated confirmation and representative-human PASS:
 
-1. refresh only the stable target/golden surfaces affected by the accepted hierarchy;
-2. record accepted durable state in the appropriate design/current-state owner without copying transient run history;
-3. verify no UX/UI evidence gap remains;
-4. delete this completed workstream by default;
-5. keep RUNTIME-1 and other hardware evidence in their separate workstream.
+1. record accepted durable state in the appropriate design/current-state owner without copying transient run history;
+2. verify no UX/UI evidence gap remains;
+3. delete this completed workstream by default;
+4. keep RUNTIME-1 and other hardware evidence in their separate workstream.
 
 ## Durable destinations
 
