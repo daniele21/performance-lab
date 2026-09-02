@@ -16,7 +16,9 @@ def _load_script() -> ModuleType:
     return module
 
 
-def test_real_browser_config_requires_first_party_identity_and_evidence_rich(tmp_path: Path) -> None:
+def test_real_browser_config_requires_first_party_identity_and_evidence_rich(
+    tmp_path: Path,
+) -> None:
     module = _load_script()
     config = module.build_browser_run_config(
         base_url="http://127.0.0.1:1235/",
