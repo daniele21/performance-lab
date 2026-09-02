@@ -122,7 +122,8 @@ def main() -> int:
     assets = args.assets.expanduser().resolve()
     if not (assets / "index.html").is_file():
         print(
-            "real browser E2E failed: built frontend assets are missing; run the canonical build first",
+            "real browser E2E failed: built frontend assets are missing; "
+            "run the canonical build first",
             file=sys.stderr,
         )
         return 1
