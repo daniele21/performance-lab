@@ -582,7 +582,9 @@ export function FindBestSetupView({
                       <div>
                         <dt>Target endpoint</dt>
                         <dd>
-                          {preview.target?.endpoint_identity ?? target.target.endpoint_identity}
+                          {preview.target?.endpoint_identity ??
+                            target?.target.endpoint_identity ??
+                            "Unavailable"}
                         </dd>
                       </div>
                       <div>
