@@ -2,7 +2,7 @@
 
 Status: canonical product-design source of truth
 Owner: Performance Lab product UI
-Last reviewed: 2026-08-29
+Last reviewed: 2026-09-02
 
 This directory specializes `repo-template-sw`'s `product-ui` profile for Performance Lab. It owns the durable UX and brand/design contracts. Executable frontend components become the implementation source of truth once they exist, but they must remain compatible with these contracts.
 
@@ -21,14 +21,16 @@ The product has two execution journeys and several inspection journeys.
 Primary decision journey:
 
 ```text
-Choose a use case
-  -> select model candidates
-  -> define configuration search
-  -> review benchmark plan
+Choose goal (use case + device)
+  -> confirm/select model candidates
+  -> choose optimization depth
+  -> review scope, estimate and contextual benchmark detail
   -> run campaign
-  -> compare trustworthy quality + performance + resource evidence
-  -> choose best-fit model + quantization + configuration
+  -> establish compatibility + decision policy
+  -> choose best-fit model + quantization + configuration from explainable evidence
 ```
+
+The setup wizard contains four user decisions only: **Goal -> Models -> Optimization -> Review**. Campaign and Results are lifecycle/outcome states after setup; benchmark plan, evaluator identity, plan digest and provenance do not become standalone mandatory steps merely because the backend owns them.
 
 Direct/manual journey:
 
@@ -53,8 +55,8 @@ Campaign Results -> benchmark case -> Case Comparison Across Candidates
 
 Primary navigation stays focused on user outcomes:
 
-1. **Overview** — what has been tested, relevant evidence, active/recent work and the next decision.
-2. **Find best setup** — use-case-first automatic model/configuration decision journey.
+1. **Overview** — the next decision first, then what has been tested and recent/relevant evidence.
+2. **Find best setup** — use-case/device-first automatic model/configuration decision journey.
 3. **Test a model** — manual evaluation of one served model candidate and one frozen configuration.
 4. **Runs** — immutable run history and sample-level evidence drill-down.
 5. **Compare** — compatibility-first comparison of evidence.
@@ -88,7 +90,7 @@ Do not place Models, Datasets, Evaluators or Evidence at the same visual priorit
 - Unknown, unavailable, not-evaluated and not-comparable evidence are first-class states and never render as zero.
 - Compatibility is established before deltas, rankings, regression verdicts or best-fit recommendations.
 - A universal opaque model score is forbidden.
-- Recommendation logic is explicit and versioned; the frontend does not invent a winner.
+- Recommendation logic is explicit and versioned; the frontend does not invent a winner or post-hoc trade-off explanation.
 
 ### Model identity and runtime ownership
 
@@ -158,23 +160,40 @@ The default mode remains **aggregate-safe**.
 
 Primary CTA: **Find best setup**. Secondary CTA: **Test a model**.
 
-Show recent/relevant evidence and trustworthy dimension summaries with enough workload/device context to interpret them. Do not show an unsupported cross-cohort winner, universal overall score or fake zeroes.
+The default reading order is decision-first: explain the goal/device decision Performance Lab can answer, expose the primary CTA, then show recent evaluations, then the quieter tested-model evidence inventory. Show trustworthy dimension summaries with enough workload/device context to interpret them. Do not show an unsupported cross-cohort winner, universal overall score or fake zeroes.
 
 ### Find best setup
 
-Canonical flow:
+Canonical setup flow:
 
 ```text
-Use case
--> Candidate models
--> Configuration search
--> Benchmark plan
--> Campaign review / estimate
--> Campaign
--> Results
+Goal
+  use case + device
+-> Models
+  eligible candidates selected by default; user may narrow
+-> Optimization
+  Quick / Standard / Thorough when evidence-backed ranges exist
+  custom/fixed/parameter detail progressively disclosed
+-> Review
+  candidates + configurations + immutable run count + estimate
+  benchmark/evaluator detail contextual
+  fingerprints/provenance/plan digest advanced
 ```
 
-The use case owns benchmark/dataset/evaluator relevance. Campaign results recommend model + quantization + configuration only from comparable evidence under an explicit versioned decision policy.
+Then:
+
+```text
+Campaign
+  progress-first lifecycle
+-> Results
+  compatibility + decision policy
+  -> recommended setup
+  -> backend-owned rationale
+  -> separate Quality / Performance / Resources comparison
+  -> exact-case evidence drill-down
+```
+
+The use case owns benchmark/dataset/evaluator relevance. Device selection scopes candidate discovery. Eligible candidates use an all-selected default when the backend already scoped them safely. **Standard** is the normal preferred optimization default when bounded ranges are available; the authored fixed configuration is the safe fallback when the runtime provides no evidence-backed sweep range. The browser never invents ranges to make the mockup richer.
 
 ### Test a model
 
@@ -191,6 +210,24 @@ Choose/connect target
 ```
 
 Connection details and advanced parameters use progressive disclosure.
+
+### Campaign
+
+Running campaigns are progress-first: overall progress precedes per-candidate rows. Leaving the page does not imply cancellation when the server persists the campaign; cancellation remains explicit. Terminal campaigns place Results before completed progress and candidate Runs.
+
+### Campaign Results
+
+Results answer the decision, not a leaderboard question. The reading order is:
+
+```text
+compatibility + explicit decision policy
+-> recommended model + quantization + frozen configuration
+-> why this setup (backend result rationale only)
+-> candidate comparison with Quality / Performance / Resources separate
+-> benchmark-case drill-down
+```
+
+Do not add trophies, medals, opaque overall scores or frontend-authored claims such as “best balance” unless an explicit backend decision policy/evidence contract provides that exact meaning.
 
 ### Models
 
@@ -223,19 +260,21 @@ essential
   -> expert / diagnostics
 ```
 
-Essential: current decision, identity, main evidence, typed status, next action.
+Essential: current decision, model/quantization identity, use case + device, main evidence, typed status and next action.
 
-Contextual: dataset/evaluator identity, configuration summary, compatibility reason, sample result summary.
+Contextual: accumulated `Your setup` summary, candidate count, configuration summary, dataset/evaluator identity, compatibility reason and sample result summary.
 
-Advanced: generation parameters, reported runtime configuration, protocol and retention/provenance detail.
+Advanced: generation/search parameters, reported runtime configuration, benchmark protocol detail and retention/provenance detail.
 
-Expert/diagnostics: raw fingerprints, raw evidence payloads, runtime/adapter diagnostics and retained safe logs.
+Expert/diagnostics: plan/config fingerprints, raw evidence payloads, runtime/adapter diagnostics and retained safe logs.
+
+On desktop-standard/wide Find best setup, a compact contextual `Your setup` pane may stay visible beside the active task. At desktop-compact it must move above/below the primary work rather than squeezing the decision surface.
 
 ## Desktop layout
 
 Supported layouts remain desktop-only:
 
-- **compact 1024-1279px** — preserve the primary task; condense secondary navigation and avoid side panes that squeeze evidence.
+- **compact 1024-1279px** — preserve the primary task; condense secondary navigation and move optional contextual panes out of side-by-side mode when they would squeeze evidence.
 - **standard 1280-1599px** — persistent task navigation, main work area and optional contextual detail pane.
 - **wide >=1600px** — use extra width for useful side-by-side evidence inspection, not decorative density.
 
@@ -258,7 +297,7 @@ Current SVG references remain conceptual guidance for already-defined flows:
 - [`reference/model-connection.svg`](reference/model-connection.svg)
 - [`reference/find-best-setup.svg`](reference/find-best-setup.svg)
 
-They are not pixel-regression goldens and may lag the newly consolidated surface contracts above.
+They are not pixel-regression goldens and may lag the consolidated surface contracts above. In particular, the four-stage Find best setup hierarchy in `ux-contract.json` and the executable frontend take precedence over older seven-stage conceptual references.
 
 The approved UX-aligned desktop UI targets live under:
 
