@@ -13,20 +13,39 @@ or another direct model endpoint as the representative Performance Lab inference
 Deterministic OpenAI-compatible fixtures remain correct for PR/CI workflow, protocol, persistence and
 regression coverage. They are not real model-inference evidence and must not be presented as such.
 
-Start Local LLM Server on the target machine, then run:
+## VALUE-01 bounded real run
+
+Before entering the real environment, produce a current exact-head PRE_REAL manifest through the
+repository-owned Built Product / pre-real workflow. The real-run entrypoint rejects stale or failed
+PRE_REAL evidence.
+
+Start Local LLM Server on the representative target machine, then run:
 
 ```bash
 python tests/real_runtime/smoke_local_llm_server.py \
   --base-url http://127.0.0.1:1235 \
   --model <runtime-key-or-model-id> \
-  --output-dir .performance-lab/real-smoke
+  --output-dir .performance-lab/value01-real \
+  --pre-real-manifest build/pre-real-e2e/manifest.json
 ```
 
-The script performs a real `performance-lab probe`, writes the exact run config, requires
-`local-llm-identity-v1`, samples `/status`, executes the current frozen
-`general-diagnostic-starter` suite through Local LLM Server and preserves the normal SQLite evidence
-plus `.plab.zip` bundle.
+The command records the current Performance Lab source revision, validates that the PRE_REAL manifest
+belongs to that exact revision, probes `/v1/models`, writes the frozen run config, requires
+`local-llm-identity-v1`, samples `/status`, enables `evidence_rich` local sample retention and executes
+the current `general-diagnostic-starter` suite through Local LLM Server.
 
-This is a bounded acceptance preflight, not the full representative evidence campaign. Use the
-normal run/regression workflow for repeated baselines, load/concurrency evidence, structured-document
-workloads and release claims. Do not call the smoke representative merely because it completes.
+The output directory retains:
+
+- the exact generated run config;
+- the SQLite run/evidence store;
+- the normal `.plab.zip` portable bundle;
+- a bounded VALUE-01 manifest with source revision, run id, fingerprint id, evidence paths and each
+  preflight/run step marked PASS/FAIL.
+
+The manifest contains no credentials or raw prompt/output content. Evidence-rich prompt/output content
+remains in the local SQLite sidecar and is deliberately excluded from the portable bundle.
+
+This command closes only the single-model execution part of VALUE-01. It does not prove repeatability,
+thermal behavior, multi-model ranking, configuration optimization or regression quality merely because
+one run succeeds. Those claims remain in later VALUE slices and the representative-device evidence
+workstream.
