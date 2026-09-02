@@ -32,7 +32,6 @@ jobs:
                   raise SystemExit(f"expected fragment missing in {path}: {old[:120]!r}")
               p.write_text(text.replace(old, new, 1))
 
-          # Canonical IA: Appearance is now a real product-owned Settings surface.
           replace_once(
               'design/ux-contract.json',
               '        "Devices / targets",\n        "Evidence retention",',
@@ -49,7 +48,6 @@ jobs:
               '        "model connections configure endpoint discovery and credentials safely",\n        "appearance preference is browser-local: Light is the canonical default, Dark is optional and System follows the operating system",\n',
           )
 
-          # Canonical product design README mirrors the implemented Settings IA and theme ownership.
           replace_once(
               'design/README.md',
               '- **Devices / targets**\n- **Evidence retention**',
@@ -61,7 +59,6 @@ jobs:
               'Only expose product-owned configuration. Appearance is a browser-local UI preference: Light is the canonical reference, Dark remains optional and System follows the OS. Theme choice must not alter benchmark semantics, evidence truthfulness or runtime ownership. Do not invent email notifications, telemetry controls, runtime lifecycle toggles or other settings merely because a mockup has space for them.',
           )
 
-          # Active workstream: record the light-first correction and fresh evidence without claiming human acceptance.
           ws = Path('docs/workstreams/product-ux-ui-convergence.md')
           text = ws.read_text()
           old = '- **Library / Settings:** quieter secondary surfaces preserve backend/runtime ownership boundaries.\n'
@@ -72,26 +69,19 @@ jobs:
 
           start = text.index('## Refreshed automated evidence\n')
           end = text.index('\n## PVR-11 acceptance gate\n', start)
-          refreshed = '''## Refreshed automated evidence
-
-The PVR-10 product tree first passed the repository-owned deterministic frontend gates, packaged-product workflow and complete browser journey suite for the four-stage hierarchy. Representative-human visual feedback then changed the canonical visual direction from dark-first to **Light-first** while preserving the settled task model and evidence semantics.
-
-The Light-first implementation is owned by `design/brand-kit.json` plus the executable semantic tokens. Light remains the default even when the OS is dark; Dark is opt-in; System follows `prefers-color-scheme`. `Settings -> Appearance` stores only this UI preference in the browser.
-
-All five stable implementation goldens were recaptured from the real Playwright implementation in bounded run `33649543902`; the exact-scope guard required all and only Overview, Test a model Review, Benchmark Detail, Sample Evidence Detail and Campaign Results to change. Candidate artifact `9854232790` (`light-first-golden-candidate-33649543902-1`) was captured at 1536x960 with OS color scheme dark, reduced motion enabled and the product still rendering its canonical Light default. The retained captures were agent-inspected with no blocking visual regression.
-
-Independent Browser Acceptance run `33649979498` then reproduced the committed Light baseline **without snapshot updates** while passing the complete browser journey suite, the Appearance contract and required screenshot/video verification. Artifact `9854404103` (`browser-acceptance-evidence-33649979498-1`) retains that evidence. Repository Validation `33649979311` and Repository Health `33649979374` also passed on the same head.
-
-Built Product run `33649979282` passed Python/frontend validation, deterministic product journey, PRE_REAL browser J0-J9 plus media verification, build/smoke, packaged J0/J1/J8/J9 plus media verification, readiness finalization and operating/E2E contract enforcement. Retained artifacts are built product `9854434372`, PRE_REAL `9854435657` and packaged E2E `9854436741`.
-
-`design/reference/visual-goldens/desktop-standard/manifest.json` owns the capture and independent-acceptance provenance. The approved automated baseline deliberately keeps `human_reference_grade_claim` false.
-
-Because this provenance/documentation edit changes the exact branch head after those runs, one final exact-head automated confirmation is still required. It does not replace representative-human accessibility/usability review.
-'''
+          refreshed = (
+              '## Refreshed automated evidence\n\n'
+              'The PVR-10 product tree first passed the repository-owned deterministic frontend gates, packaged-product workflow and complete browser journey suite for the four-stage hierarchy. Representative-human visual feedback then changed the canonical visual direction from dark-first to **Light-first** while preserving the settled task model and evidence semantics.\n\n'
+              'The Light-first implementation is owned by `design/brand-kit.json` plus the executable semantic tokens. Light remains the default even when the OS is dark; Dark is opt-in; System follows `prefers-color-scheme`. `Settings -> Appearance` stores only this UI preference in the browser.\n\n'
+              'All five stable implementation goldens were recaptured from the real Playwright implementation in bounded run `33649543902`; the exact-scope guard required all and only Overview, Test a model Review, Benchmark Detail, Sample Evidence Detail and Campaign Results to change. Candidate artifact `9854232790` (`light-first-golden-candidate-33649543902-1`) was captured at 1536x960 with OS color scheme dark, reduced motion enabled and the product still rendering its canonical Light default. The retained captures were agent-inspected with no blocking visual regression.\n\n'
+              'Independent Browser Acceptance run `33649979498` then reproduced the committed Light baseline **without snapshot updates** while passing the complete browser journey suite, the Appearance contract and required screenshot/video verification. Artifact `9854404103` (`browser-acceptance-evidence-33649979498-1`) retains that evidence. Repository Validation `33649979311` and Repository Health `33649979374` also passed on the same head.\n\n'
+              'Built Product run `33649979282` passed Python/frontend validation, deterministic product journey, PRE_REAL browser J0-J9 plus media verification, build/smoke, packaged J0/J1/J8/J9 plus media verification, readiness finalization and operating/E2E contract enforcement. Retained artifacts are built product `9854434372`, PRE_REAL `9854435657` and packaged E2E `9854436741`.\n\n'
+              '`design/reference/visual-goldens/desktop-standard/manifest.json` owns the capture and independent-acceptance provenance. The approved automated baseline deliberately keeps `human_reference_grade_claim` false.\n\n'
+              'Because this provenance/documentation edit changes the exact branch head after those runs, one final exact-head automated confirmation is still required. It does not replace representative-human accessibility/usability review.\n'
+          )
           text = text[:start] + refreshed + text[end:]
           ws.write_text(text)
 
-          # Golden manifest: promote only after independent reproduction succeeded.
           manifest_path = Path('design/reference/visual-goldens/desktop-standard/manifest.json')
           manifest = json.loads(manifest_path.read_text())
           manifest['status'] = 'approved-light-first-automated-visual-regression-baseline'
@@ -114,7 +104,6 @@ Because this provenance/documentation edit changes the exact branch head after t
           )
           manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
 
-          # Parse contract/manifest to fail fast on malformed JSON.
           json.loads(Path('design/ux-contract.json').read_text())
           json.loads(manifest_path.read_text())
           PY
