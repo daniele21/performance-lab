@@ -4,11 +4,23 @@ This directory contains only bounded implementation/evidence plans that need exp
 
 Current active workstreams:
 
-- [`product-ux-ui-convergence.md`](product-ux-ui-convergence.md) — converge the canonical Performance Lab UX contract, approved desktop visual targets, backend read models and built browser product through staged UX/UI implementation and acceptance.
-- [`representative-device-evidence.md`](representative-device-evidence.md) — validate real model/runtime/device identity, telemetry, repeatability and representative comparison/regression evidence.
-- [`local-llm-migration.md`](local-llm-migration.md) — migrate or deliberately retain/remove overlapping Local LLM Server evaluation workflows after parity and consumer evidence.
+- [`incremental-value-delivery.md`](incremental-value-delivery.md) — owns the operational order of end-to-end VALUE slices; M1-M9 remain coverage/maturity labels rather than the development sequence.
+- [`product-ux-ui-convergence.md`](product-ux-ui-convergence.md) — close the remaining representative-human accessibility/usability acceptance for the integrated decision-first, Light-first desktop product.
+- [`representative-device-evidence.md`](representative-device-evidence.md) — owns real model/runtime/device protocol, retained artifacts, telemetry, repeatability and representative comparison/regression evidence consumed incrementally by VALUE slices.
+- [`local-llm-migration.md`](local-llm-migration.md) — owns Local LLM Server replacement/deprecation/removal semantics and evidence; its cutover becomes VALUE-07 only after the replacement loop has already demonstrated user value.
 
-The earlier UI productization workstream was deleted after Compare, Library/Settings, browser J1-J6 acceptance and the built-product lifecycle were integrated; Git history owns that completed plan. The new product UX/UI convergence workstream is intentionally separate: it owns the later use-case-first decision journey, richer evidence inspection and convergence on the current canonical UX/brand contracts.
+The earlier UI productization workstream was deleted after Compare, Library/Settings, browser acceptance and the built-product lifecycle were integrated. The current product-experience workstream remains only for its final human acceptance gate; it does not own the next product-development sequence.
+
+## Coordination rule
+
+Do not duplicate one status across multiple plans:
+
+- `incremental-value-delivery.md` owns **which user-value slice executes next** and its end-to-end acceptance;
+- `representative-device-evidence.md` owns **how real-device evidence is captured and bounded**;
+- `local-llm-migration.md` owns **how the cross-repository LLS cutover is performed safely**;
+- `product-ux-ui-convergence.md` owns only the remaining **human UX/accessibility acceptance** for the integrated experience.
+
+If a VALUE slice needs evidence/cutover behavior from a specialized workstream, reference that owner instead of copying its protocol.
 
 Lifecycle rules:
 
