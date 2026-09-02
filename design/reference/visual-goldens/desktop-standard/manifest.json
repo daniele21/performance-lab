@@ -1,60 +1,54 @@
 {
   "schema_version": 1,
   "golden_type": "accepted-implementation-screenshot",
-  "status": "approved-desktop-ux-automated-visual-regression-baseline",
+  "status": "candidate-light-first-automated-visual-regression-baseline",
   "viewport": {
     "width": 1536,
     "height": 960,
     "class": "desktop-standard"
   },
   "capture": {
-    "source_head_sha": "66968cae31c4b9d15952f8a3288256a4e6954099",
-    "browser_capture_run_id": 33633046893,
-    "artifact_id": 9847625651,
-    "artifact_name": "desktop-ux-golden-candidate-33633046893-1",
-    "artifact_sha256": "afcdbe4be1cd51ed6b482ce477a4797fe3884088c63279181c88bc3f28da5aca",
+    "source_head_sha": "HEAD^",
+    "browser_capture_run_id": 33649543902,
+    "artifact_id": 9854232790,
+    "artifact_name": "light-first-golden-candidate-33649543902-1",
+    "artifact_sha256": "1f6b5c278364581a73dbecf8e8b2115a80091ab51e6d330f21b68ed0a162ede5",
     "platform": "GitHub-hosted Ubuntu 24.04",
     "locale": "en-US",
     "timezone": "UTC",
-    "color_scheme": "dark",
+    "os_color_scheme": "dark",
+    "product_theme": "light",
     "reduced_motion": "reduce"
   },
-  "acceptance": {
-    "browser_acceptance_run_id": 33633300007,
-    "artifact_id": 9847747270,
-    "artifact_name": "browser-acceptance-evidence-33633300007-1",
-    "artifact_sha256": "01ebd05730d4611a8b3a3fcbbf7b7e28133f08dfd075b17a19482c0a4ca7fa43",
-    "result": "all browser journeys, media verification and visual regression passed without snapshot updates"
-  },
   "review": {
-    "method": "agent-inspected real implementation captures followed by an independent Browser Acceptance run that reproduced the committed visual baseline without snapshot updates",
-    "decision": "accepted for bounded automated visual regression",
+    "method": "real Playwright implementation capture; independent Browser Acceptance reproduction pending",
+    "decision": "candidate pending independent CI match",
     "human_reference_grade_claim": false
   },
   "source_of_truth": "design/ux-contract.json",
   "ux_contract_version": "0.5.0",
-  "design_target_root": "design/",
+  "design_target_root": "design/ux-contract.json + design/brand-kit.json",
   "goldens": {
     "benchmark-detail": {
       "file": "benchmark-detail.png",
-      "sha256": "32335866e03f84fb46bf7e6ec36f693d00450515fba0ed5a7372e9f13ef740c5"
+      "sha256": "a410469f41a22b7baaba40722b19c743be30dabb34e85fd792fb5e3b785e239a"
     },
     "campaign-results": {
       "file": "campaign-results.png",
-      "sha256": "1b08f3413754ae9ceac6a79dc244b0cb4bded6482150379f6a79b4751dea57fa"
+      "sha256": "c2307216b451ae8ac90d88e5e17babb8cf91fc0a59ca79041073cf98d5545a35"
     },
     "overview": {
       "file": "overview.png",
-      "sha256": "29f16a8d979907a8bb9264061cd0f23858a4540a9251c847495439cf6af76605"
+      "sha256": "fb5ab70df083156aeaf9ec2dcedf36595c95224ba5c865306a61207f8d6a59f5"
     },
     "sample-evidence-detail": {
       "file": "sample-evidence-detail.png",
-      "sha256": "54925ec2d9288941fd1571c47413e1094c1a5e5827f879043a20ae23bf694ba2"
+      "sha256": "5924033e937a88d30b882fc4e30c72569cd289adf1bd5e15e8a65eafdeb5fa19"
     },
     "test-a-model-review": {
       "file": "test-a-model-review.png",
-      "sha256": "e7fb30fb5b025433c54ae5d3831633416176af55d195a9e7c4f76a8797421aab"
+      "sha256": "601035780b65a55f043ab1806ba15dd3fd361c9da86832052562a21e44b8fa3e"
     }
   },
-  "scope_note": "These five stable surfaces are bounded automated visual-regression goldens. Overview and Campaign Results were refreshed from the real implementation after representative-human hierarchy feedback and independently reproduced by Browser Acceptance. They do not substitute for final representative-human accessibility/usability review."
+  "scope_note": "These five stable automated visual-regression surfaces were refreshed from the real implementation after Light became the canonical default theme. Capture intentionally used an OS-dark browser context while the product rendered Light, proving that default product appearance is independent of OS theme until the user selects System. Independent Browser Acceptance must reproduce this baseline without snapshot updates. This does not substitute for representative-human accessibility/usability review."
 }
