@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from performance_lab.application import (
     EvidenceContentState,
     ExplanationState,
+    SampleQualityVerdict,
     UIQueryService,
 )
 from performance_lab.datasets import DatasetRecord, MaterializedDataset
@@ -22,6 +23,7 @@ from performance_lab.domain import (
     ModelIdentity,
     Run,
     RunStatus,
+    SampleContentEvidence,
     SampleExecution,
     SampleStatus,
     Score,
@@ -32,7 +34,12 @@ from performance_lab.storage import SQLiteRunStore
 from performance_lab.ui_api import create_ui_app
 
 
-def _evidence_fixture(tmp_path, *, inspectable: bool = True) -> UIQueryService:
+def _evidence_fixture(
+    tmp_path,
+    *,
+    inspectable: bool = True,
+    evidence_rich: bool = False,
+) -> UIQueryService:
     evaluator = ExactMatchEvaluator()
     snapshot = DatasetSnapshot(
         dataset_id="demo",
@@ -123,6 +130,22 @@ def _evidence_fixture(tmp_path, *, inspectable: bool = True) -> UIQueryService:
         samples=(failed, succeeded),
     )
     store = SQLiteRunStore(tmp_path / "runs.sqlite3")
+    if evidence_rich:
+        store.save_working(
+            run.model_copy(
+                update={"status": RunStatus.RUNNING, "completed_at": None, "samples": ()}
+            )
+        )
+        store.save_working_sample_content(
+            SampleContentEvidence(
+                run_id="run-1",
+                task_id="qa",
+                sample_id="sample-1",
+                attempt=2,
+                prompt="Question",
+                response="Answer",
+            )
+        )
     store.publish(run)
     return UIQueryService(
         store,
@@ -167,6 +190,10 @@ def test_sample_detail_keeps_definition_content_separate_from_execution_content(
     assert detail.prompt.reason == "content_not_retained"
     assert detail.response.state == EvidenceContentState.NOT_RETAINED
     assert detail.response.content is None
+    assert detail.quality.verdict == SampleQualityVerdict.CORRECT
+    assert detail.quality.metric == "exact_match"
+    assert detail.quality.value == 1.0
+    assert detail.quality.percentage == 100.0
     assert detail.definition_issues == ()
 
     score = detail.scores[0]
@@ -182,6 +209,20 @@ def test_sample_detail_keeps_definition_content_separate_from_execution_content(
     assert measurement.name == "request_duration"
     assert measurement.provenance == MeasurementProvenance.CLIENT
     assert measurement.protocol_version == "client-v1"
+
+
+def test_sample_detail_reads_evidence_rich_prompt_and_output_from_local_sidecar(tmp_path) -> None:
+    detail = _evidence_fixture(tmp_path, evidence_rich=True).get_sample_evidence(
+        "run-1", "qa", "sample-1", 2
+    )
+
+    assert detail.prompt.state == EvidenceContentState.RETAINED
+    assert detail.prompt.content == "Question"
+    assert detail.response.state == EvidenceContentState.RETAINED
+    assert detail.response.content == "Answer"
+    assert detail.benchmark_case is not None
+    assert detail.benchmark_case.expected == "Answer"
+    assert detail.quality.verdict == SampleQualityVerdict.CORRECT
 
 
 def test_sample_detail_does_not_invent_benchmark_content_when_not_inspectable(tmp_path) -> None:
@@ -222,6 +263,14 @@ def test_sample_evidence_api_exposes_attempt_specific_read_models(tmp_path) -> N
     payload = detail.json()
     assert payload["sample"]["attempt"] == 2
     assert payload["benchmark_case"]["expected"] == "Answer"
+    assert payload["quality"] == {
+        "api_version": "v1",
+        "read_model_version": 1,
+        "verdict": "correct",
+        "metric": "exact_match",
+        "value": 1.0,
+        "percentage": 100.0,
+    }
     assert payload["prompt"] == {
         "api_version": "v1",
         "read_model_version": 1,

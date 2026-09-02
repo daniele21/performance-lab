@@ -34,6 +34,14 @@ class ExplanationState(StrEnum):
     UNAVAILABLE = "unavailable"
 
 
+class SampleQualityVerdict(StrEnum):
+    CORRECT = "correct"
+    INCORRECT = "incorrect"
+    PARTIAL = "partial"
+    SCORED = "scored"
+    NOT_EVALUATED = "not_evaluated"
+
+
 class EvidenceContentReadModel(UIModel):
     """Typed content state so absence is never rendered as an empty retained value."""
 
@@ -88,6 +96,15 @@ class SampleScoreReadModel(UIModel):
         return self
 
 
+class SampleQualitySummaryReadModel(UIModel):
+    """Primary evaluator result translated by the Python evidence owner for the browser."""
+
+    verdict: SampleQualityVerdict
+    metric: str | None = None
+    value: float | None = None
+    percentage: float | None = Field(default=None, ge=0, le=100)
+
+
 class SampleMeasurementReadModel(UIModel):
     name: str = Field(min_length=1)
     value: float
@@ -107,6 +124,9 @@ class SampleEvidenceDetailReadModel(UIModel):
     benchmark_case: BenchmarkCaseReadModel | None = None
     prompt: EvidenceContentReadModel
     response: EvidenceContentReadModel
+    quality: SampleQualitySummaryReadModel = SampleQualitySummaryReadModel(
+        verdict=SampleQualityVerdict.NOT_EVALUATED
+    )
     scores: tuple[SampleScoreReadModel, ...] = ()
     measurements: tuple[SampleMeasurementReadModel, ...] = ()
     definition_issues: tuple[str, ...] = ()

@@ -9,7 +9,7 @@ from hashlib import sha256
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
-from performance_lab.domain import Run, RunStatus, load_json
+from performance_lab.domain import Run, RunStatus, SampleContentEvidence, load_json
 
 _BUNDLE_VERSION = 1
 _TERMINAL_STATUSES = {RunStatus.SUCCEEDED, RunStatus.FAILED, RunStatus.CANCELLED}
@@ -36,7 +36,11 @@ class InvalidRunBundleError(RunStoreError):
 
 
 class SQLiteRunStore:
-    """Keep mutable working state separate from immutable completed evidence."""
+    """Keep mutable working state separate from immutable completed evidence.
+
+    Potentially sensitive prompt/model-output content is stored in dedicated local tables and is
+    deliberately excluded from canonical Run JSON and portable ``.plab.zip`` bundles.
+    """
 
     def __init__(self, path: Path) -> None:
         self.path = path
@@ -66,6 +70,25 @@ class SQLiteRunStore:
                 );
                 CREATE INDEX IF NOT EXISTS idx_completed_fingerprint
                     ON completed_runs(fingerprint_id);
+                CREATE TABLE IF NOT EXISTS working_sample_content (
+                    run_id TEXT NOT NULL,
+                    task_id TEXT NOT NULL,
+                    sample_id TEXT NOT NULL,
+                    attempt INTEGER NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY(run_id, task_id, sample_id, attempt)
+                );
+                CREATE TABLE IF NOT EXISTS completed_sample_content (
+                    run_id TEXT NOT NULL,
+                    task_id TEXT NOT NULL,
+                    sample_id TEXT NOT NULL,
+                    attempt INTEGER NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    published_at TEXT NOT NULL,
+                    PRIMARY KEY(run_id, task_id, sample_id, attempt),
+                    FOREIGN KEY(run_id) REFERENCES completed_runs(run_id) ON DELETE CASCADE
+                );
                 """
             )
 
@@ -92,7 +115,45 @@ class SQLiteRunStore:
                 (run.run_id, payload, _now_iso()),
             )
 
+    def save_working_sample_content(self, evidence: SampleContentEvidence) -> None:
+        """Upsert sensitive content only while its owning run is still working."""
+
+        with self._connect() as connection:
+            completed = connection.execute(
+                "SELECT 1 FROM completed_runs WHERE run_id = ?", (evidence.run_id,)
+            ).fetchone()
+            if completed is not None:
+                raise ImmutableRunConflictError(f"run already published: {evidence.run_id}")
+            working = connection.execute(
+                "SELECT 1 FROM working_runs WHERE run_id = ?", (evidence.run_id,)
+            ).fetchone()
+            if working is None:
+                raise InvalidRunStateError(
+                    f"sample content requires an active working run: {evidence.run_id}"
+                )
+            connection.execute(
+                """
+                INSERT INTO working_sample_content(
+                    run_id, task_id, sample_id, attempt, payload_json, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(run_id, task_id, sample_id, attempt) DO UPDATE SET
+                    payload_json = excluded.payload_json,
+                    updated_at = excluded.updated_at
+                """,
+                (
+                    evidence.run_id,
+                    evidence.task_id,
+                    evidence.sample_id,
+                    evidence.attempt,
+                    evidence.model_dump_json(),
+                    _now_iso(),
+                ),
+            )
+
     def publish(self, run: Run) -> None:
+        self._publish(run, promote_working_content=True)
+
+    def _publish(self, run: Run, *, promote_working_content: bool) -> None:
         if run.status not in _TERMINAL_STATUSES:
             raise InvalidRunStateError("only terminal runs can be published as immutable evidence")
         payload = run.canonical_json()
@@ -109,6 +170,7 @@ class SQLiteRunStore:
                     )
                 connection.rollback()
                 return
+            published_at = _now_iso()
             connection.execute(
                 """
                 INSERT INTO completed_runs(
@@ -120,9 +182,22 @@ class SQLiteRunStore:
                     run.fingerprint.fingerprint_id,
                     run.status.value,
                     payload,
-                    _now_iso(),
+                    published_at,
                 ),
             )
+            if promote_working_content:
+                connection.execute(
+                    """
+                    INSERT INTO completed_sample_content(
+                        run_id, task_id, sample_id, attempt, payload_json, published_at
+                    )
+                    SELECT run_id, task_id, sample_id, attempt, payload_json, ?
+                    FROM working_sample_content
+                    WHERE run_id = ?
+                    """,
+                    (published_at, run.run_id),
+                )
+            connection.execute("DELETE FROM working_sample_content WHERE run_id = ?", (run.run_id,))
             connection.execute("DELETE FROM working_runs WHERE run_id = ?", (run.run_id,))
             connection.commit()
         except Exception:
@@ -154,6 +229,26 @@ class SQLiteRunStore:
             return None
         return load_json(Run, str(row[0]))
 
+    def get_sample_content(
+        self,
+        run_id: str,
+        task_id: str,
+        sample_id: str,
+        attempt: int,
+    ) -> SampleContentEvidence | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT payload_json
+                FROM completed_sample_content
+                WHERE run_id = ? AND task_id = ? AND sample_id = ? AND attempt = ?
+                """,
+                (run_id, task_id, sample_id, attempt),
+            ).fetchone()
+        if row is None:
+            return None
+        return SampleContentEvidence.model_validate_json(str(row[0]))
+
     def list_completed(self) -> tuple[Run, ...]:
         with self._connect() as connection:
             rows = connection.execute(
@@ -171,8 +266,25 @@ class SQLiteRunStore:
 
     def delete_working(self, run_id: str) -> bool:
         with self._connect() as connection:
+            connection.execute("DELETE FROM working_sample_content WHERE run_id = ?", (run_id,))
             cursor = connection.execute("DELETE FROM working_runs WHERE run_id = ?", (run_id,))
             return cursor.rowcount > 0
+
+    def delete_working_sample_content(self, run_id: str) -> int:
+        with self._connect() as connection:
+            cursor = connection.execute(
+                "DELETE FROM working_sample_content WHERE run_id = ?", (run_id,)
+            )
+            return cursor.rowcount
+
+    def delete_completed_sample_content(self, run_id: str) -> int:
+        """Delete only sensitive local content while preserving canonical completed Run evidence."""
+
+        with self._connect() as connection:
+            cursor = connection.execute(
+                "DELETE FROM completed_sample_content WHERE run_id = ?", (run_id,)
+            )
+            return cursor.rowcount
 
     def export_bundle(self, run_id: str, destination: Path) -> Path:
         run = self.get_completed(run_id)
@@ -213,7 +325,7 @@ class SQLiteRunStore:
         run = load_json(Run, run_json)
         if manifest_raw.get("run_id") != run.run_id:
             raise InvalidRunBundleError("manifest run_id does not match payload")
-        self.publish(run)
+        self._publish(run, promote_working_content=False)
         return run
 
 

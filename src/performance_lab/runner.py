@@ -17,6 +17,7 @@ from performance_lab.datasets import (
 from performance_lab.domain import (
     EvaluationSuite,
     EvaluatorRef,
+    EvidenceMode,
     ExecutionFingerprint,
     HardwareIdentity,
     LoadProfile,
@@ -27,11 +28,12 @@ from performance_lab.domain import (
     TelemetryLevel,
 )
 from performance_lab.engine import EvaluationOrchestrator, ProgressEvent
+from performance_lab.evidence_capture import EvidenceCapturingAdapter
 from performance_lab.integrations import (
     LocalLLMServerIdentityClient,
     LocalLLMServerIdentityError,
 )
-from performance_lab.plugins import Evaluator, TelemetryCollector
+from performance_lab.plugins import Evaluator, InferenceAdapter, TelemetryCollector
 from performance_lab.run_config import StarterRunConfig
 from performance_lab.storage import SQLiteRunStore
 from performance_lab.telemetry import (
@@ -79,7 +81,12 @@ async def execute_starter_run(
     """
 
     bundle = _resolve_execution_bundle(config)
-    adapter = OpenAICompatibleAdapter(config.endpoint, model=config.model_id)
+    run_id = config.run_id or f"run-{uuid4()}"
+    store = SQLiteRunStore(config.store_path)
+    base_adapter = OpenAICompatibleAdapter(config.endpoint, model=config.model_id)
+    adapter: InferenceAdapter = base_adapter
+    if config.evidence_mode == EvidenceMode.EVIDENCE_RICH:
+        adapter = EvidenceCapturingAdapter(base_adapter, store, run_id=run_id)
     try:
         probe = await adapter.probe()
         if not probe.healthy:
@@ -118,8 +125,6 @@ async def execute_starter_run(
             ),
             telemetry=telemetry_descriptor,
         )
-        run_id = config.run_id or f"run-{uuid4()}"
-        store = SQLiteRunStore(config.store_path)
         orchestrator = EvaluationOrchestrator(
             adapter,
             bundle.evaluators,
@@ -136,8 +141,12 @@ async def execute_starter_run(
         bundle_path = config.store_path.parent / "artifacts" / f"{run_id}.plab.zip"
         store.export_bundle(run_id, bundle_path)
         return RunExecutionResult(run=run, store_path=config.store_path, bundle_path=bundle_path)
+    except Exception:
+        if config.evidence_mode == EvidenceMode.EVIDENCE_RICH:
+            store.delete_working_sample_content(run_id)
+        raise
     finally:
-        await adapter.aclose()
+        await base_adapter.aclose()
 
 
 def _resolve_execution_bundle(config: StarterRunConfig) -> _ExecutionBundle:

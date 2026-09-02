@@ -16,6 +16,7 @@ from .compatibility import (
     NonComparabilityReason,
     compare_fingerprints,
 )
+from .evidence import CONTENT_EVIDENCE_SCHEMA_VERSION, EvidenceMode, SampleContentEvidence
 from .schemas import (
     SCHEMA_VERSION,
     AuthConfig,
@@ -55,6 +56,7 @@ from .serialization import (
 )
 
 __all__ = [
+    "CONTENT_EVIDENCE_SCHEMA_VERSION",
     "SCHEMA_VERSION",
     "TERMINAL_CAMPAIGN_ENTRY_STATUSES",
     "TERMINAL_CAMPAIGN_STATUSES",
@@ -74,6 +76,7 @@ __all__ = [
     "ErrorInfo",
     "EvaluationSuite",
     "EvaluatorRef",
+    "EvidenceMode",
     "ExecutionFingerprint",
     "GenerationConfig",
     "HardwareIdentity",
@@ -88,6 +91,7 @@ __all__ = [
     "Run",
     "RunStatus",
     "RuntimeIdentity",
+    "SampleContentEvidence",
     "SampleExecution",
     "SampleStatus",
     "SchemaLoadError",

@@ -11,7 +11,7 @@ from performance_lab.application import (
     UIQueryService,
 )
 from performance_lab.datasets import build_general_starter_suite, build_workload_pack
-from performance_lab.domain import EndpointProfile, HardwareIdentity, Target
+from performance_lab.domain import EndpointProfile, EvidenceMode, HardwareIdentity, Target
 from performance_lab.run_config import StarterRunConfig
 from performance_lab.storage import SQLiteRunStore
 
@@ -110,6 +110,7 @@ def test_fixed_general_plan_is_frozen_deterministic_and_executable(tmp_path: Pat
     assert len(launch.runs) == 1
     assert launch.runs[0].config.suite_id == "general-diagnostic-starter"
     assert launch.runs[0].config.suite_version == first.benchmark_plan.suite.suite_version
+    assert launch.runs[0].config.evidence_mode == EvidenceMode.AGGREGATE_SAFE
 
 
 def test_launch_revalidates_the_exact_reviewed_digest(tmp_path: Path) -> None:
@@ -149,6 +150,7 @@ def test_workload_use_case_maps_to_its_own_versioned_executable_plan(tmp_path: P
     launch = queries.prepare_campaign_launch(request, expected_plan_digest=preview.plan_digest)
     assert launch.runs[0].config.suite_id == "workload-structured-document-extraction"
     assert launch.runs[0].config.suite_version == preview.benchmark_plan.suite.suite_version
+    assert launch.runs[0].config.evidence_mode == EvidenceMode.AGGREGATE_SAFE
 
 
 def test_sweep_strategy_is_blocked_without_backend_owned_bounded_ranges(tmp_path: Path) -> None:

@@ -99,6 +99,8 @@ export type {
   SampleEvidenceDetailReadModel,
   SampleErrorInfo,
   SampleMeasurementReadModel,
+  SampleQualitySummaryReadModel,
+  SampleQualityVerdict,
   SampleScoreReadModel,
   SampleStatus,
   SampleSummaryReadModel,

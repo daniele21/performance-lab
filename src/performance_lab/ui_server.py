@@ -85,8 +85,13 @@ def build_local_ui_app(
         workload_packs=workload_bundles,
     )
     capacity = EvaluationCapacity()
+    recovered_runs = store.list_working()
+    for recovered_run in recovered_runs:
+        # Resume is intentionally unsupported. Keep bounded run metadata for the interrupted-job
+        # surface, but never preserve potentially sensitive raw prompt/output after a hard restart.
+        store.delete_working_sample_content(recovered_run.run_id)
     run_jobs = RunJobManager(
-        recovered_runs=store.list_working(),
+        recovered_runs=recovered_runs,
         capacity=capacity,
     )
     campaign_jobs = CampaignJobManager(campaign_store, capacity=capacity)

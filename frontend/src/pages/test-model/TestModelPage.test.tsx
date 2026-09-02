@@ -68,6 +68,7 @@ const preflight: RunPreflightReadModel = {
       store_path: "artifacts/performance-lab.sqlite3",
       run_id: null,
       write_bundle: true,
+      evidence_mode: "evidence_rich",
       use_host_telemetry: true,
       suite_id: "general-diagnostic-starter",
     },
@@ -222,6 +223,7 @@ describe("TestModelView", () => {
     );
 
     expect(markup).toContain("Frozen config digest");
+    expect(markup).toContain("evidence_rich");
     expect(markup).toContain("a".repeat(64));
     expect(markup).toContain("Run test");
     expect(markup).toContain("continues in the local Performance Lab process");

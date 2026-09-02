@@ -5,7 +5,7 @@ Document type: operational-reference
 Owner: executable run path
 Canonical scope: operations.run-config
 Read when: creating or reviewing a `performance-lab run --config` JSON file
-Last reviewed: 2026-08-15
+Last reviewed: 2026-09-01
 
 The executable starter run uses a strict versioned JSON configuration. Unknown fields are rejected rather than silently ignored.
 
@@ -21,7 +21,8 @@ The executable starter run uses a strict versioned JSON configuration. Unknown f
     "base_url": "http://127.0.0.1:1235/v1/",
     "model_selector": "my-model"
   },
-  "model_id": "my-model"
+  "model_id": "my-model",
+  "evidence_mode": "aggregate_safe"
 }
 ```
 
@@ -36,11 +37,23 @@ The executable starter run uses a strict versioned JSON configuration. Unknown f
 | `model_id` | non-empty string | yes | — | canonical configured model identity used by the starter run |
 | `store_path` | path | no | `.performance-lab/runs.sqlite3` | local SQLite evidence store |
 | `run_id` | non-empty string or null | no | generated | explicit run ID when deterministic naming is desired |
+| `evidence_mode` | `aggregate_safe` \| `evidence_rich` | no | `aggregate_safe` | whether raw prompt/model-output content is omitted or retained in the local evidence sidecar |
 | `use_host_telemetry` | boolean | no | `false` | enable portable host/process telemetry collector |
 | `local_llm_server_telemetry` | object or null | no | `null` | poll Local LLM Server `/status` during the run |
 | `local_llm_server_identity` | object or null | no | `null` | discover/freeze `local-llm-identity-v1` before execution |
 | `hardware` | object | no | all fields unknown | caller-supplied hardware identity when explicitly known |
-| `suite_id` | literal string | no | `general-diagnostic-starter` | bundled executable suite; current starter path accepts only this value |
+| `suite_id` | string | no | `general-diagnostic-starter` | executable suite ID; registered workload-pack suite IDs are also accepted |
+| `suite_version` | non-empty string or null | no | current registered version | explicit suite version when version pinning is required |
+
+## Evidence mode
+
+`aggregate_safe` is the default for CLI, CI/regression and campaign-derived runs. The canonical `Run` and portable `.plab.zip` remain transcript-free in both modes.
+
+`evidence_rich` additionally retains the exact rendered prompt and model response in dedicated **local-only SQLite sidecar rows** keyed by run/task/sample/attempt. This content may contain sensitive or private data. It is deliberately excluded from the canonical `Run`, `ExecutionFingerprint` and `.plab.zip` bundle.
+
+The browser **Test a model** flow is a diagnostic surface and freezes `evidence_rich` into its reviewed execution config by default. Campaign planning explicitly forces `aggregate_safe`, and ordinary CLI configs remain `aggregate_safe` unless the caller opts in.
+
+Completed evidence from older aggregate-safe runs is immutable: Performance Lab never reconstructs a prompt or response that was not retained. After a hard process restart, uncommitted evidence-rich working content is discarded because in-place run resume is not supported.
 
 ## `endpoint`
 
@@ -161,6 +174,7 @@ Do not guess hardware from endpoint names. When Local LLM Server first-party ide
   },
   "model_id": "qwen-model",
   "store_path": ".performance-lab/runs.sqlite3",
+  "evidence_mode": "aggregate_safe",
   "use_host_telemetry": true,
   "local_llm_server_identity": {
     "base_url": "http://127.0.0.1:1235",
@@ -197,6 +211,7 @@ The loader rejects:
 - unsupported/missing `schema_version`;
 - empty required strings;
 - unknown fields because models use `extra="forbid"`;
+- invalid `evidence_mode` values;
 - invalid URLs;
 - out-of-range timeout/sampling values;
 - invalid hardware memory values.
@@ -205,6 +220,8 @@ A validation error exits `performance-lab run` with execution/configuration erro
 
 ## Reproducibility rules
 
-Treat the config as one input to the fingerprint, not the whole fingerprint. Dataset snapshot, evaluator versions, benchmark protocol, generated model/runtime identity, telemetry descriptor and effective generation/load settings are frozen into `ExecutionFingerprint` at run start.
+Treat the config as one input to the execution decision, not the whole fingerprint. Dataset snapshot, evaluator versions, benchmark protocol, generated model/runtime identity, telemetry descriptor and effective generation/load settings are frozen into `ExecutionFingerprint` at run start.
+
+`evidence_mode` is intentionally **not** part of the model/runtime comparison fingerprint because it changes diagnostic retention, not inference semantics. The reviewed browser preflight digest still includes it, so launch cannot silently switch retention mode after Review.
 
 If an identity field is not explicitly supplied or observed, it remains unknown.

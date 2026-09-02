@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError
 
-from performance_lab.domain import EndpointProfile, HardwareIdentity
+from performance_lab.domain import EndpointProfile, EvidenceMode, HardwareIdentity
 
 RUN_CONFIG_VERSION: Literal[1] = 1
 
@@ -45,6 +45,7 @@ class StarterRunConfig(BaseModel):
     model_id: str = Field(min_length=1)
     store_path: Path = Path(".performance-lab/runs.sqlite3")
     run_id: str | None = Field(default=None, min_length=1)
+    evidence_mode: EvidenceMode = EvidenceMode.AGGREGATE_SAFE
     use_host_telemetry: bool = False
     local_llm_server_telemetry: LocalLLMServerTelemetryConfig | None = None
     local_llm_server_identity: LocalLLMServerIdentityConfig | None = None

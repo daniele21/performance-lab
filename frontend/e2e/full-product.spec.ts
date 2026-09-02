@@ -88,9 +88,7 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
   await expect(page.getByRole("heading", { name: "fixture-good" })).toBeVisible();
 });
 
-test("J1/J8: packaged product completes, persists and drills into sample evidence", async ({
-  page,
-}) => {
+test("J1/J8: packaged manual test retains and explains exact sample evidence", async ({ page }) => {
   await page.goto("/#test-a-model");
   await expect(page.getByRole("heading", { name: "Test a model" })).toBeVisible();
 
@@ -121,9 +119,26 @@ test("J1/J8: packaged product completes, persists and drills into sample evidenc
 
   await expect(page).toHaveURL(/#runs\/[^/]+\/samples\//);
   await expect(page.getByRole("heading", { name: "Model exchange" })).toBeVisible();
-  await expect(page.getByText("Prompt sent to model", { exact: true })).toBeVisible();
-  await expect(page.getByText("Model output", { exact: true })).toBeVisible();
-  await expect(page.getByText("Expected output", { exact: true })).toBeVisible();
-  await expect(page.getByText("Content not retained")).toHaveCount(2);
+  await expect(page.getByText("Quality", { exact: true })).toBeVisible();
+  await expect(page.getByText("Correct", { exact: true })).toBeVisible();
+  await expect(page.getByText("normalized_exact_match · 1 · 100%", { exact: true })).toBeVisible();
+
+  const promptPanel = page.locator(".evidence-drilldown__panel").filter({
+    has: page.getByText("Prompt sent to model", { exact: true }),
+  });
+  await expect(promptPanel.getByText("Reply with exactly: BLUE", { exact: true })).toBeVisible();
+
+  const outputPanel = page.locator(".evidence-drilldown__panel").filter({
+    has: page.getByText("Model output", { exact: true }),
+  });
+  await expect(outputPanel.getByText("BLUE", { exact: true })).toBeVisible();
+
+  const expectedPanel = page.locator(".evidence-drilldown__panel").filter({
+    has: page.getByText("Expected output", { exact: true }),
+  });
+  await expect(expectedPanel.getByText("BLUE", { exact: true })).toBeVisible();
+
+  await expect(page.getByText("Evidence-rich local content", { exact: true })).toBeVisible();
+  await expect(page.getByText("Content not retained")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Evaluator evidence" })).toBeVisible();
 });

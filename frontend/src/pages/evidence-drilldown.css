@@ -17,8 +17,15 @@
 .evidence-drilldown__summary-grid,
 .evidence-drilldown__metadata-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
+}
+
+.evidence-drilldown__summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.evidence-drilldown__metadata-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .evidence-drilldown__summary-grid > div,
@@ -38,6 +45,13 @@
   margin-bottom: var(--space-2);
   color: var(--color-text-secondary);
   font-size: 0.8rem;
+}
+
+.evidence-drilldown__summary-detail {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
 }
 
 .evidence-drilldown__metadata-grid dl,

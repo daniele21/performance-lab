@@ -4,6 +4,7 @@ import { getSampleEvidence } from "../../api";
 import type {
   EvidenceContentReadModel,
   SampleEvidenceDetailReadModel,
+  SampleQualityVerdict,
   SampleSummaryReadModel,
 } from "../../api";
 import {
@@ -28,6 +29,21 @@ function sampleTone(status: SampleSummaryReadModel["status"]) {
   if (status === "succeeded") return "success" as const;
   if (status === "failed") return "error" as const;
   return "warning" as const;
+}
+
+function qualityTone(verdict: SampleQualityVerdict) {
+  if (verdict === "correct") return "success" as const;
+  if (verdict === "incorrect") return "error" as const;
+  if (verdict === "partial") return "warning" as const;
+  return "unknown" as const;
+}
+
+function qualityLabel(verdict: SampleQualityVerdict) {
+  if (verdict === "correct") return "Correct";
+  if (verdict === "incorrect") return "Incorrect";
+  if (verdict === "partial") return "Partial";
+  if (verdict === "scored") return "Scored";
+  return "Not evaluated";
 }
 
 function ContentPanel({ label, evidence }: { label: string; evidence: EvidenceContentReadModel }) {
@@ -64,6 +80,12 @@ function ValuePanel({ label, value }: { label: string; value: unknown }) {
 export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailReadModel }) {
   const { run, sample, benchmark_case: benchmarkCase } = detail;
   const identity = run.identity;
+  const richContent = detail.prompt.state === "retained" || detail.response.state === "retained";
+  const qualityDetail = detail.quality.metric
+    ? `${detail.quality.metric} · ${detail.quality.value}${
+        detail.quality.percentage === null ? "" : ` · ${detail.quality.percentage.toFixed(0)}%`
+      }`
+    : "No evaluator score";
 
   return (
     <AppShell activePrimary="Runs">
@@ -78,6 +100,13 @@ export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailRea
         />
 
         <div className="evidence-drilldown__summary-grid" aria-label="Sample evidence summary">
+          <div>
+            <span>Quality</span>
+            <Status tone={qualityTone(detail.quality.verdict)}>
+              {qualityLabel(detail.quality.verdict)}
+            </Status>
+            <p className="evidence-drilldown__summary-detail">{qualityDetail}</p>
+          </div>
           <div>
             <span>Execution</span>
             <Status tone={sampleTone(sample.status)}>{sample.status}</Status>
@@ -117,8 +146,17 @@ export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailRea
         <section className="evidence-drilldown__section">
           <SectionHeader
             title="Model exchange"
-            description="The rendered prompt sent to the model, the model output and the benchmark expected output are kept visually distinct. Retention states remain explicit."
+            description="The exact prompt sent to the model, the model output and the benchmark expected output are shown as three distinct pieces of evidence."
           />
+          {richContent ? (
+            <div className="evidence-drilldown__notice" role="status">
+              <Status tone="warning">Evidence-rich local content</Status>
+              <p>
+                Prompt and model output may contain sensitive data. They are retained only in the
+                local evidence database and are excluded from aggregate-safe portable bundles.
+              </p>
+            </div>
+          ) : null}
           <div className="evidence-drilldown__stack">
             <ContentPanel label="Prompt sent to model" evidence={detail.prompt} />
             <div className="evidence-drilldown__content-grid">
@@ -182,7 +220,7 @@ export function SampleEvidenceView({ detail }: { detail: SampleEvidenceDetailRea
         <section className="evidence-drilldown__section">
           <SectionHeader
             title="Benchmark source context"
-            description="The authored benchmark input is source case data used to render the execution prompt. It is not the prompt sent to the model."
+            description="The authored benchmark input is source case data used to render the execution prompt. It is not automatically the prompt sent to the model."
           />
           {benchmarkCase ? (
             <ValuePanel label="Original benchmark input" value={benchmarkCase.input} />
