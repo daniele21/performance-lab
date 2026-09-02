@@ -2,12 +2,7 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import {
-  BRAND_CONTRACT_VERSION,
-  COLOR_TOKENS,
-  DARK_COLOR_TOKENS,
-  MOTION_TOKENS,
-} from "./tokens";
+import { BRAND_CONTRACT_VERSION, COLOR_TOKENS, DARK_COLOR_TOKENS, MOTION_TOKENS } from "./tokens";
 
 interface BrandKit {
   contract_version: string;
