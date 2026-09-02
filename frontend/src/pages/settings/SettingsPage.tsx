@@ -12,18 +12,10 @@ import {
   Status,
   type DataColumn,
 } from "../../components";
-import {
-  getThemePreference,
-  setThemePreference,
-  type ThemePreference,
-} from "../../theme";
+import { getThemePreference, setThemePreference, type ThemePreference } from "../../theme";
 import "../secondary.css";
 
-export type SettingsSection =
-  | "model-connections"
-  | "devices-targets"
-  | "appearance"
-  | "advanced";
+export type SettingsSection = "model-connections" | "devices-targets" | "appearance" | "advanced";
 
 const SECTION_LABEL: Record<
   SettingsSection,
