@@ -57,6 +57,7 @@ The approved desktop direction is now implemented as follows:
 - **Run Detail:** `identity/status -> separate Q/P/R panel -> samples/evidence -> reproducibility`.
 - **Runs / Compare:** compact technical register; compatibility and exact metric deltas dominate decoration.
 - **Library / Settings:** quieter secondary surfaces preserve backend/runtime ownership boundaries.
+- **Visual theme:** Light is the canonical default workspace; Dark remains an explicit optional preference and System follows the OS. The browser-local theme preference changes presentation only and does not alter benchmark, evidence or runtime semantics.
 
 ## Prior evidence status
 
@@ -70,13 +71,19 @@ Because PVR-10 materially changes Overview, Find best setup, Campaign and Campai
 
 ## Refreshed automated evidence
 
-The PVR-10 product tree has passed the repository-owned deterministic frontend gates, the packaged-product workflow and the complete browser journey suite. The only initial Browser Acceptance failure was the intentionally stale Overview visual baseline; no functional journey failed.
+The PVR-10 product tree first passed the repository-owned deterministic frontend gates, packaged-product workflow and complete browser journey suite for the four-stage hierarchy. Representative-human visual feedback then changed the canonical visual direction from dark-first to **Light-first** while preserving the settled task model and evidence semantics.
 
-Overview and Campaign Results were then recaptured from the real Playwright implementation with a bounded guard that allowed only those two intended golden files to change. The resulting candidate images were inspected and an independent Browser Acceptance run reproduced the committed baseline without snapshot updates while passing all browser journeys and required media verification.
+The Light-first implementation is owned by `design/brand-kit.json` plus the executable semantic tokens. Light remains the default even when the OS is dark; Dark is opt-in; System follows `prefers-color-scheme`. `Settings -> Appearance` stores only this UI preference in the browser.
 
-`design/reference/visual-goldens/desktop-standard/manifest.json` owns the exact capture and independent-acceptance provenance. The approved automated baseline deliberately keeps `human_reference_grade_claim` false.
+All five stable implementation goldens were recaptured from the real Playwright implementation in bounded run `33649543902`; the exact-scope guard required all and only Overview, Test a model Review, Benchmark Detail, Sample Evidence Detail and Campaign Results to change. Candidate artifact `9854232790` (`light-first-golden-candidate-33649543902-1`) was captured at 1536x960 with OS color scheme dark, reduced motion enabled and the product still rendering its canonical Light default. The retained captures were agent-inspected with no blocking visual regression.
 
-A final exact-head deterministic confirmation is still required after the documentation/provenance edits in this workstream. That confirmation does not replace representative-human accessibility/usability review.
+Independent Browser Acceptance run `33649979498` then reproduced the committed Light baseline **without snapshot updates** while passing the complete browser journey suite, the Appearance contract and required screenshot/video verification. Artifact `9854404103` (`browser-acceptance-evidence-33649979498-1`) retains that evidence. Repository Validation `33649979311` and Repository Health `33649979374` also passed on the same head.
+
+Built Product run `33649979282` passed Python/frontend validation, deterministic product journey, PRE_REAL browser J0-J9 plus media verification, build/smoke, packaged J0/J1/J8/J9 plus media verification, readiness finalization and operating/E2E contract enforcement. Retained artifacts are built product `9854434372`, PRE_REAL `9854435657` and packaged E2E `9854436741`.
+
+`design/reference/visual-goldens/desktop-standard/manifest.json` owns the capture and independent-acceptance provenance. The approved automated baseline deliberately keeps `human_reference_grade_claim` false.
+
+Because this provenance/documentation edit changes the exact branch head after those runs, one final exact-head automated confirmation is still required. It does not replace representative-human accessibility/usability review.
 
 ## PVR-11 acceptance gate
 

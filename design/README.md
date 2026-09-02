@@ -76,6 +76,7 @@ Technical objects remain reachable but do not compete with the primary task mode
 
 - **Model connections**
 - **Devices / targets**
+- **Appearance** — Light is the canonical default; Dark is optional; System follows the operating system. The preference is browser-local and does not change benchmark/runtime semantics.
 - **Evidence retention**
 - **Accessibility**
 - **Advanced**
@@ -247,7 +248,7 @@ This is an audit/provenance surface. It obeys aggregate-safe/evidence-rich reten
 
 ### Settings
 
-Only expose product-owned configuration. Do not invent email notifications, telemetry controls, runtime lifecycle toggles or other settings merely because a mockup has space for them.
+Only expose product-owned configuration. Appearance is a browser-local UI preference: Light is the canonical reference, Dark remains optional and System follows the OS. Theme choice must not alter benchmark semantics, evidence truthfulness or runtime ownership. Do not invent email notifications, telemetry controls, runtime lifecycle toggles or other settings merely because a mockup has space for them.
 
 ## Progressive disclosure
 

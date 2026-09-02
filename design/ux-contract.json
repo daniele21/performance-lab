@@ -83,6 +83,7 @@
       "Settings": [
         "Model connections",
         "Devices / targets",
+        "Appearance",
         "Evidence retention",
         "Accessibility",
         "Advanced"
@@ -398,6 +399,7 @@
       "sections": [
         "Model connections",
         "Devices / targets",
+        "Appearance",
         "Evidence retention",
         "Accessibility",
         "Advanced"
@@ -405,6 +407,7 @@
       "rules": [
         "do not surface speculative settings for features the product does not own",
         "model connections configure endpoint discovery and credentials safely",
+        "appearance preference is browser-local: Light is the canonical default, Dark is optional and System follows the operating system",
         "runtime/model-load settings remain external unless an explicit mutable runtime contract is adopted",
         "evidence retention settings explain consequences for future sample drill-down",
         "secrets are never shown after storage and never exported into evidence"
