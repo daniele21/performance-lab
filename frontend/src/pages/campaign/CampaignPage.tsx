@@ -41,7 +41,7 @@ function stateTone(
 
 function label(value: string) {
   return value
-    .split("_")
+    .split(/[_-]/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
@@ -171,12 +171,11 @@ export function CampaignPage({
     <AppShell activePrimary="Find best setup">
       <div className="campaign-page">
         <PageHeader
-          eyebrow={terminal ? "Campaign results" : "Evaluation campaign"}
-          title={campaign.use_case_id}
+          title={terminal ? "Evaluation complete" : "Evaluation in progress"}
           description={
             terminal
-              ? "Decision policy, compatibility and retained Run evidence explain the best fit for this completed campaign."
-              : "Campaign progress is server-owned and reconnectable. Each completed row remains an immutable Run with its own evidence identity."
+              ? `${label(campaign.use_case_id)} · compatibility, decision policy and retained Run evidence explain the result.`
+              : `${label(campaign.use_case_id)} · progress is persisted by the server and each candidate/configuration remains an immutable Run.`
           }
           actions={
             terminal ? (
@@ -205,7 +204,7 @@ export function CampaignPage({
           className={`campaign-progress-section${terminal ? " campaign-progress-section--completed" : ""}`}
         >
           <SectionHeader
-            title="Campaign progress"
+            title={terminal ? "Completed progress" : "Overall progress"}
             description={`${progress.completedRuns} of ${campaign.entries.length} immutable runs completed successfully.`}
           />
           <RunProgress
@@ -215,6 +214,7 @@ export function CampaignPage({
           />
           {!terminal ? (
             <div className="campaign-actions">
+              <span>Progress is preserved if you leave this screen.</span>
               <Button
                 variant="quiet"
                 disabled={cancelLoading || campaign.status === "cancelling"}
@@ -222,9 +222,8 @@ export function CampaignPage({
               >
                 {cancelLoading || campaign.status === "cancelling"
                   ? "Cancelling…"
-                  : "Cancel campaign"}
+                  : "Stop campaign"}
               </Button>
-              <span>Leaving this page does not cancel the campaign.</span>
             </div>
           ) : null}
           {cancelError ? (
@@ -236,8 +235,8 @@ export function CampaignPage({
 
         <section className="campaign-matrix">
           <SectionHeader
-            title="Candidate runs"
-            description="One row is one candidate + frozen configuration + immutable Run. Unknown identity remains explicit."
+            title={terminal ? "Candidate runs" : "Live progress"}
+            description="Each row is one candidate + frozen configuration + immutable Run. Unknown identity remains explicit."
           />
           <div className="campaign-entry-list">
             {campaign.entries.map((entry) => (
@@ -286,22 +285,76 @@ function CampaignResults({
   onOpenCase?: (taskId: string, sampleId: string) => void;
 }) {
   const { results } = campaign;
+  const availableCompatibility = results.compatibility.filter((item) => item.evidence_available);
+  const allAvailableComparable =
+    availableCompatibility.length > 0 && availableCompatibility.every((item) => item.comparable);
+  const recommendedEntry = results.recommendation
+    ? (campaign.entries.find(
+        (entry) => entry.candidate_id === results.recommendation?.candidate_id,
+      ) ?? null)
+    : null;
+
   return (
     <section className="campaign-results" aria-label="Campaign results">
       <SectionHeader
         title="Results"
-        description="Compatibility and the versioned decision policy are shown before any recommendation. Quality, performance and resources stay separate."
+        description="Compatibility and the explicit decision policy come first; the recommendation then explains the best fit without collapsing evidence into an overall score."
       />
-      <div className="campaign-policy">
-        <span>Decision policy</span>
-        <strong>
-          {results.decision_policy.policy_id}@{results.decision_policy.policy_version}
-        </strong>
-        <p>{results.decision_policy.description}</p>
-        <small>No hidden weights · No universal score</small>
+
+      <div className="campaign-results-context">
+        <div>
+          <span>Evidence compatibility</span>
+          <Status tone={allAvailableComparable ? "success" : "warning"}>
+            {allAvailableComparable
+              ? "Available evidence is comparable"
+              : availableCompatibility.length
+                ? "Some evidence is not comparable"
+                : "Comparable evidence unavailable"}
+          </Status>
+        </div>
+        <div>
+          <span>Decision policy</span>
+          <strong>{results.decision_policy.title}</strong>
+          <small>
+            {results.decision_policy.policy_id}@{results.decision_policy.policy_version} · No hidden
+            weights · No universal score
+          </small>
+        </div>
       </div>
 
-      <div className="campaign-compatibility" aria-label="Evidence compatibility">
+      <div className="campaign-recommendation">
+        <span>Recommended setup</span>
+        {results.recommendation ? (
+          <div className="campaign-recommendation__body">
+            <div className="campaign-recommendation__identity">
+              <strong>{results.recommendation.model_id}</strong>
+              <small>
+                Quantization: {recommendedEntry?.identity?.quantization ?? "Unknown"} · frozen
+                configuration
+              </small>
+            </div>
+            <div className="campaign-recommendation__reason">
+              <strong>Why this setup</strong>
+              <p>{results.recommendation.rationale}</p>
+            </div>
+            <Button variant="secondary" onClick={() => onOpenRun?.(results.recommendation!.run_id)}>
+              Inspect recommended Run
+            </Button>
+          </div>
+        ) : (
+          <div className="campaign-recommendation__body">
+            <div className="campaign-recommendation__identity">
+              <strong>No single recommended setup</strong>
+            </div>
+            <div className="campaign-recommendation__reason">
+              <strong>Why</strong>
+              <p>{results.recommendation_reason}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="campaign-compatibility" aria-label="Evidence compatibility by dimension">
         {results.compatibility.map((dimension) => (
           <article key={dimension.dimension}>
             <span>
@@ -329,27 +382,9 @@ function CampaignResults({
         ))}
       </div>
 
-      <div className="campaign-recommendation">
-        <span>Best fit under this policy</span>
-        {results.recommendation ? (
-          <>
-            <strong>{results.recommendation.model_id}</strong>
-            <p>{results.recommendation.rationale}</p>
-            <Button variant="quiet" onClick={() => onOpenRun?.(results.recommendation!.run_id)}>
-              Inspect recommended Run
-            </Button>
-          </>
-        ) : (
-          <>
-            <strong>No single recommended winner</strong>
-            <p>{results.recommendation_reason}</p>
-          </>
-        )}
-      </div>
-
       <SectionHeader
-        title="Evidence by candidate"
-        description="These are the retained metrics from each immutable Run, grouped by evidence dimension."
+        title="Comparison"
+        description="Retained metrics from each immutable Run. Quality, performance and resources remain separate rather than collapsing into an overall score."
       />
       <div className="campaign-evidence-grid">
         {campaign.entries.map((entry) => (
@@ -361,7 +396,7 @@ function CampaignResults({
             {(["quality", "performance", "resources"] as MetricDimension[]).map((dimension) => {
               const metrics = entry.metrics.filter((metric) => metric.dimension === dimension);
               return (
-                <div className="campaign-metric-group" key={dimension}>
+                <div className="campaign-metric-group" data-dimension={dimension} key={dimension}>
                   <strong>{label(dimension)}</strong>
                   {metrics.length ? (
                     <dl>

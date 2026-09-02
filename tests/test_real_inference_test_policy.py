@@ -40,21 +40,51 @@ def test_real_runtime_smoke_routes_model_inference_through_local_llm_server(
 ) -> None:
     module = _load_real_runtime_script()
     calls: list[tuple[tuple[str, ...], Path]] = []
+    model_id = "nvidia/nemotron-3-nano-4b"
+    source_revision = "test-source-revision"
+    pre_real_manifest = tmp_path / "pre-real-manifest.json"
+    pre_real_manifest.write_text(
+        json.dumps(
+            {
+                "gate_id": "PRE_REAL_E2E",
+                "status": "PASS",
+                "ready_for_real_environment": True,
+                "browser_layer": {"source_revision": source_revision},
+            }
+        ),
+        encoding="utf-8",
+    )
+    bundle_path = tmp_path / "contract-test.plab.zip"
 
     def fake_run_cli(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
         calls.append((args, cwd))
         if args[0] == "probe":
-            return subprocess.CompletedProcess(args, 0, stdout='{"healthy": true}', stderr="")
-        if args[0] == "run":
             return subprocess.CompletedProcess(
                 args,
                 0,
-                stdout='{"run_id": "contract-test", "status": "completed"}',
+                stdout=json.dumps({"healthy": True, "models": [model_id]}),
+                stderr="",
+            )
+        if args[0] == "run":
+            bundle_path.write_bytes(b"portable-bundle-placeholder")
+            return subprocess.CompletedProcess(
+                args,
+                0,
+                stdout=json.dumps(
+                    {
+                        "run_id": "contract-test",
+                        "status": "succeeded",
+                        "fingerprint_id": "fingerprint-1",
+                        "bundle_path": str(bundle_path),
+                        "sample_count": 1,
+                    }
+                ),
                 stderr="",
             )
         raise AssertionError(f"unexpected CLI call: {args}")
 
     monkeypatch.setattr(module, "_run_cli", fake_run_cli)
+    monkeypatch.setattr(module, "_git_revision", lambda: source_revision)
     monkeypatch.setattr(
         sys,
         "argv",
@@ -63,11 +93,13 @@ def test_real_runtime_smoke_routes_model_inference_through_local_llm_server(
             "--base-url",
             "http://127.0.0.1:1235",
             "--model",
-            "nvidia/nemotron-3-nano-4b",
+            model_id,
             "--output-dir",
             str(tmp_path),
             "--run-id",
             "contract-test",
+            "--pre-real-manifest",
+            str(pre_real_manifest),
         ],
     )
 
@@ -80,7 +112,7 @@ def test_real_runtime_smoke_routes_model_inference_through_local_llm_server(
         "--base-url",
         "http://127.0.0.1:1235/v1/",
         "--model",
-        "nvidia/nemotron-3-nano-4b",
+        model_id,
         "--json",
     )
     assert probe_cwd == tmp_path.resolve()
@@ -88,16 +120,24 @@ def test_real_runtime_smoke_routes_model_inference_through_local_llm_server(
     config_path = tmp_path / "contract-test.config.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     assert config["endpoint"]["base_url"] == "http://127.0.0.1:1235/v1/"
-    assert config["endpoint"]["model_selector"] == "nvidia/nemotron-3-nano-4b"
+    assert config["endpoint"]["model_selector"] == model_id
+    assert config["evidence_mode"] == "evidence_rich"
     assert config["local_llm_server_identity"] == {
         "base_url": "http://127.0.0.1:1235",
-        "model_id": "nvidia/nemotron-3-nano-4b",
+        "model_id": model_id,
         "required": True,
         "timeout_seconds": 5.0,
     }
     assert config["local_llm_server_telemetry"]["base_url"] == "http://127.0.0.1:1235"
-    assert config["local_llm_server_telemetry"]["model_id"] == "nvidia/nemotron-3-nano-4b"
+    assert config["local_llm_server_telemetry"]["model_id"] == model_id
 
     run_args, run_cwd = calls[1]
     assert run_args == ("run", "--config", str(config_path), "--json")
     assert run_cwd == tmp_path.resolve()
+
+    retained_manifest = json.loads(
+        (tmp_path / "contract-test.manifest.json").read_text(encoding="utf-8")
+    )
+    assert retained_manifest["status"] == "PASS"
+    assert retained_manifest["source_revision"] == source_revision
+    assert retained_manifest["bundle_path"] == str(bundle_path)

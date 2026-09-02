@@ -5,9 +5,9 @@ Document type: roadmap
 Owner: repository
 Canonical scope: roadmap.repository
 Read when: selecting the next capability milestone or understanding product sequencing
-Last reviewed: 2026-08-24
+Last reviewed: 2026-09-02
 
-This roadmap tracks capability outcomes. Live state belongs in [`current-state.md`](current-state.md); detailed active dependencies belong in bounded workstreams.
+This roadmap tracks capability outcomes. Live state belongs in [`current-state.md`](current-state.md); detailed active dependencies and slice acceptance belong in bounded workstreams.
 
 ## Milestones
 
@@ -20,9 +20,46 @@ This roadmap tracks capability outcomes. Live state belongs in [`current-state.m
 | M4 — Workload evaluation | IMPLEMENTED / EVIDENCE PENDING | workload packs on representative models |
 | M5 — Resource-aware local evaluation | IMPLEMENTED / EVIDENCE PENDING | real identity/telemetry/device evidence |
 | M6 — Regression automation | IMPLEMENTED / EVIDENCE PENDING | real baseline/candidate CI evidence |
-| M7 — Local product UI | **DONE** | Compare, Library/Settings, J1-J6 browser acceptance and built-product lifecycle integrated |
+| M7 — Local product UI | **DONE** | decision-first desktop product, Light-first appearance, browser acceptance and built-product lifecycle integrated |
 | M8 — External benchmark ecosystem | DEFERRED | start only when real product evidence exposes a concrete coverage gap |
 | M9 — Additional task families | FUTURE | ASR/embeddings/reranking/vision after the text product stabilizes |
+
+M1-M9 are a **coverage and maturity map**, not the implementation sequence. A value slice may consume only the parts of several milestones required to unlock one usable end-to-end outcome.
+
+## Incremental value-delivery order
+
+Operational development is organized by [`workstreams/incremental-value-delivery.md`](workstreams/incremental-value-delivery.md). The rule is: deliver the smallest vertical slice that creates a new usable loop, validate it at the fidelity required by its claim, gather feedback, then extend the product.
+
+| Slice | Value unlocked | State |
+| --- | --- | --- |
+| VALUE-01 | Real single-model evidence loop: connect -> real inference -> Run/Sample evidence -> `.plab.zip` | READY |
+| VALUE-02 | Real model decision: 2+ candidates -> comparable evidence -> explainable recommendation/no-rank | BLOCKED by VALUE-01 |
+| VALUE-03 | Configuration decision: choose supported model + quantization + configuration | BLOCKED by VALUE-02 |
+| VALUE-04 | Device-aware decision: real performance/resource evidence informs the trade-off | BLOCKED by VALUE-02 |
+| VALUE-05 | Confidence/repeatability: controlled variability supports or weakens the recommendation | BLOCKED by VALUE-04 |
+| VALUE-06 | Regression workflow: real baseline vs candidate -> explicit policy outcome | BLOCKED by VALUE-02 + VALUE-05 |
+| VALUE-07 | LLS evaluation cutover: PL owns new evaluation; LLS remains serving/runtime owner | BLOCKED by VALUE-03 + migration evidence |
+| VALUE-08 | Low-friction distribution: launch/connect/evaluate without repository-development setup | BLOCKED by VALUE-02 |
+
+The graph is intentionally not waterfall. After VALUE-02, VALUE-03, VALUE-04 and VALUE-08 may proceed in parallel when write ownership does not conflict. Later slices may be reshaped by evidence/feedback from earlier accepted slices.
+
+## Current value frontier
+
+Current executable slice: **VALUE-01 — Real single-model evidence loop**.
+
+The first real product claim to prove is deliberately small:
+
+```text
+real target/device
+  -> discover one real model
+  -> Test a model
+  -> real inference
+  -> immutable Run Detail
+  -> sample evidence
+  -> portable .plab.zip
+```
+
+This establishes the real execution/evidence loop before expanding to multi-model recommendations, configuration optimization, richer device telemetry or regression automation.
 
 ## M7 — Local product UI
 
@@ -30,35 +67,22 @@ Goal: make Performance Lab the primary local benchmark/evaluation product withou
 
 Integrated on `dev`:
 
-- task-model-first Overview;
-- Model -> Scenario -> Test -> Review;
-- server-owned run launch/progress/cancellation/reconnect;
-- Runs and immutable Run Detail;
-- compatibility-first Compare/regression;
-- secondary read-only Library/Settings;
-- versioned UI read/preflight contracts;
-- executable semantic design system and loopback composition root;
-- Playwright Chromium J1-J6 browser acceptance, compact/wide checks and reduced-motion behavior;
-- unique built-product/source identity, immutable package publication, manifest/checksum, build delta, bounded retention and package smoke/cleanup.
+- decision-first Overview and four-stage **Find best setup**: Goal -> Models -> Optimization -> Review;
+- Campaign progress + Results with compatibility/decision policy before recommendation;
+- **Test a model**, Live Run recovery, Runs/Run Detail and sample evidence;
+- compatibility-first Compare/regression and secondary Library/Settings;
+- Light as canonical appearance with optional Dark/System preference;
+- versioned UI read/preflight contracts and executable semantic design system;
+- Playwright browser acceptance across supported desktop contexts plus assembled built-product lifecycle;
+- unique build/source identity, immutable package publication, manifest/checksum, build delta, bounded retention and package smoke/cleanup.
 
-M7 software/productization is complete. Real-device evidence is intentionally tracked separately because synthetic CI cannot establish hardware performance, telemetry, thermal or device-specific claims. Local LLM Server deprecation/removal is also a separate migration lifecycle rather than a UI-completion gate.
+M7 software/productization is complete for the current text-generation scope. Real-device evidence remains separate because synthetic CI cannot establish hardware performance, telemetry, thermal or device-specific claims.
 
-## Active evidence and migration tracks
+## Specialized evidence and migration tracks
 
-Representative evidence: [`workstreams/representative-device-evidence.md`](workstreams/representative-device-evidence.md)
+Representative-device protocol/evidence remains owned by [`workstreams/representative-device-evidence.md`](workstreams/representative-device-evidence.md). VALUE-01/02/04/05/06 consume that evidence incrementally rather than waiting for an entire M1-M6 evidence campaign to complete.
 
-1. run a real Local LLM Server target through a representative suite/workload;
-2. retain the execution fingerprint and `.plab.zip`;
-3. exercise identity and `/status` telemetry on the real device;
-4. repeat/load the same controlled target;
-5. preserve representative comparison/regression outcomes.
-
-LLS migration: [`workstreams/local-llm-migration.md`](workstreams/local-llm-migration.md)
-
-1. map every overlapping evaluation workflow and consumer;
-2. establish replacement parity plus history/data policy;
-3. deprecate before removal;
-4. remove redundant paths only after cross-repo and real-runtime evidence.
+Local LLM Server replacement/deprecation/removal remains owned by [`workstreams/local-llm-migration.md`](workstreams/local-llm-migration.md). VALUE-07 executes only after Performance Lab has already demonstrated the replacement value loop and the migration's real-environment gates are satisfied.
 
 ## Product maturity
 
@@ -66,9 +90,11 @@ LLS migration: [`workstreams/local-llm-migration.md`](workstreams/local-llm-migr
 
 **Product-software complete for the current local UI scope** — M7 surfaces, browser acceptance and built-product lifecycle are integrated.
 
-**Evidence-backed local benchmark product** — product software + representative M1-M5 evidence.
+**Evidence-backed local benchmark product** — VALUE-01..05 demonstrate the product promise on representative real endpoints/devices.
 
-**Engineering regression platform** — evidence-backed product + representative M6 CI gate evidence.
+**Engineering regression platform** — evidence-backed product + VALUE-06 real baseline/candidate policy evidence.
+
+**Low-friction local product** — VALUE-08 removes repository-development setup from the normal user path.
 
 **Broader platform** — only then add justified M8 integrations and selected M9 task families.
 

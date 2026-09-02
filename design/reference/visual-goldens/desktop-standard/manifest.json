@@ -1,53 +1,68 @@
 {
   "schema_version": 1,
   "golden_type": "accepted-implementation-screenshot",
-  "status": "approved-v0.6-automated-visual-regression-baseline",
+  "status": "approved-light-first-automated-visual-regression-baseline",
   "viewport": {
     "width": 1536,
     "height": 960,
     "class": "desktop-standard"
   },
   "capture": {
-    "source_head_sha": "afa3fa2dc2d82acccdd86338806e3923636ab476",
-    "browser_capture_run_id": 33445799989,
-    "artifact_id": 9777981789,
-    "artifact_name": "pvr08-target-candidate-33445799989-1",
-    "artifact_sha256": "5575bb27b4858260e22226754776647954fed7fa912fcd30dce65822c2820a84",
+    "source_head_sha": "c0bd3f44279db0f294e03aa0d33e8a078e210150",
+    "browser_capture_run_id": 33649543902,
+    "artifact_id": 9854232790,
+    "artifact_name": "light-first-golden-candidate-33649543902-1",
+    "artifact_sha256": "1f6b5c278364581a73dbecf8e8b2115a80091ab51e6d330f21b68ed0a162ede5",
     "platform": "GitHub-hosted Ubuntu 24.04",
     "locale": "en-US",
     "timezone": "UTC",
-    "color_scheme": "dark",
+    "os_color_scheme": "dark",
+    "product_theme": "light",
     "reduced_motion": "reduce"
   },
   "review": {
-    "method": "second independent CI capture matched byte-for-byte against the approved bounded v0.6 target set",
+    "method": "agent-inspected real Playwright implementation captures followed by independent Browser Acceptance reproduction without snapshot updates",
     "decision": "accepted for bounded automated visual regression",
+    "inspected_surfaces": [
+      "overview",
+      "test-a-model-review",
+      "benchmark-detail",
+      "sample-evidence-detail",
+      "campaign-results"
+    ],
     "human_reference_grade_claim": false
   },
   "source_of_truth": "design/ux-contract.json",
   "ux_contract_version": "0.5.0",
-  "design_target_root": "design/reference/visual-targets/desktop-standard-v0.6",
+  "design_target_root": "design/ux-contract.json + design/brand-kit.json",
   "goldens": {
     "benchmark-detail": {
       "file": "benchmark-detail.png",
-      "sha256": "32335866e03f84fb46bf7e6ec36f693d00450515fba0ed5a7372e9f13ef740c5"
+      "sha256": "a410469f41a22b7baaba40722b19c743be30dabb34e85fd792fb5e3b785e239a"
     },
     "campaign-results": {
       "file": "campaign-results.png",
-      "sha256": "6c308a2f01d0fcf38f52411c05db2f2832bb4051051121c9f75fd8c09fcae310"
+      "sha256": "c2307216b451ae8ac90d88e5e17babb8cf91fc0a59ca79041073cf98d5545a35"
     },
     "overview": {
       "file": "overview.png",
-      "sha256": "e534c8ce7bee81ece8af7d89da674ad80585932d7d9ef3ed3410e919f202d6ad"
+      "sha256": "fb5ab70df083156aeaf9ec2dcedf36595c95224ba5c865306a61207f8d6a59f5"
     },
     "sample-evidence-detail": {
       "file": "sample-evidence-detail.png",
-      "sha256": "c1f351ed74d3f8d15ccc5acd9bfe3f863953f588f55bde64f995c852c1d3edb2"
+      "sha256": "5924033e937a88d30b882fc4e30c72569cd289adf1bd5e15e8a65eafdeb5fa19"
     },
     "test-a-model-review": {
       "file": "test-a-model-review.png",
-      "sha256": "e7fb30fb5b025433c54ae5d3831633416176af55d195a9e7c4f76a8797421aab"
+      "sha256": "601035780b65a55f043ab1806ba15dd3fd361c9da86832052562a21e44b8fa3e"
     }
   },
-  "scope_note": "These five stable surfaces are v0.6 automated visual-regression goldens. They do not substitute for PRE_REAL J0-J9 or final human accessibility/usability review."
+  "scope_note": "These five stable automated visual-regression surfaces were refreshed from the real implementation after Light became the canonical default theme. Capture intentionally used an OS-dark browser context while the product rendered Light, proving that default product appearance is independent of OS theme until the user selects System. Independent Browser Acceptance reproduced the committed baseline without snapshot updates. This does not substitute for representative-human accessibility/usability review.",
+  "acceptance": {
+    "browser_acceptance_run_id": 33649979498,
+    "artifact_id": 9854404103,
+    "artifact_name": "browser-acceptance-evidence-33649979498-1",
+    "artifact_sha256": "24b69d3a192424d7527388efe389e7c34c4af44991117ca49e1c27b9ddb83923",
+    "result": "all browser journeys, Appearance contract, media verification and visual regression passed without snapshot updates"
+  }
 }

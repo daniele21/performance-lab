@@ -4,60 +4,69 @@ Status: active
 Document type: current-state
 Owner: repository
 Canonical scope: state.repository
-Last reviewed: 2026-09-01
+Last reviewed: 2026-09-02
 
 Short operational ledger only. Durable behavior belongs in architecture/ADR/design docs; active detail belongs in workstreams; Git history owns implementation history.
 
 ## Current phase
 
-The premium `Precision Instrument` browser experience is integrated in `dev`. The visual refactor itself, deterministic visual acceptance and final automated browser/PRE_REAL/package evidence are complete. Product-experience work now has one remaining gate: representative human accessibility/usability acceptance before any reference-grade human UX claim.
+Performance Lab is product-software complete for the current local text-generation UI scope. The decision-first desktop experience is integrated on `dev`, including the four-stage **Find best setup** flow and the Light-first visual system with optional Dark/System appearance.
 
 Primary product question:
 
-> For this use case on this device, which available model/configuration gives me the best evidence-backed trade-off, and why?
+> For this use case on this device, which available model + quantization + configuration gives me the best evidence-backed trade-off, and why?
+
+Work now advances through vertical VALUE slices that unlock end-to-end outcomes. M1-M9 remain the capability/maturity coverage map rather than the delivery sequence.
 
 ## Integrated baseline
 
-`dev` contains Overview; Find best setup through frozen Campaign review/execution/Results/exact-case comparison; Test a model; Live Run recovery; Runs/Run Detail; Compare; Library/Settings; Benchmark Detail; and Run -> Samples -> Sample Evidence.
+`dev` contains Overview; Find best setup `Goal -> Models -> Optimization -> Review -> Campaign -> Results`; Test a model; Live Run recovery; Runs/Run Detail; Compare; Library/Settings; Benchmark Detail; Run -> Samples -> Sample Evidence; same-case comparison; browser-local Light/Dark/System appearance; and built/package lifecycle support.
 
-Campaigns revalidate frozen plan digests, persist reconnectable lifecycle separately from immutable Runs and apply compatibility before `strict-quality-dominance@1.0.0`. Same-case comparison stays tied to candidate/config/Run/sample-attempt identity; missing, incompatible and not-retained evidence remain explicit.
+Campaigns revalidate frozen plan digests, persist reconnectable lifecycle separately from immutable Runs and apply compatibility before explicit decision policy. Quality, Performance and Resources remain separate; missing, incompatible, unavailable and not-retained evidence remain explicit.
 
-The browser now uses the v0.6 graphite `Precision Instrument` visual system. Five provenance-bound v0.6 target-backed goldens cover Overview, Test a model frozen review, Benchmark Detail, Sample Evidence Detail and Campaign Results. Product hardening covers keyboard/focus semantics, assistive loading/error feedback, reduced motion, long-content containment and 1024/standard/1600 desktop contexts.
+VALUE-01 software/readiness lanes are integrated:
 
-Repository setup and CI use one locked toolchain path: `uv` owns Python resolution, `.venv`, execution and builds through `uv.lock`; pnpm owns frontend resolution/execution through `frontend/pnpm-lock.yaml`. The legacy pip-constraints/npm-lock setup path is removed and repository health blocks its reintroduction.
+- **VALUE-01A / #117 DONE** — real built-browser journey against Local LLM Server;
+- **VALUE-01B / #118 DONE** — retained evidence completeness/portability verifier;
+- **VALUE-01C / #119 DONE** — exact-head PRE_REAL-gated real-run entry point and retained run manifest.
 
-E2E contract 0.1.1 requires screenshot and video artifacts for UI journeys. Current integrated evidence is fully green: Browser Acceptance is 20/20 with screenshot/video/trace retained, PRE_REAL browser J0-J9 passes with retained media, packaged J0/J1/J8/J9 passes with retained media, and the finalizer reports `READY_FOR_REAL_ENVIRONMENT: YES`.
+Their branch validation passed Repository Validation, Browser Acceptance, Built Product/PRE_REAL and Repository Health before integration. The merge commits moved `dev`, so the representative run still requires a **fresh exact-head PRE_REAL PASS** for the final `dev` revision.
 
-Hosted fixtures never prove representative hardware/runtime behavior; `RUNTIME-1` remains separate real-environment evidence.
+## Current value frontier
+
+Current executable slice: **VALUE-01 — Real single-model evidence loop** in [`workstreams/incremental-value-delivery.md`](workstreams/incremental-value-delivery.md).
+
+Target loop:
+
+```text
+real target/device -> discover one real model -> Test a model -> real inference
+-> Run Detail -> sample evidence -> retained .plab.zip
+```
+
+VALUE-01 remains **ACTIVE**. Its only remaining acceptance gate is **VALUE-01D / #120**, now READY for one retained `REAL_ENVIRONMENT` execution after a fresh exact-head PRE_REAL/Built Product pass.
 
 ## Active work
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
-| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | PVR-00..08 DONE / PVR-09 automated + agent media review DONE / human acceptance PENDING | representative human review at supported desktop contexts; on PASS finalize and delete the workstream |
-| [Representative device evidence](workstreams/representative-device-evidence.md) | READY | first real LLS/model/device run with retained fingerprint/bundle; re-check current `PRE_REAL_E2E` before execution |
-| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 EVIDENCE BLOCKED / MIG-003 BLOCKED | EV-3 + real PL replacement run, then redundant-path removal/smoke |
+| [Incremental value delivery](workstreams/incremental-value-delivery.md) | VALUE-01 ACTIVE; A/B/C DONE; D READY | refresh exact-head PRE_REAL, then execute #120 on representative hardware |
+| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | automated product/visual acceptance PASS | representative human accessibility/usability acceptance; then finalize/delete |
+| [Representative device evidence](workstreams/representative-device-evidence.md) | EVID-001 READY | #120 retained real run supplies the first representative artifact set |
+| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 evidence-blocked / MIG-003 blocked | EV-3 + real PL replacement evidence; consumed by VALUE-07 |
 
-## UX/UI baseline
-
-`design/ux-contract.json` remains the settled task/semantic owner. `design/brand-kit.json` v0.6 owns the integrated visual system. The current direction is `Precision Instrument`: neutral graphite hierarchy, restrained accent usage, compact controls, deliberate depth, higher evidence density and less default explanatory copy while preserving truthful evidence semantics.
-
-Final retained browser/PRE_REAL/package screenshots and videos were inspected after CI. They show the expected complete transitions for campaign planning/results, model connection/run, failure recovery, cancellation/restart, progressive secondary navigation, supported desktop containment and packaged-product evidence flow, with no blocking regression found. This is agent-reviewed evidence, not representative-human acceptance; `human_reference_grade_claim` remains false until the human gate is recorded.
-
-## Evaluation migration
-
-Post-cutover evaluation evidence belongs to Performance Lab under PL-native identities; existing LLS `general-purpose@1.0.0` evidence remains legacy. Serving, residency, runtime identity/status, provider metrics and hardware/resource correctness remain LLS-owned.
-
-MIG-003 still requires EV-3, a current passing `PRE_REAL_E2E`, a real PL run against LLS and post-disable serving/runtime smoke.
-
-## Integration lines
+## Delivery model
 
 - `dev` is the integration line; ordinary feature branches start from current green `dev` and target `dev`.
 - `main` is stable/release-oriented and is promoted deliberately with `FULL` validation.
+- VALUE slices are vertical user outcomes. After VALUE-02, configuration optimization, device-aware evidence and distribution may proceed in parallel when ownership does not conflict.
+- Parallel work uses explicit non-conflicting owners and one convergence gate; it must not create competing implementations of the same contract.
+- Do not build broad subsystems in anticipation of later slices.
 
 ## Evidence still required
 
-- PVR-09 representative human accessibility/usability acceptance before a reference-grade human UX claim;
-- representative resident-model identity/resource/telemetry/repeated-load evidence;
-- LLS EV-3, real PL replacement run and post-disable cross-repository smoke;
-- any other human acceptance only where a release claim explicitly depends on it.
+- fresh exact-head PRE_REAL/Built Product readiness for the final integrated `dev` revision;
+- VALUE-01D retained real target/model/device execution with verifier PASS;
+- later VALUE-02/04/05/06 real decision, telemetry/repeatability and regression evidence;
+- representative human accessibility/usability acceptance before a reference-grade human UX claim;
+- LLS EV-3 + real PL replacement run + post-disable cross-repository smoke before VALUE-07 cutover;
+- branch protection/admin work remains tracked separately in GitHub issue #61.
