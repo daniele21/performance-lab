@@ -1,0 +1,43 @@
+name: Temporary sample evidence golden update
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  update-golden:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - run: pnpm --dir frontend exec playwright install --with-deps chromium
+      - name: Update only the reviewed sample evidence golden
+        run: |
+          pnpm --dir frontend exec playwright test e2e/visual-acceptance.spec.ts --update-snapshots
+          changed="$(git diff --name-only)"
+          expected="design/reference/visual-goldens/desktop-standard/sample-evidence-detail.png"
+          if [ "$changed" != "$expected" ]; then
+            echo "Unexpected snapshot changes:"
+            printf '%s\n' "$changed"
+            exit 1
+          fi
+          git rm .github/workflows/update-sample-evidence-golden.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$expected"
+          git commit -m "Update sample evidence visual golden"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
