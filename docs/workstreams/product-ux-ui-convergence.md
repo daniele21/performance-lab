@@ -1,6 +1,6 @@
 # Product UX/UI convergence
 
-Status: active — final human evidence pending
+Status: active — representative human hierarchy feedback reopened implementation
 Owner: product experience / browser UI
 Read when: coordinating final UX/UI acceptance
 
@@ -10,7 +10,7 @@ Keep Performance Lab a calm precision instrument around the product question:
 
 > For this use case on this device, which available model + quantization + configuration is the best evidence-backed fit, and why?
 
-`design/ux-contract.json` owns product semantics, `design/brand-kit.json` owns visual identity, and the frontend implements them. This workstream now exists only to close the final representative-human acceptance gate; the implementation/refactor slices are complete.
+`design/ux-contract.json` owns product semantics, `design/brand-kit.json` owns visual identity, and the frontend implements them.
 
 ## Blocking invariants
 
@@ -27,71 +27,83 @@ Keep Performance Lab a calm precision instrument around the product question:
 | --- | --- | --- |
 | UXUI-00..10 | Existing UX/UI + baseline | DONE |
 | PVR-00..07 | Audit, v0.6 system, surfaces and integrated polish | DONE |
-| PVR-08 | Approved v0.6 targets + bounded goldens | DONE |
-| PVR-09A | Final browser/PRE_REAL/packaged media evidence | DONE |
-| PVR-09B | Agent inspection of retained final media | DONE |
-| PVR-09C | Representative human accessibility/usability acceptance | PENDING |
+| PVR-08 | v0.6 targets + bounded goldens | SUPERSEDED for Overview/Campaign Results by PVR-10 |
+| PVR-09A | Prior browser/PRE_REAL/packaged media evidence | HISTORICAL — invalidated for changed surfaces |
+| PVR-09B | Prior agent inspection of retained final media | HISTORICAL — invalidated for changed surfaces |
+| PVR-09C | Representative human accessibility/usability acceptance | FAIL — hierarchy/progressive disclosure feedback |
+| PVR-10 | Four-stage decision hierarchy + desktop implementation refresh | IN PROGRESS |
+| PVR-11 | Fresh browser/PRE_REAL/visual + representative-human acceptance | PENDING |
 
-## Settled product experience
+## Representative-human feedback that reopened the slice
 
-- **Foundation/shell:** graphite neutral hierarchy, restrained accent, compact controls, tabular metrics and persistent primary workspace navigation. Library/Settings use progressive disclosure and remain visually subordinate.
-- **Overview:** tested-model evidence is primary; recent runs are secondary.
-- **Campaign:** progress-first while running. Terminal reading order is `status -> Results/best fit -> completed progress -> candidate Runs`; compatibility and explicit decision policy precede recommendation.
+The integrated v0.6 implementation was exercised by the product owner and rejected as the reference UX because the information/action hierarchy remained too flat and progressive disclosure was applied locally without governing the page composition. The seven-stage `Find best setup` representation exposed implementation/lifecycle concepts (`Benchmark plan`, `Campaign`, `Results`) as peer setup steps and gave contextual/technical information excessive default weight.
+
+This is a blocking product-comprehension issue under the PVR-09 acceptance contract, not non-blocking visual polish. Prior automated and agent-inspected evidence remains useful historical evidence for unchanged behavior, but it does not validate the new hierarchy.
+
+## PVR-10 settled structural correction
+
+The approved desktop direction is now:
+
+- **Overview:** decision-first. `Find best setup` and the product question dominate; Recent evaluations follow; Tested models/evidence inventory is quieter and later.
+- **Find best setup setup flow:** exactly four user-decision stages: `Goal -> Models -> Optimization -> Review`.
+  - **Goal** combines use case + device/target.
+  - **Models** defaults to all backend-scoped eligible candidates selected; the user may narrow.
+  - **Optimization** foregrounds Quick/Standard/Thorough only when supported by evidence-backed ranges. Standard is preferred when available; authored fixed configuration is the safe fallback when ranges are unavailable. Custom/fixed/range detail is progressive disclosure.
+  - **Review** foregrounds candidate count, configurations/model, immutable run count, estimate and launch action. Benchmark/evaluator detail is contextual; fingerprints, decision-policy identifiers, endpoint/provenance and plan digest are advanced/technical.
+- **Context pane:** standard/wide desktop may keep a compact `Your setup` summary beside the active decision; compact desktop moves it out of side-by-side mode rather than squeezing the task.
+- **Campaign:** progress-first while running; overall progress precedes per-candidate Runs. Leaving the screen does not imply cancellation when server-owned progress persists.
+- **Campaign Results:** `compatibility + explicit decision policy -> recommended setup -> backend-owned rationale -> separate Quality/Performance/Resources comparison -> exact-case evidence drill-down`. No trophies, opaque overall score or frontend-authored “best balance” rationale.
 - **Test / Live Run:** compact discovery, preflight, freeze, lifecycle and recovery without exposing runtime ownership as browser-owned configuration.
 - **Run Detail:** `identity/status -> separate Q/P/R panel -> samples/evidence -> reproducibility`.
 - **Runs / Compare:** compact technical register; compatibility and exact metric deltas dominate decoration.
 - **Library / Settings:** quieter secondary surfaces preserve backend/runtime ownership boundaries.
 
-## PVR-08 visual baseline
+## Prior evidence status
 
-Five stable surfaces are provenance-bound v0.6 targets and automated goldens: Overview, Test a model frozen review, Benchmark Detail, Sample Evidence Detail and Campaign Results. The target capture was reviewed first; a separate CI capture reproduced all five PNGs byte-for-byte before golden promotion. `human_reference_grade_claim` deliberately remains `false`.
+The previous validation runs remain historical evidence only:
 
-## PVR-09 automated evidence
+- Browser Acceptance run `33446780589`, artifact `9778340564`: 20/20 PASS for the superseded v0.6 implementation.
+- Built Product run `33446780596`, PRE_REAL artifact `9778368175`: browser J0-J9 PASS for the superseded v0.6 implementation.
+- Packaged artifact `9778368537`: packaged J0/J9 and J1/J8 2/2 PASS for the superseded v0.6 implementation.
 
-The final validated PR merge tree is file-identical to integrated `dev`; no product file changed between the validated merge ref and the merge commit.
+Because PVR-10 materially changes Overview, Find best setup, Campaign and Campaign Results, affected previous visual/readiness evidence is invalidated by design. Unchanged product/runtime invariants are not invalidated merely by the UX rewrite.
 
-- Browser Acceptance run `33446780589`, artifact `9778340564`: **20/20 PASS**. Every executed browser test retained screenshot, video and Playwright trace; the required-media verifier passed.
-- Built Product run `33446780596`, PRE_REAL artifact `9778368175`: browser J0-J9 **PASS**, with screenshot/video/trace retained for every required journey.
-- The same Built Product run, packaged artifact `9778368537`: packaged J0/J9 and J1/J8 **2/2 PASS**, each with screenshot/video/trace.
-- PRE_REAL finalizer: browser layer **PASS**, packaged layer **PASS**, `READY_FOR_REAL_ENVIRONMENT: YES`.
-- Residual real-environment gaps remain explicit: external model/runtime is a deterministic fixture, hosted CI hardware is not representative target hardware, and thermal/device telemetry is not established.
+## PVR-11 acceptance gate
 
-The retained media were also inspected directly after CI. The review confirmed the expected complete transitions for campaign planning/results, model connection/run, failure recovery, cancellation/restart, progressive secondary navigation, minimum/wide desktop containment and packaged-product loading-to-evidence flow. No blocking visual, hierarchy, overflow or journey regression was found in that inspection.
+After PVR-10 implementation reaches exact-head deterministic validation, fresh browser/PRE_REAL media and representative-human review must answer:
 
-This closes automated and agent-inspected evidence only. It is not a representative-human acceptance claim.
+1. Is the primary decision obvious on Overview without internal architecture knowledge?
+2. Does Find best setup read as four user decisions rather than backend lifecycle objects?
+3. Are current decision, accumulated context and primary next action visually distinct?
+4. Are advanced configuration, benchmark protocol, provenance and fingerprints discoverable without dominating normal use?
+5. At 1024, standard and wide desktop, does the contextual setup pane preserve rather than squeeze the task?
+6. While a Campaign runs, is progress/status/recovery obvious and truthful?
+7. In Results, are compatibility and decision policy understood before recommendation, and is the recommendation rationale clearly backend/evidence-owned?
+8. Do Quality, Performance and Resources remain separate with unknown/unavailable/not-comparable states truthful?
+9. Is keyboard focus visible/predictable and does reduced motion preserve orientation?
+10. Are loading, empty, failure, retry, cancellation and partial-evidence states understandable and recoverable?
 
-## PVR-09 representative human gate
+A PASS may include non-blocking polish notes. Any issue that changes task comprehension, evidence truthfulness, accessibility, recovery or supported-layout operability reopens the owning implementation slice.
 
-Before this workstream can be finalized, a representative human reviewer must exercise the integrated desktop product at the supported contexts (minimum, standard and wide desktop; keyboard-only where applicable; reduced motion enabled for the motion check) and record PASS/FAIL for these acceptance questions:
-
-1. Is the primary task/decision obvious on Overview, Campaign Results and Run Detail without needing internal architecture knowledge?
-2. Are primary actions visually distinct from secondary diagnostics, Library and Settings?
-3. Do 1024, standard and wide layouts keep critical evidence/actions legible, reachable and free from disruptive clipping/overflow/wrapping?
-4. Is keyboard focus visible and predictable, with skip navigation and route-change focus behavior understandable in real use?
-5. Are loading, empty, failure, retry, cancellation and unavailable/not-comparable states understandable and recoverable without misleading zeroes or hidden evidence gaps?
-6. Does reduced motion preserve orientation and feedback without depending on animation?
-7. Do Quality, Performance and Resources remain clearly distinct, and does compatibility/decision-policy language appear before any recommendation or delta that depends on it?
-
-A PASS may include non-blocking polish notes. Any issue that changes task comprehension, evidence truthfulness, accessibility, recovery or supported-layout operability reopens the owning implementation slice before acceptance.
-
-Until this evidence exists, `human_reference_grade_claim` stays `false` and PVR-09 remains active.
+Until this evidence exists, `human_reference_grade_claim` stays `false`.
 
 Physical/model/runtime device evidence is a separate `REAL_ENVIRONMENT` / `RUNTIME-1` concern and must not be inferred from browser acceptance.
 
 ## Completion
 
-After representative-human PASS:
+After fresh automated exact-head evidence and representative-human PASS:
 
-1. record the accepted state in the appropriate durable design/current-state owner without copying transient run history;
-2. verify no UX/UI evidence gap remains;
-3. delete this completed workstream by default;
-4. keep RUNTIME-1 and other hardware evidence in their separate workstream.
+1. refresh only the stable target/golden surfaces affected by the accepted hierarchy;
+2. record accepted durable state in the appropriate design/current-state owner without copying transient run history;
+3. verify no UX/UI evidence gap remains;
+4. delete this completed workstream by default;
+5. keep RUNTIME-1 and other hardware evidence in their separate workstream.
 
 ## Durable destinations
 
 - `design/ux-contract.json`: task model, IA, hierarchy, states and journeys.
-- `design/brand-kit.json`: v0.6 visual identity/system.
+- `design/brand-kit.json`: visual identity/system.
 - `frontend/src/design/` + canonical components: executable visual system.
 - `.engineering/e2e.json` / PRE_REAL: journey/fidelity/media evidence contract.
-- `design/reference/visual-targets/desktop-standard-v0.6`: approved bounded v0.6 target provenance.
-- `design/reference/visual-goldens/desktop-standard`: accepted implementation regression baseline.
+- `design/reference/visual-targets/`: approved design intent references.
+- `design/reference/visual-goldens/desktop-standard`: accepted implementation regression baseline after refreshed validation.
