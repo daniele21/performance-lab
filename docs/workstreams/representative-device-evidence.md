@@ -3,13 +3,27 @@
 Status: active
 Owner: Performance Lab evidence
 Canonical scope: evidence.representative-device
-Last reviewed: 2026-08-31
+Last reviewed: 2026-09-02
 
 ## Goal
 
 Validate the assumptions that synthetic CI cannot prove by running representative models through a real Local LLM Server/device path and retaining auditable evidence.
 
 This workstream does not change benchmark semantics merely to fit a device. It proves where the existing contracts hold, surfaces unsupported/unknown telemetry honestly and bounds the product claims that can be made.
+
+## Delivery coordination
+
+[`incremental-value-delivery.md`](incremental-value-delivery.md) owns the order in which this evidence unlocks product value. This workstream owns the **real-device protocol and retained evidence**, not a separate capability-first execution sequence.
+
+Current consumption:
+
+- `VALUE-01` consumes EVID-001 to prove one real single-model execution/evidence loop;
+- `VALUE-02` extends representative evidence to 2+ candidates under one use case/device;
+- `VALUE-04` consumes EVID-003 for device-aware resource/performance decisions;
+- `VALUE-05` consumes EVID-002 for repeatability/variability;
+- `VALUE-06` consumes EVID-004 for real comparison/regression policy evidence.
+
+Do not wait for EVID-001..004 as one monolithic campaign before delivering VALUE-01. Retain each accepted slice as soon as its required evidence is sufficient.
 
 ## Durable owners
 
@@ -43,6 +57,6 @@ This workstream does not change benchmark semantics merely to fit a device. It p
 
 ## Completion gate
 
-Complete when the representative runs needed for the current M1-M6 claims are retained and reproducible, their limitations are reflected in canonical evidence/telemetry docs, and no fixture-only assumption is presented as a real-device fact.
+Complete when the representative runs needed for the current VALUE slices/M1-M6 claims are retained and reproducible, their limitations are reflected in canonical evidence/telemetry docs, and no fixture-only assumption is presented as a real-device fact.
 
-After completion, update `current-state.md`/roadmap and delete this workstream by default. Git history owns the plan history.
+After completion, update `current-state.md`/roadmap and delete this workstream by default.
