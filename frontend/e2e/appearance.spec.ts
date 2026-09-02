@@ -8,7 +8,7 @@ test("Appearance defaults to Light, persists explicit choice and lets System fol
   await page.goto("/#appearance");
 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  await expect(page.getByRole("radio", { name: "Light" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: /^Light\b/ })).toBeChecked();
   await expect
     .poll(() =>
       page.evaluate(() =>
@@ -17,7 +17,7 @@ test("Appearance defaults to Light, persists explicit choice and lets System fol
     )
     .toBe("#f6f8fa");
 
-  await page.getByRole("radio", { name: "Dark" }).check();
+  await page.getByRole("radio", { name: /^Dark\b/ }).check();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem("performance-lab.theme")))
@@ -25,9 +25,9 @@ test("Appearance defaults to Light, persists explicit choice and lets System fol
 
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByRole("radio", { name: "Dark" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: /^Dark\b/ })).toBeChecked();
 
-  await page.getByRole("radio", { name: "System" }).check();
+  await page.getByRole("radio", { name: /^System\b/ }).check();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
   await expect
     .poll(() =>
