@@ -26,6 +26,7 @@ describe("product navigation contract", () => {
     expect(SECONDARY_NAVIGATION.Settings.map((item) => item.label)).toEqual([
       "Model connections",
       "Devices / targets",
+      "Appearance",
       "Evidence retention",
       "Accessibility",
       "Advanced",
@@ -52,5 +53,8 @@ describe("product navigation contract", () => {
     expect(
       SECONDARY_NAVIGATION.Settings.find((item) => item.label === "Model connections")?.href,
     ).toBe("#model-connections");
+    expect(SECONDARY_NAVIGATION.Settings.find((item) => item.label === "Appearance")?.href).toBe(
+      "#appearance",
+    );
   });
 });
