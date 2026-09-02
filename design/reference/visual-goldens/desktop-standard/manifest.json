@@ -23,6 +23,13 @@
   "review": {
     "method": "agent-inspected real Playwright implementation captures followed by independent Browser Acceptance reproduction without snapshot updates",
     "decision": "accepted for bounded automated visual regression",
+    "inspected_surfaces": [
+      "overview",
+      "test-a-model-review",
+      "benchmark-detail",
+      "sample-evidence-detail",
+      "campaign-results"
+    ],
     "human_reference_grade_claim": false
   },
   "source_of_truth": "design/ux-contract.json",
