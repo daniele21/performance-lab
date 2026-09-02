@@ -79,7 +79,10 @@ def _verify_bundle_round_trip(
         detail=(
             "bundle contains only canonical manifest.json + run.json"
             if names == {"manifest.json", "run.json"}
-            else "bundle contains unexpected files; local sample sidecar content must not be exported"
+            else (
+                "bundle contains unexpected files; local sample sidecar content "
+                "must not be exported"
+            )
         ),
     )
 
@@ -246,7 +249,10 @@ def verify_value01_evidence(
         detail=(
             "run is completed immutable SUCCEEDED evidence"
             if run.status == RunStatus.SUCCEEDED
-            else f"run completed with status {run.status.value}; VALUE-01 requires a successful loop"
+            else (
+                f"run completed with status {run.status.value}; "
+                "VALUE-01 requires a successful loop"
+            )
         ),
     )
     _verify_bundle_round_trip(checks, bundle_path=bundle_path, run=run)
@@ -268,7 +274,9 @@ def verify_value01_evidence(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Verify retained VALUE-01 real-runtime evidence without inventing missing facts."
+        description=(
+            "Verify retained VALUE-01 real-runtime evidence without inventing missing facts."
+        )
     )
     parser.add_argument("--store", type=Path, required=True)
     parser.add_argument("--bundle", type=Path, required=True)
