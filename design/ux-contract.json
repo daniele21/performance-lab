@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.5.0",
+  "contract_version": "0.6.0",
   "applicable": true,
   "design_source_of_truth": {
     "type": "in-repo",
@@ -96,7 +96,7 @@
     },
     "primary_user_question": "Which model works best for my workload on this device, and with which configuration?",
     "journey_hierarchy": {
-      "primary": "Find best setup: use case -> candidate models -> configuration search -> benchmark plan -> campaign -> results",
+      "primary": "Find best setup: goal (use case + device) -> candidate models -> optimization -> review -> campaign -> results",
       "direct_manual": "Test a model: target/model -> scenario -> test configuration -> review -> live run -> immutable run result",
       "benchmark_first": "Library -> Benchmarks -> Benchmark Detail -> benchmark case",
       "run_first": "Runs -> Run Detail -> Samples -> Sample Evidence Detail",
@@ -120,10 +120,12 @@
       ]
     },
     "find_best_setup": {
-      "primary": "Continue / Start evaluation campaign when executable",
+      "primary": "Continue / Start evaluation when executable",
       "secondary": [
+        "Adjust goal or device",
         "Adjust candidates",
-        "Customize benchmark plan"
+        "Customize optimization parameters",
+        "Inspect benchmark and technical details"
       ],
       "destructive": [
         "Cancel campaign when running"
@@ -174,9 +176,10 @@
   },
   "surface_contracts": {
     "overview": {
-      "goal": "Answer what has been tested, what evidence is available, and what the user should do next.",
+      "goal": "Answer what decision the user can make next, what has been tested, and what evidence is available.",
       "primary_action": "Find best setup",
       "must_show": [
+        "decision-first entry into Find best setup before evidence inventory",
         "recent or relevant immutable evidence",
         "device/workload context where needed to interpret evidence",
         "separate quality, performance and resource summaries when trustworthy"
@@ -190,21 +193,28 @@
     "find_best_setup": {
       "goal": "Choose the best model + quantization + configuration for one selected use case on this device.",
       "steps": [
-        "Use case",
-        "Candidate models",
-        "Configuration search",
-        "Benchmark plan",
-        "Campaign review / estimate",
+        "Goal (use case + device)",
+        "Models",
+        "Optimization",
+        "Review"
+      ],
+      "post_setup_states": [
         "Campaign",
         "Results"
       ],
       "rules": [
+        "campaign and results are lifecycle/outcome states after setup, not setup decisions",
+        "benchmark plan and estimate are contextual review information, not mandatory standalone setup steps",
         "use case determines benchmark, dataset and evaluator relevance",
+        "device/target is selected with the goal so downstream candidates stay scoped correctly",
+        "eligible model candidates are selected by default when the backend has already scoped them to the chosen target",
         "same base model with different quantization is a distinct candidate",
         "quantization is candidate identity, not a sweep parameter",
+        "standard search is the preferred normal default when the runtime exposes bounded search ranges; fixed authored configuration is the safe fallback when it does not",
         "request-level parameters may be searched only when declared supported",
         "runtime/model-load parameters may be searched only when the serving runtime exposes an explicit mutable lifecycle",
-        "the browser must never invent parameter ranges or capabilities",
+        "advanced/custom optimization controls are progressively disclosed and never invent parameter ranges or capabilities",
+        "review foregrounds candidate/configuration/run scope and next action while benchmark/provenance/fingerprint detail stays contextual or advanced",
         "campaign results require comparable evidence and an explicit versioned decision policy"
       ]
     },
@@ -232,7 +242,9 @@
       "rules": [
         "campaign groups immutable runs",
         "each matrix row maps to one model + quantization + frozen configuration run",
+        "running presentation is progress-first: overall progress precedes per-candidate runs",
         "queued/running/completed/failed/cancelled states are explicit",
+        "leaving the campaign screen does not imply cancellation when server-owned progress persists",
         "cancellation and failure recovery preserve resource ownership and partial evidence truthfully"
       ]
     },
@@ -242,7 +254,9 @@
         "recommend model + quantization + configuration, never model family alone",
         "quality, performance and resources remain separate dimensions",
         "no universal opaque score",
+        "reading order is compatibility and decision policy -> recommendation -> evaluator-owned/policy-owned rationale -> candidate comparison -> case-level drill-down",
         "decision policy and compatibility are visible before recommendation",
+        "recommendation rationale comes from the backend result contract; the frontend never invents trade-off claims",
         "support alternatives such as highest quality, fastest and lowest resource usage only when evidence supports them",
         "allow drill-down to the benchmark cases that materially differentiate candidates"
       ]
@@ -448,7 +462,7 @@
     "benchmark_detail": {
       "entry_points": [
         "Library / Benchmarks",
-        "Find best setup benchmark plan"
+        "Find best setup Review"
       ],
       "default_information": [
         "suite identity and version",
@@ -687,7 +701,7 @@
   "critical_journeys": [
     {
       "id": "J0",
-      "name": "Choose use case -> select model candidates -> search configurations -> run campaign -> understand best-fit result",
+      "name": "Choose goal/device -> confirm model candidates -> choose optimization -> review -> run campaign -> understand best-fit result",
       "e2e": "required_when_executable"
     },
     {
