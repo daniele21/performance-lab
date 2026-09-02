@@ -1,0 +1,61 @@
+name: Temporary desktop UX formatter
+
+on:
+  push:
+    branches:
+      - feat/desktop-ux-hierarchy
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/desktop-ux-hierarchy
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+          run_install: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frozen frontend dependencies
+        run: pnpm --dir frontend install --frozen-lockfile
+
+      - name: Format changed TypeScript
+        run: |
+          pnpm --dir frontend exec prettier --write \
+            e2e/best-setup-ux.spec.ts \
+            e2e/full-product.spec.ts \
+            src/pages/campaign/CampaignPage.tsx \
+            src/pages/find-best-setup/FindBestSetupPage.tsx \
+            src/pages/overview/OverviewPage.tsx
+
+      - name: Commit formatting when needed
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            frontend/e2e/best-setup-ux.spec.ts \
+            frontend/e2e/full-product.spec.ts \
+            frontend/src/pages/campaign/CampaignPage.tsx \
+            frontend/src/pages/find-best-setup/FindBestSetupPage.tsx \
+            frontend/src/pages/overview/OverviewPage.tsx
+          git commit -m "Format desktop UX implementation"
+          git push origin HEAD:feat/desktop-ux-hierarchy
