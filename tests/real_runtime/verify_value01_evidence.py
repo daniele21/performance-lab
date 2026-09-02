@@ -72,6 +72,9 @@ def _verify_bundle_round_trip(
         _check(checks, "portable_bundle_shape", False, detail="bundle is not a readable zip")
         return
 
+    unexpected_bundle_detail = (
+        "bundle contains unexpected files; local sample sidecar content must not be exported"
+    )
     _check(
         checks,
         "portable_bundle_shape",
@@ -79,10 +82,7 @@ def _verify_bundle_round_trip(
         detail=(
             "bundle contains only canonical manifest.json + run.json"
             if names == {"manifest.json", "run.json"}
-            else (
-                "bundle contains unexpected files; local sample sidecar content "
-                "must not be exported"
-            )
+            else unexpected_bundle_detail
         ),
     )
 
@@ -242,18 +242,17 @@ def verify_value01_evidence(
         }
 
     assert run is not None
+    completed_detail = "run is completed immutable SUCCEEDED evidence"
+    if run.status != RunStatus.SUCCEEDED:
+        completed_detail = (
+            f"run completed with status {run.status.value}; "
+            "VALUE-01 requires a successful loop"
+        )
     _check(
         checks,
         "completed_run",
         run.status == RunStatus.SUCCEEDED,
-        detail=(
-            "run is completed immutable SUCCEEDED evidence"
-            if run.status == RunStatus.SUCCEEDED
-            else (
-                f"run completed with status {run.status.value}; "
-                "VALUE-01 requires a successful loop"
-            )
-        ),
+        detail=completed_detail,
     )
     _verify_bundle_round_trip(checks, bundle_path=bundle_path, run=run)
     _verify_identity(checks, run)
