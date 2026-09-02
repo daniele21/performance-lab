@@ -25,7 +25,6 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
   await expect(page.getByRole("heading", { name: "Find best setup" })).toBeVisible();
   await expect(page.getByText("Structured document extraction")).toBeVisible();
 
-  await page.getByRole("button", { name: "Continue" }).click();
   const targetSelect = page.getByLabel("Target / device");
   const discoveredTarget = targetSelect
     .locator("option")
@@ -33,28 +32,30 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
   const discoveredTargetId = await discoveredTarget.getAttribute("value");
   expect(discoveredTargetId).not.toBeNull();
   await targetSelect.selectOption(discoveredTargetId!);
+  await page.getByRole("button", { name: "Continue" }).click();
 
+  await expect(page.getByRole("heading", { name: "Select models to compare" })).toBeVisible();
   await expect(page.getByText("fixture-good", { exact: true })).toBeVisible();
   await expect(page.getByText("fixture-bad", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
 
+  await expect(page.getByRole("heading", { name: "How thoroughly should we search?" })).toBeVisible();
   await expect(page.getByRole("radio", { name: /Quick/ })).toBeDisabled();
-  await page.getByRole("button", { name: "Build benchmark plan" }).click();
+  await expect(page.getByRole("radio", { name: /Single configuration/ })).toBeChecked();
+  await page.getByRole("button", { name: "Continue" }).click();
 
-  await expect(page.getByRole("heading", { name: "Benchmark plan" })).toBeVisible();
-  await expect(page.getByText("general-diagnostic-starter")).toBeVisible();
-  await page.getByRole("button", { name: "Review campaign" }).click();
-
-  await expect(page.getByRole("heading", { name: "Campaign review / estimate" })).toBeVisible();
-  await expect(page.getByText("Plan frozen")).toBeVisible();
-  await expect(page.getByText("Ready to run")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Review your evaluation" })).toBeVisible();
+  await expect(page.getByText("Ready to evaluate", { exact: true })).toBeVisible();
+  await page.getByText("Technical details (advanced)", { exact: true }).click();
   await expect(page.getByText("strict-quality-dominance@1.0.0")).toBeVisible();
-  await page.getByRole("button", { name: "Start evaluation campaign" }).click();
+  await page.getByRole("button", { name: "Start evaluation" }).click();
 
   await expect(page).toHaveURL(/#campaigns\/[^/]+$/, { timeout: 120_000 });
-  await expect(page.getByRole("heading", { name: "Results" })).toBeVisible({ timeout: 120_000 });
-  await expect(page.getByText("No hidden weights · No universal score")).toBeVisible();
-  await expect(page.getByText("No single recommended winner")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Evaluation complete" })).toBeVisible({
+    timeout: 120_000,
+  });
+  await expect(page.getByText("No hidden weights · No universal score", { exact: false })).toBeVisible();
+  await expect(page.getByText("No single recommended setup")).toBeVisible();
   await expect(
     page.getByText(
       "Candidates do not expose the same aggregate quality metrics, so no weighted or partial ranking is inferred.",
@@ -64,7 +65,7 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
   const campaignUrl = page.url();
   await page.reload();
   await expect(page).toHaveURL(campaignUrl);
-  await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Evaluation complete" })).toBeVisible();
 
   const compareCase = page.getByRole("button", { name: "Compare across candidates" }).first();
   await expect(compareCase).toBeVisible();
