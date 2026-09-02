@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/brand/mark.svg" width="112" alt="Performance Lab mark">
+  <img src="docs/assets/brand/app-icon.webp" width="128" alt="Performance Lab logo">
 </p>
 
 <h1 align="center">Performance Lab</h1>
