@@ -167,55 +167,81 @@ export function OverviewView({ models, runs, onFindBestSetup, onTestModel }: Ove
     <AppShell activePrimary="Overview">
       <div className="overview-page">
         <PageHeader
-          eyebrow="Local evidence"
-          title="Your tested models"
-          description="Latest evidence by model, runtime and device. Quality, performance and resources remain separate."
+          title="Overview"
+          description="Choose the next decision to evaluate, then return to the evidence that Performance Lab has already produced."
           actions={
-            <div className="overview-page__actions">
-              <Button variant="quiet" onClick={onTestModel}>
-                Test a model
-              </Button>
-              <Button variant="primary" onClick={onFindBestSetup}>
-                Find best setup
-              </Button>
-            </div>
+            <Button variant="quiet" onClick={onTestModel}>
+              Test a model
+            </Button>
           }
         />
 
-        {models.length === 0 ? (
-          <EmptyState
-            title="No tested models yet"
-            description="Start from a use case to define the model/configuration decision you want Performance Lab to evaluate."
-            action={
-              <Button variant="primary" onClick={onFindBestSetup}>
-                Find best setup
-              </Button>
+        <section className="overview-decision" aria-labelledby="overview-decision-title">
+          <div className="overview-decision__copy">
+            <h2 id="overview-decision-title">Find the best setup for your goal</h2>
+            <p>
+              Tell Performance Lab what the model needs to do and where it has to run. We'll compare
+              eligible models, quantizations and configurations, then explain the best evidence-backed
+              fit.
+            </p>
+            <ul>
+              <li>Start from the workload and target device.</li>
+              <li>Compare only evidence-backed candidates and configuration ranges.</li>
+              <li>Keep quality, performance and resources separate in the recommendation.</li>
+            </ul>
+            <Button variant="primary" onClick={onFindBestSetup}>
+              Find best setup
+            </Button>
+          </div>
+          <div className="overview-decision__summary" aria-label="Decision flow">
+            <span>Goal</span>
+            <span>Models</span>
+            <span>Optimization</span>
+            <span>Recommendation</span>
+          </div>
+        </section>
+
+        <section className="overview-page__section overview-page__section--primary">
+          <SectionHeader
+            title="Recent evaluations"
+            description="Immutable evidence from your latest runs, newest first."
+          />
+          <DataTable
+            caption="Recent evaluation runs"
+            columns={RUN_COLUMNS}
+            rows={runs.slice(0, 8)}
+            rowKey={(run) => run.run_id}
+            emptyMessage="No evaluations yet. Start with Find best setup or Test a model."
+          />
+        </section>
+
+        <section className="overview-page__section overview-page__section--secondary">
+          <SectionHeader
+            title="Tested models"
+            description={
+              models.length
+                ? `${models.length} model${models.length === 1 ? "" : "s"} with retained evidence. Exact recommendations still require explicit comparability.`
+                : "Model evidence appears here after a completed evaluation."
             }
           />
-        ) : (
-          <section className="overview-page__section overview-page__section--primary">
-            <SectionHeader
-              title="Tested models"
-              description="Latest evidence for each model/runtime/device cohort. Recommendations require explicit comparability."
-            />
+          {models.length ? (
             <DataTable
               caption="Tested model evidence"
               columns={MODEL_COLUMNS}
               rows={models}
               rowKey={(model) => model.cohort_key}
             />
-          </section>
-        )}
-
-        <section className="overview-page__section overview-page__section--secondary">
-          <SectionHeader title="Recent runs" description="Immutable evidence, newest first." />
-          <DataTable
-            caption="Recent evaluation runs"
-            columns={RUN_COLUMNS}
-            rows={runs.slice(0, 8)}
-            rowKey={(run) => run.run_id}
-            emptyMessage="No completed runs yet."
-          />
+          ) : (
+            <EmptyState
+              title="No model evidence yet"
+              description="Start from a goal and device to create comparable evidence for the decision you need to make."
+              action={
+                <Button variant="primary" onClick={onFindBestSetup}>
+                  Find best setup
+                </Button>
+              }
+            />
+          )}
         </section>
       </div>
     </AppShell>
@@ -258,7 +284,7 @@ export function OverviewPage({ onFindBestSetup, onTestModel }: OverviewPageProps
     return (
       <AppShell activePrimary="Overview">
         <LoadingState
-          title="Loading tested models"
+          title="Loading local evidence"
           description="Reading immutable evidence from the local Performance Lab store."
         />
       </AppShell>
