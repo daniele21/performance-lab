@@ -65,6 +65,13 @@ def _verify_bundle_round_trip(
         )
         return
 
+    _check(
+        checks,
+        "portable_bundle_exists",
+        True,
+        detail="portable .plab.zip bundle is present",
+    )
+
     try:
         with ZipFile(bundle_path, "r") as archive:
             names = set(archive.namelist())
