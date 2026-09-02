@@ -4,127 +4,108 @@ Status: active
 Document type: architecture
 Owner: repository
 Canonical scope: architecture.repository
-Read when: implementing a component, changing dependency boundaries, adding an adapter, or deciding where new behavior belongs
-Last reviewed: 2026-08-15
+Read when: changing dependency boundaries, adding a domain/application/adapter/storage boundary, or deciding where new behavior belongs
+Last reviewed: 2026-08-31
 
 ## 1. Architectural objective
 
-AI Performance Lab is an evaluation control plane around externally served AI models.
+Performance Lab is an evaluation control plane around externally served AI models. It owns **evaluation orchestration, measurement, scoring, evidence, comparison and regression**. It does not own model loading/serving-runtime lifecycle in the core product.
 
-The lab owns **evaluation orchestration, measurement, scoring, evidence and comparison**. It does not own model runtime lifecycle in the core product.
+The same engine can evaluate a local llama.cpp-compatible service, LM Studio, Ollama, a device-exposed endpoint, Local LLM Server or a remote API when an adapter can normalize the required request/response behavior.
 
-This boundary is deliberate: the same evaluation engine should be usable against a local llama.cpp server, LM Studio, Ollama, an Android-exposed endpoint, a custom local inference service or a remote API, provided an adapter can express the required request/response behavior.
+Primary product question:
+
+> For this workload and device, which tested model/configuration provides the best evidence-backed trade-off, and why?
 
 ## 2. System context
 
 ```text
-                     +-----------------------------+
-                     |      AI Performance Lab     |
-                     |                             |
-                     | suites / runs / comparison |
-                     +--------------+--------------+
-                                    |
-                          normalized inference API
-                                    |
-              +---------------------+--------------------+
-              |                     |                    |
-        local server           device server         remote API
-              |                     |                    |
-        llama.cpp / MLX        Android runtime        provider
-              |                     |                    |
-              +---------------------+--------------------+
-                                    |
-                         model + runtime + device
+Browser UI / CLI / CI
+        |
+        v
+application / orchestration
+        |
+        v
+canonical domain + evaluation semantics
+   /        |          |          \
+adapters  datasets   telemetry   persistence
+   |                                |
+served model/runtime             run evidence
 ```
 
-Optional instrumentation is a separate channel:
+Inference and optional instrumentation are distinct channels:
 
 ```text
-Inference endpoint  <------ requests ------  Performance Lab
-       |
-       +------ optional telemetry ------->  Telemetry collector
+Performance Lab ---- inference requests ----> endpoint/runtime
+      |
+      +---- optional telemetry -------------> collector/device API
 ```
 
-A black-box run remains valid when the telemetry channel does not exist.
+A black-box evaluation remains valid when telemetry is unavailable. Resource/device claims require the corresponding evidence channel.
 
-## 3. Dependency direction
+## 3. Dependency and ownership rules
 
-Preferred logical dependency direction:
+- `domain/` owns immutable identities, execution/evidence contracts, compatibility types and shared error semantics.
+- `engine/` owns evaluation orchestration and run execution against interfaces.
+- `adapters/` owns provider/transport-specific inference behavior; provider differences do not leak into orchestration.
+- `datasets/` owns source/snapshot/loading/sampling semantics.
+- `evaluation/` owns parsers/evaluators and score semantics.
+- `performance/` owns runtime measurement protocols/statistics.
+- `telemetry/` owns metric collection/provenance, not benchmark pass/fail policy.
+- `storage/` owns run persistence, immutable completed evidence, bounded Campaign lifecycle persistence, import/export and migrations.
+- `regression/` and comparison owners consume canonical fingerprints/metrics; persistence/UI do not redefine comparability.
+- `application/` exposes task-oriented read models, preflight/frozen configuration, bounded server-owned run/campaign jobs and versioned decision policy to presentation layers.
+- `ui_api.py` and `ui_server.py` are transport/composition boundaries, not domain-policy owners.
+- `frontend/` consumes versioned application/API contracts and semantic design contracts; it never reads SQLite directly or reimplements canonical benchmark/comparability truth.
+- CLI/CI/automation are presentation/automation entry points over the same canonical engine/evidence semantics.
+
+Dependency direction is therefore:
 
 ```text
-presentation / CLI / API
+presentation / transport
           |
           v
-application orchestration
+application / orchestration
           |
           v
-core domain contracts
-       /   |    \
-      v    v     v
- adapters evaluators stores
-      |           |
- external IO    persistence
+canonical domain contracts
+     /       |        \
+adapters  evaluators  stores/collectors
+     |                   |
+ external IO          persistence / instrumentation
 ```
 
-Rules:
+## 4. Current package shape
 
-- domain types do not depend on HTTP clients, databases, UI frameworks or benchmark libraries;
-- orchestration depends on interfaces, not concrete endpoint/runtime implementations;
-- endpoint adapters do not own scoring policy;
-- evaluators do not call the endpoint directly;
-- telemetry collectors do not decide benchmark pass/fail;
-- persistence does not redefine compatibility rules;
-- UI does not reconstruct domain calculations from raw database rows.
-
-## 4. Proposed package/module ownership
-
-Exact language/runtime choice is a foundation task, but the ownership model should resemble:
+The implementation is intentionally capability-oriented rather than a mirror of backend technology:
 
 ```text
-performance_lab/
-  core/
-    models
-    fingerprints
-    compatibility
-    errors
-  orchestration/
-    run_engine
-    progress
-    cancellation
-  adapters/
-    inference/
-      openai_compatible
-    telemetry/
-  datasets/
-    registry
-    loaders
-    sampling
-  evaluation/
-    deterministic
-    rubric
-  benchmarking/
-    latency
-    throughput
-    statistics
-  storage/
-    runs
-    artifacts
-    migrations
-  comparison/
-    baselines
-    regressions
-  cli/
-  api/
-  ui/                # when introduced
+src/performance_lab/
+  domain/          immutable benchmark/evidence contracts
+  engine/          run orchestration
+  adapters/        inference-provider boundaries
+  datasets/        dataset registry/loading/snapshots
+  evaluation/      parsers/evaluators and score semantics
+  performance/     latency/throughput/load/statistics
+  telemetry/       collectors and provenance
+  storage/         SQLite/artifact persistence
+  regression/      baseline/policy/verdict logic
+  integrations/    external product/framework integration
+  plugins/         extension discovery/contracts
+  application/     UI read/preflight/run/campaign application layer
+  cli.py            command-line surface
+  ci.py             CI regression surface
+  automation.py     automation-facing helpers
+  ui_api.py         versioned local HTTP API
+  ui_server.py      loopback composition root
+frontend/           React/TypeScript browser product
 ```
 
-Create real boundaries only when behavior exists. Do not create empty modules merely to mirror this diagram.
+Create a new module/interface only when it owns an autonomous domain responsibility, external/platform boundary, reusable multi-consumer behavior or distinct test/release boundary. Do not create empty architectural layers speculatively.
 
 ## 5. Inference adapter contract
 
-The adapter isolates provider/transport differences from evaluation logic.
-
-Conceptual interface:
+Adapters normalize transport/provider behavior conceptually as:
 
 ```text
 probe(target) -> EndpointCapabilities
@@ -132,247 +113,122 @@ invoke(request, cancellation) -> InferenceResult
 stream(request, cancellation) -> stream<InferenceEvent>
 ```
 
-Normalized request contains:
+A normalized request contains task/messages input, requested generation configuration, optional response-format intent, timeout/deadline and correlation identity.
 
-- messages or task input;
-- requested generation configuration;
-- optional response-format/schema intent;
-- timeout/deadline;
-- request correlation ID.
-
-Normalized result/event should expose only facts actually known:
-
-- output text/content;
-- finish reason when available;
-- model identifier when available;
-- input/output token counts when available;
-- provider request ID when safe/useful;
-- normalized error;
-- timestamps measured at the lab boundary;
-- provider-reported timings in a separate provenance namespace.
+A normalized result/event exposes only facts actually known: output, finish reason, safe model/request identity, trustworthy token counts, normalized errors, lab-boundary timestamps and separately namespaced endpoint-reported timing.
 
 ### Effective configuration
 
-A major source of invalid benchmark comparisons is assuming requested parameters were honored.
+Requested parameters are not evidence that they were honored. Each parameter must resolve to one of:
 
-For every run, the adapter must represent one of:
-
-1. parameter supported and effective value known;
-2. parameter unsupported and request rejected;
-3. parameter unsupported but explicitly ignored under a user-approved compatibility policy;
+1. supported with effective value known;
+2. unsupported and rejected;
+3. unsupported but explicitly ignored under an approved compatibility policy;
 4. effective value unknown.
 
-Silent parameter loss is not acceptable for benchmark evidence.
+Silent parameter loss is invalid benchmark evidence.
 
-## 6. Execution fingerprint
+## 6. Execution fingerprint and compatibility
 
-The execution fingerprint is the core reproducibility contract.
+`ExecutionFingerprint` is the reproducibility identity. It covers the material execution inputs needed to distinguish evidence, including:
 
-Conceptually:
+- target/adapter/safe endpoint identity;
+- model identity, revision/artifact/quantization when known;
+- runtime identity/version when known;
+- effective generation/load configuration;
+- prompt/template identity;
+- dataset snapshot/split/sample policy;
+- evaluator versions;
+- benchmark protocol/warmup/repetitions/concurrency;
+- device/environment identity when known;
+- telemetry collectors/versions.
 
-```text
-ExecutionFingerprint
-  target
-    adapter_type
-    endpoint_safe_id
-  model
-    model_id
-    revision?
-    artifact_digest?
-    quantization?
-  runtime
-    name?
-    version?
-  generation
-    temperature
-    top_p
-    top_k?
-    seed?
-    max_output_tokens
-    response_format?
-    ...
-  prompt
-    template_id
-    template_version
-  dataset
-    dataset_id
-    snapshot_digest
-    split
-    sample_policy
-  evaluator
-    evaluator_versions
-  benchmark_protocol
-    protocol_version
-    warmup_policy
-    repetition_policy
-    concurrency
-  environment
-    device_id?
-    os?
-    cpu?
-    gpu?
-    memory?
-  telemetry
-    collectors + versions
-```
+Serialization is canonical before hashing. Unknown values remain explicit rather than inferred.
 
-Fingerprint serialization must be canonical before hashing.
+Compatibility is **dimension-specific**, not one global boolean. Examples:
 
-Two runs can be partially comparable. Compatibility is therefore dimension-specific rather than a single boolean.
+- same quality protocol on different hardware may permit quality comparison while preventing hardware-neutral latency regression;
+- different dataset snapshots invalidate dataset-derived quality deltas even if runtime evidence remains comparable under an equivalent load profile;
+- different quantization is an explicit configuration comparison, not a same-configuration regression.
 
-Example:
+Comparison always evaluates identity/compatibility before deltas.
 
-- same dataset/evaluator/generation but different hardware: capability scores may be comparable; latency is not a hardware-neutral regression;
-- same model/hardware but different dataset snapshot: runtime performance may be comparable under the same token/load profile, benchmark accuracy is not;
-- same model name but different quantization: comparison is allowed as an explicit configuration comparison, but it must never be described as a same-configuration regression.
+## 7. Run and sample lifecycle
 
-## 7. Run lifecycle and state machine
-
-Suggested lifecycle:
+Canonical run semantics distinguish validation, execution, interruption and immutable publication. Conceptually:
 
 ```text
-DRAFT
-  -> VALIDATING
-  -> READY
-  -> RUNNING
-       -> CANCELLING -> CANCELLED
-       -> FAILED
-       -> AGGREGATING
-  -> COMPLETED
+DRAFT -> VALIDATING -> READY -> RUNNING
+                              |-> CANCELLING -> CANCELLED
+                              |-> FAILED
+                              `-> AGGREGATING -> COMPLETED
 ```
 
-Completed runs are immutable.
+Completed evidence is immutable. Working/checkpoint state may exist, but it cannot be mistaken for completed evidence and publication must be atomic enough to preserve that invariant.
 
-A partial working area may persist checkpoints, but publication into the completed run store must be atomic enough that consumers do not mistake partial evidence for complete results.
-
-### Sample lifecycle
-
-Each sample records independently:
+Per-sample outcomes remain typed:
 
 ```text
 PENDING -> RUNNING -> SUCCESS
-                   -> MODEL_ERROR
-                   -> ADAPTER_ERROR
-                   -> TIMEOUT
-                   -> CANCELLED
-                   -> EVALUATOR_ERROR
+                   |-> MODEL_ERROR
+                   |-> ADAPTER_ERROR
+                   |-> TIMEOUT
+                   |-> CANCELLED
+                   `-> EVALUATOR_ERROR
 ```
 
-Evaluator failure is not model failure. Transport timeout is not an incorrect answer. Aggregations must preserve this distinction.
+Evaluator infrastructure failure is not model failure; transport timeout is not an incorrect answer. Aggregation preserves those distinctions.
+
+The UI application layer additionally owns bounded server-side Run and Campaign jobs, progress, reconnect/cancellation state and restart/interruption recovery without changing the immutable run-evidence contract. A Campaign groups immutable Runs; it does not become an alternate Run identity or portable replacement for Run evidence.
 
 ## 8. Reproducibility rules
 
-### Dataset freeze
+### Dataset and configuration freeze
 
-At run start, resolve dataset source + split + filter + deterministic sample selection into a `DatasetSnapshot` identity. The run must not observe a dataset changing underneath it.
+Before measured execution, freeze dataset source/split/filter/deterministic sample selection into a snapshot identity and freeze endpoint profile references, effective generation settings, suite/evaluator versions and benchmark protocol. A run must not observe mutable configuration or dataset content underneath it.
 
-### Configuration freeze
+### Randomness and time
 
-Freeze endpoint profile references, generation settings, suite version, evaluator versions and benchmark protocol before the first measured sample.
+Use deterministic seeds where supported and meaningful; record when the backend cannot provide deterministic seeding. Repeated stochastic evaluation is an explicit benchmark policy. Use monotonic clocks for elapsed measurements; wall-clock timestamps are audit/order metadata only.
 
-### Randomness
+## 9. Runtime measurement protocols
 
-Use deterministic seeds where supported and meaningful. Record when the serving backend does not support deterministic seeding.
-
-For stochastic quality evaluation, repeated sampling is a benchmark-policy decision and must be explicit.
-
-### Clock
-
-Use monotonic clocks for elapsed duration. Wall clock timestamps are for audit/order only.
-
-## 9. Runtime measurement architecture
-
-The lab measures what it owns at the client boundary:
+Performance Lab measures what it owns at the client boundary:
 
 ```text
 request start
-  -> connection/request processing
-  -> first streamed output event      = lab TTFT
-  -> final output event
-  -> response completion              = total latency
+  -> first observable streamed output = lab TTFT
+  -> final output
+  -> response completion = total latency
 ```
 
-Endpoint-reported prefill/decode/load timings may be stored, but are tagged as `endpoint_reported` and must not be conflated with lab-observed metrics.
+Endpoint-provided prefill/decode/load timing remains `endpoint_reported` and is never conflated with lab-observed timing.
 
-For tokens/second:
+Tokens/sec requires trustworthy token counts: prefer endpoint counts when reliable; use a configured tokenizer only when tokenizer/model compatibility is known; otherwise mark token throughput unavailable rather than fabricate it.
 
-- prefer output token count returned by the endpoint when reliable;
-- otherwise use a configured tokenizer only when tokenizer/model compatibility is known;
-- if token count cannot be established reliably, report character/byte timing only or mark throughput unavailable rather than fabricate token throughput.
+Cold/warm/load state is explicit:
 
-## 10. Cold, warm and load protocols
-
-Cold/warm classification must be explicit.
-
-The lab cannot universally force a third-party model runtime to unload. Therefore a `cold` benchmark is only valid when the adapter or external orchestration can establish a documented cold precondition.
-
-Protocol labels:
-
-- `UNCONTROLLED_INITIAL` — first observed request, but cold state not guaranteed;
-- `CONTROLLED_COLD` — external/adapter hook proves cold precondition;
+- `UNCONTROLLED_INITIAL` — first observed request, cold state not proven;
+- `CONTROLLED_COLD` — adapter/external hook proves the cold precondition;
 - `WARMUP` — excluded from measured aggregates;
 - `WARM_MEASURED` — post-warmup measured samples;
 - `LOAD_TEST` — concurrent/throughput profile.
 
-Do not label `UNCONTROLLED_INITIAL` as cold in reports.
+A third-party runtime that cannot be forced cold must never be reported as controlled cold.
 
-## 11. Telemetry architecture
+## 10. Telemetry architecture
 
-Three telemetry levels:
+Telemetry has three evidence levels:
 
-### Level 0 — endpoint-only
+- **Level 0 — endpoint-only:** client-observed latency/TTFT, success/failure/timeout and endpoint token usage when present.
+- **Level 1 — lab-host:** system/process metrics from the machine running Performance Lab; attribution limitations must be explicit.
+- **Level 2 — instrumented inference host/device:** cooperating runtime/device identity, residency, memory, CPU/GPU, thermal, energy and runtime-native timing where supported.
 
-Always available:
+Every telemetry sample carries time basis, collector identity/version, metric/unit, scope, provenance and optional run/request correlation. Precise remote request-level correlation requires an adequate clock relationship; otherwise telemetry is correlated to a run window.
 
-- client-observed latency;
-- TTFT when streamable;
-- success/error/timeout;
-- token usage when endpoint reports it.
+Telemetry failure is normally independent from inference unless the suite explicitly requires the metric.
 
-### Level 1 — lab-host telemetry
-
-Collected from the machine running Performance Lab. Useful only when the inference runtime is co-located or when system-level metrics are intentionally being measured.
-
-Possible metrics:
-
-- system CPU;
-- system/process memory;
-- load average;
-- network transfer.
-
-The collector must record attribution limitations.
-
-### Level 2 — instrumented inference host/device
-
-A cooperating server/agent exposes:
-
-- model/runtime identity;
-- model load/residency state;
-- process memory/RSS/PSS;
-- GPU/VRAM/unified memory;
-- CPU/GPU utilization;
-- thermal state;
-- energy/power where available;
-- runtime-native prefill/decode/load metrics.
-
-This is the preferred path for meaningful local-device resource benchmarking.
-
-## 12. Telemetry correlation
-
-Every telemetry sample requires:
-
-- monotonic timestamp or synchronized time basis;
-- collector identity/version;
-- metric name/unit;
-- scope (system/process/device/runtime/request/run);
-- provenance;
-- optional request/run correlation ID.
-
-Clock synchronization between a remote instrumented device and lab host must be addressed before claiming precise request-level correlation. Until then, remote telemetry may be correlated to a run window rather than individual token events.
-
-## 13. Dataset and evaluator architecture
-
-A task is separated into:
+## 11. Dataset and evaluator pipeline
 
 ```text
 Dataset sample
@@ -383,124 +239,73 @@ Dataset sample
   -> typed score(s)
 ```
 
-This allows the same dataset sample to support different prompt templates or response formats without duplicating the raw dataset.
+Dataset identity and evaluator identity are independent because changing normalization/scoring semantics changes results even when raw dataset content is unchanged.
 
-Evaluator implementations are versioned independently from datasets because changing normalization or scoring semantics changes results even when dataset content is unchanged.
-
-## 14. External benchmark frameworks
-
-Frameworks such as lm-evaluation-harness or other evaluation packages should be integrated through a bridge that translates:
+External benchmark frameworks integrate through an explicit bridge:
 
 ```text
-Performance Lab run config
-  -> external framework config
-  -> execution
-  -> normalized imported evidence
+Performance Lab config -> framework config/execution -> normalized imported evidence
 ```
 
-The lab must preserve external framework name/version/task/configuration. It must not pretend externally computed scores were produced by native evaluators.
+Imported evidence preserves framework/task/version/config provenance and is never presented as native evaluator output. Native evaluation remains necessary for custom workloads, runtime/resource evidence and regression orchestration.
 
-The native engine remains necessary for workload-specific/custom datasets, runtime metrics, telemetry correlation and regression orchestration.
+## 12. Persistence and privacy
 
-## 15. Persistence model
+Current persistence uses a queryable run store plus portable evidence artifacts. Technology remains replaceable as long as migration, immutability and atomic-publication contracts hold.
 
-Recommended storage split:
+Queryable metadata includes run headers/fingerprints, aggregate quality/runtime/resource evidence, baselines and comparison/regression state. Campaign lifecycle is persisted separately as bounded orchestration state that references immutable Run IDs; terminal Campaign snapshots are immutable, while Run records remain the authoritative benchmark evidence. Larger artifacts may include per-sample evidence, telemetry series and imported benchmark output.
 
-### Metadata/index store
+Privacy modes are conceptually:
 
-Queryable:
+- **aggregate-safe (default):** metrics, hashes/IDs and typed failures; prompt/output content is not retained unless the evaluator contract requires it;
+- **evidence-rich (explicit):** debugging inputs/outputs may be retained and must be treated as potentially sensitive with retention/delete behavior.
 
-- targets;
-- suites;
-- run headers;
-- fingerprints;
-- aggregate scores;
-- aggregate runtime metrics;
-- baseline relationships;
-- compatibility/comparison results.
+Credentials, authorization headers and signed secrets are never portable run evidence.
 
-### Artifact store
+## 13. Comparison and regression
 
-Potentially larger:
+Canonical comparison order:
 
-- per-sample records;
-- raw/sanitized outputs when persistence is enabled;
-- telemetry time series;
-- imported external benchmark artifacts;
-- reports.
+1. load immutable fingerprints/evidence;
+2. compute identity differences;
+3. determine comparability per metric dimension;
+4. align tasks/samples where applicable;
+5. calculate only valid deltas/statistics;
+6. apply versioned regression thresholds/policies;
+7. emit typed result and limitations.
 
-A local relational database plus filesystem/content-addressed artifacts is sufficient initially. Database choice is an implementation detail as long as migration and atomicity contracts are maintained.
+`PASS`, `FAIL`, `NOT_COMPARABLE` and `NOT_EVALUATED` remain distinct. Missing evidence cannot silently pass and incompatible deltas are absent, not cosmetically disabled into apparent validity.
 
-## 16. Privacy modes
+Campaign recommendation follows the same compatibility-first rule. The current `strict-quality-dominance@1.0.0` application policy recommends only a unique candidate that is no worse on every comparable quality metric and strictly better on at least one metric against every alternative. It introduces no metric weights, cross-dimension normalization or hidden tie-break. Runtime and resource evidence remain separate read-model dimensions rather than inputs to an opaque universal score.
 
-At least two modes should exist conceptually:
+Same-case Campaign comparison is an application projection, not a second comparison engine. It aligns one exact retained `(task_id, sample_id)` across Campaign Runs and reuses canonical capability fingerprint compatibility before presenting candidate sample evidence. A Run with zero matching samples is unavailable; multiple retained attempts are not silently chosen. The projection does not create a case winner or cross-case delta.
 
-### Aggregate-safe
+## 14. Local UI application boundary
 
-Default for general use/CI:
+`UIQueryService` and related application models translate canonical run/evidence semantics into task-oriented browser read models. Preflight resolves/validates a user selection and produces a frozen execution preview before launch. Campaign planning similarly resolves use-case, candidate, configuration-search and benchmark semantics in Python and produces a deterministic frozen plan digest.
 
-- persist metrics, hashes, task/sample IDs and typed failures;
-- do not persist prompt/output text unless required by the evaluator evidence policy.
+`RunJobManager` owns bounded single-Run job state, progress, cancellation/reconnect and interruption recovery. `CampaignJobManager` owns bounded multi-Run Campaign orchestration over that same native runner. A shared `EvaluationCapacity` prevents manual Runs and Campaigns from concurrently claiming the same local evaluation slot. Both managers release ownership across success, failure, cancellation and shutdown/restart paths.
 
-### Evidence-rich
+Campaign launch never trusts the browser preview as executable truth: the server rebuilds the requested plan from current backend-owned semantics and requires its digest to match the reviewed digest before capacity is acquired. Each Campaign matrix entry then receives one explicit Run ID and executes through the canonical runner. `SQLiteCampaignStore` retains lifecycle/reconnect state separately from `SQLiteRunStore`; completed Run truth remains immutable Run evidence.
 
-Explicit opt-in:
+Campaign result projection joins persisted Campaign entries to completed Runs, evaluates dimension-specific compatibility and applies an explicit versioned decision policy. The same application owner enumerates retained Campaign case identities and composes exact sample-evidence projections with capability compatibility for same-case drill-down. The frontend only renders those projections; it does not rank candidates, assign benchmark relevance, join samples across Runs or combine quality/runtime/resource metrics itself.
 
-- persist sample inputs/outputs required for debugging;
-- clearly mark artifacts as potentially sensitive;
-- provide retention/delete controls.
+`ui_server.py` composes the local graph from one versioned starter execution config and binds the API to `127.0.0.1` by default. During development Vite proxies `/api` to this loopback service. Built static-product ownership, build identity/artifact promotion and final smoke/cleanup remain release concerns rather than campaign-lifecycle ownership.
 
-Credentials, authorization headers and signed secrets are never part of either mode.
+Frontend information architecture and interaction rules belong in `design/ux-contract.json`; brand/component/motion semantics belong in `design/brand-kit.json` and `frontend/src/design/`. Architecture does not duplicate those UX contracts.
 
-## 17. Comparison engine
+## 15. Failure, resources and security
 
-Comparison proceeds in this order:
+Prefer typed `unknown`, `unavailable`, `partial` and `not-comparable` states over invented defaults. Examples: no stream -> TTFT unavailable; no trustworthy token count -> token throughput unavailable; collector permission failure -> typed telemetry unavailable; unknown model revision stays unknown.
 
-1. load both immutable run fingerprints;
-2. compute identity diff;
-3. determine comparable metric dimensions;
-4. align tasks/samples where relevant;
-5. calculate deltas/statistics;
-6. evaluate configured thresholds;
-7. emit typed comparison result with limitations.
+Every significant process/listener/job/queue/cache/temp file/workspace has an owner, bounded lifetime/cardinality, timeout/cancellation behavior and cleanup across success, failure, timeout, cancellation, interrupt and partial initialization.
 
-A comparison report should make configuration differences more visible, not less visible.
+Trust boundaries include endpoint credentials, imported datasets, prompts/outputs, SQLite/evidence bundles, device telemetry and loopback browser/API traffic. No secret persistence, content logging or silent cloud fallback is introduced outside an explicit reviewed contract. See `SECURITY.md` for repository-wide policy.
 
-## 18. Failure philosophy
+## 16. Durable extension decisions
 
-Prefer explicit unavailable/unknown/incompatible states over invented defaults.
+Keep domain policy out of transport/UI/persistence adapters unless that layer genuinely owns it. Search for the existing owner before adding a constant/status/configuration/lifecycle rule.
 
-Examples:
+Material durable ownership changes belong here or in an ADR. Current accepted product ownership is documented in `docs/adr/0004-performance-lab-owns-evaluation-product.md`: Performance Lab owns evaluation/product history; Local LLM Server remains the serving/runtime control plane.
 
-- no streaming -> TTFT unavailable, not zero;
-- no token usage -> token throughput unavailable unless a compatible tokenizer is configured;
-- telemetry collector permission denied -> run continues with telemetry status `UNAVAILABLE_PERMISSION`;
-- model revision unknown -> fingerprint says unknown;
-- judge evaluator unavailable -> deterministic metrics may complete while judge score is separately failed/unavailable.
-
-## 19. Extension rules
-
-Add a new module/interface only when it owns one of:
-
-- an autonomous domain responsibility;
-- a third-party/platform boundary;
-- a reusable behavior used by multiple consumers;
-- a distinct testing/release boundary.
-
-Do not add provider-specific branches inside the orchestrator when an adapter can own the difference.
-
-Do not add benchmark-specific conditionals inside persistence or UI; normalize through task/evaluator contracts.
-
-## 20. Architectural decisions still open
-
-Tracked for FND-001/FND-002:
-
-- implementation language/runtime and package strategy;
-- local persistence technology;
-- configuration file format and schema tooling;
-- plugin discovery mechanism;
-- whether the local UI is served by the same API process or a separate frontend;
-- exact safe endpoint identity hashing/redaction policy;
-- initial instrumented telemetry protocol transport.
-
-Durable choices should be recorded as ADRs under `docs/adr/` once decided.
+Open implementation work does **not** belong in architecture. Current execution state and remaining dependencies are routed through `docs/current-state.md` and the active bounded workstream only.

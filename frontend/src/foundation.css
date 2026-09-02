@@ -1,0 +1,131 @@
+@import "./design/tokens.css";
+@import "./design/design-system.css";
+@import "./design/primitives.css";
+
+:root {
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--color-surface);
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  font-size: 0.9375rem;
+  font-weight: var(--font-weight-body);
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-primary) 26%, transparent);
+}
+
+.skip-link {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 1000;
+  transform: translateY(calc(-100% - var(--space-6)));
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-primary);
+  background: var(--color-surface-raised);
+  font-size: 0.85rem;
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  box-shadow: var(--shadow-raised);
+  transition: transform var(--transition-functional);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.app-shell__main,
+code,
+pre,
+dd,
+.data-table th,
+.data-table td,
+.state-surface {
+  overflow-wrap: anywhere;
+}
+
+code,
+.data-table code {
+  word-break: break-word;
+}
+
+.product-intro {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.product-intro__status {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 52rem;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--space-6);
+}
+
+.product-intro__status h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.product-intro__status p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

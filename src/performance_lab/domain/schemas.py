@@ -117,6 +117,7 @@ class ModelIdentity(FrozenModel):
 class RuntimeIdentity(FrozenModel):
     name: NonEmptyStr | None = None
     version: NonEmptyStr | None = None
+    config_digest: NonEmptyStr | None = None
 
 
 class HardwareIdentity(FrozenModel):
@@ -213,7 +214,7 @@ class BenchmarkProtocol(FrozenModel):
 
 
 class ExecutionFingerprint(VersionedModel):
-    """Immutable identity of the evaluated configuration.
+    """Immutable identity of an evaluation configuration.
 
     Fields describing model/runtime/hardware may remain ``None`` when the endpoint
     cannot expose them.  Their absence is part of the fingerprint rather than guessed.

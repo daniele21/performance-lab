@@ -1,0 +1,80 @@
+name: Browser acceptance
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  scope:
+    name: Select validation profile
+    runs-on: ubuntu-latest
+    outputs:
+      run_browser_e2e: ${{ steps.selector.outputs.run_browser_e2e }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - id: selector
+        name: Resolve blast radius
+        shell: bash
+        run: |
+          args=(
+            --base "${{ github.event.pull_request.base.sha }}"
+            --head "${{ github.event.pull_request.head.sha }}"
+            --github-output "$GITHUB_OUTPUT"
+          )
+          if [[ "${{ github.base_ref }}" == "main" ]]; then
+            args+=(--promotion)
+          fi
+          python scripts/select_validation_profile.py "${args[@]}"
+
+  playwright:
+    name: Playwright (Chromium)
+    needs: scope
+    if: needs.scope.outputs.run_browser_e2e == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install frozen frontend dependencies
+        run: pnpm --dir frontend install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm --dir frontend exec playwright install --with-deps chromium
+      - name: Check frontend
+        run: pnpm --dir frontend run check
+      - name: Test frontend components
+        run: pnpm --dir frontend run test
+      - name: Run critical browser journeys
+        run: pnpm --dir frontend run test:e2e
+      - name: Verify required UI E2E screenshots and videos
+        run: >-
+          uv run --no-project python scripts/verify_e2e_media.py
+          frontend/test-results/results.json
+          J0 J1 J2 J3 J4 J5 J6 J7 J8 J9
+      - name: Upload bounded browser E2E evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-acceptance-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: frontend/test-results
+          if-no-files-found: ignore
+          retention-days: 7

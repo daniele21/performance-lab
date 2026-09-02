@@ -1,0 +1,208 @@
+.campaign-page {
+  display: grid;
+  gap: var(--space-8);
+  max-width: 76rem;
+}
+
+.campaign-status-row,
+.campaign-actions,
+.campaign-entry-heading,
+.campaign-evidence-heading {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.campaign-status-row {
+  flex-wrap: wrap;
+}
+
+.campaign-id {
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.campaign-progress-section,
+.campaign-matrix,
+.campaign-results,
+.campaign-case-explorer {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.campaign-results {
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.campaign-progress-section--completed {
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+.campaign-actions {
+  justify-content: flex-start;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-elevated);
+  font-size: 0.82rem;
+}
+
+.campaign-entry-list,
+.campaign-evidence-grid,
+.campaign-compatibility {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.campaign-entry,
+.campaign-policy,
+.campaign-recommendation,
+.campaign-compatibility article,
+.campaign-evidence-grid > article,
+.campaign-case-list > article {
+  display: grid;
+  gap: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  padding: var(--space-4);
+  background: var(--color-surface-elevated);
+}
+
+.campaign-recommendation {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-subtle);
+  box-shadow: var(--shadow-raised);
+}
+
+.campaign-recommendation > strong {
+  color: var(--color-text-primary);
+  font-size: 1.2rem;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: -0.015em;
+}
+
+.campaign-entry-heading,
+.campaign-evidence-heading {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.campaign-entry-heading > div,
+.campaign-evidence-heading {
+  min-width: 0;
+}
+
+.campaign-entry-heading > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.campaign-entry-heading span,
+.campaign-evidence-heading span,
+.campaign-policy p,
+.campaign-policy small,
+.campaign-recommendation p,
+.campaign-compatibility small,
+.campaign-metric-group > span,
+.campaign-case-list span,
+.campaign-case-list small {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.campaign-policy > span,
+.campaign-recommendation > span,
+.campaign-compatibility article > span {
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.campaign-policy,
+.campaign-recommendation {
+  max-width: 52rem;
+}
+
+.campaign-compatibility article,
+.campaign-evidence-grid > article {
+  align-content: start;
+}
+
+.campaign-metric-group {
+  display: grid;
+  gap: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+}
+
+.campaign-metric-group dl {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.campaign-metric-group dl > div {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
+.campaign-metric-group dt,
+.campaign-metric-group dd {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.campaign-metric-group dt {
+  color: var(--color-text-secondary);
+}
+
+.campaign-case-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.campaign-case-list > article {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.campaign-case-list > article > div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.campaign-error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 64rem) {
+  .campaign-entry-list,
+  .campaign-evidence-grid,
+  .campaign-compatibility {
+    grid-template-columns: 1fr;
+  }
+
+  .campaign-actions,
+  .campaign-entry-heading,
+  .campaign-evidence-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .campaign-case-list > article {
+    grid-template-columns: 1fr;
+  }
+}

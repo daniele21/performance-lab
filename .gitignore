@@ -10,6 +10,13 @@ venv/
 htmlcov/
 build/
 dist/
+node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/test-results/
+frontend/test-results-full-product/
+frontend/playwright-report/
+frontend/*.tsbuildinfo
 .env
 .env.*
 !.env.example

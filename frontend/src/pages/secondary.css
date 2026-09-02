@@ -1,0 +1,56 @@
+.secondary-page {
+  display: grid;
+  max-width: 76rem;
+  gap: var(--space-6);
+}
+
+.secondary-page__cards {
+  display: grid;
+  max-width: 54rem;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--color-border-subtle);
+}
+
+.secondary-card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-surface);
+}
+
+.secondary-card__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.secondary-card h2,
+.secondary-card p {
+  margin: 0;
+}
+
+.secondary-card h2 {
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.secondary-card p {
+  max-width: 64ch;
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.secondary-page .data-table {
+  background: var(--color-surface);
+}
+
+@media (max-width: 760px) {
+  .secondary-page__cards {
+    max-width: none;
+  }
+}

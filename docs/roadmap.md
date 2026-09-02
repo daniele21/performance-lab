@@ -4,261 +4,80 @@ Status: active
 Document type: roadmap
 Owner: repository
 Canonical scope: roadmap.repository
-Read when: selecting the next capability milestone, understanding sequencing or identifying deferred product direction
-Last reviewed: 2026-08-15
+Read when: selecting the next capability milestone or understanding product sequencing
+Last reviewed: 2026-08-24
 
-This document tracks capability-level milestones. Live task status and the immediate next work block belong in [`current-state.md`](current-state.md). Detailed dependencies belong in [`implementation-plan.md`](implementation-plan.md).
+This roadmap tracks capability outcomes. Live state belongs in [`current-state.md`](current-state.md); detailed active dependencies belong in bounded workstreams.
 
-## Milestone summary
+## Milestones
 
-| Milestone | Status | Main outcome | Parallel opportunities |
-| --- | --- | --- | --- |
-| M0 — Repository and contracts | In progress | validated foundation + remaining plugin/registry/fake boundary | adapters, datasets, telemetry and storage are now unlocked in parallel |
-| M1 — First black-box evaluation | Planned | run a deterministic quality suite against an OpenAI-compatible endpoint | quality and runtime benchmark engines in parallel |
-| M2 — Runtime performance evidence | Planned | TTFT/latency/throughput/reliability with repeatable protocols | runs alongside M1 quality engine work |
-| M3 — Run store and comparison | Planned | immutable fingerprints, history and compatible run comparison | storage can begin during M1/M2 |
-| M4 — Custom workload evaluation | Planned | import local datasets and create reusable workload suites | parallel with comparison/telemetry |
-| M5 — Resource-aware local evaluation | Planned | host/device telemetry and instrumented endpoint correlation | telemetry lane is mostly independent |
-| M6 — Regression automation | Planned | explicit baselines, threshold policies and machine-readable CLI | UI work may run in parallel |
-| M7 — Local product UI | Planned | configure, run, inspect and compare evaluations visually | not on engine MVP critical path |
-| M8 — External benchmark ecosystem | Planned | bridge established evaluation frameworks without duplicating them | after native contracts stabilize |
-| M9 — Additional AI task families | Future | ASR, embeddings, reranking, vision through generic task extensions | independent task-family workstreams after text core |
-
-## M0 — Repository and contracts
-
-Goal: establish a project that can evolve without coupling the core to a model runtime or UI.
-
-Implemented and validated:
-
-- repository toolchain, lint/type/test/CI foundation;
-- branch and contribution policy;
-- MIT license;
-- immutable domain schemas and schema versioning;
-- deterministic execution fingerprint identity;
-- dimension-specific compatibility semantics;
-- privacy-safe endpoint credential references;
-- clean-checkout validation on Python 3.12 and 3.13.
-
-Remaining before M0 closes:
-
-- plugin interfaces for inference, datasets/evaluators, telemetry, stores/exporters;
-- deterministic fakes for orchestration tests;
-- integration-line bootstrap for parallel work.
-
-Exit gate:
-
-- clean checkout validation works;
-- core domain serialization tests pass;
-- adapter, dataset, telemetry and storage lanes can implement against stable enough contracts without importing one another;
-- FND-003 contracts/fakes are usable by the first downstream implementations.
-
-## M1 — First black-box capability evaluation
-
-Goal: connect to an OpenAI-compatible endpoint and obtain trustworthy quality scores from a versioned suite.
-
-Required outcomes:
-
-- OpenAI-compatible adapter with streaming/non-streaming normalized behavior;
-- endpoint capability probe;
-- dataset snapshotting and deterministic sampling;
-- deterministic evaluators;
-- compact general-purpose starter suite;
-- orchestrator lifecycle with cancellation/failure semantics;
-- per-sample and aggregate results.
-
-Exit gate:
-
-- a local endpoint can be evaluated without Performance Lab knowing how the model is hosted;
-- the completed run has a reproducible fingerprint and immutable result bundle;
-- unsupported/unknown endpoint features are explicit.
-
-## M2 — Runtime performance evidence
-
-Goal: measure serving behavior independently from quality scoring.
-
-Required outcomes:
-
-- client-observed total latency;
-- TTFT for streaming endpoints;
-- reliable output token throughput when token counts are valid;
-- warmup/repetition policy;
-- controlled versus uncontrolled cold-start semantics;
-- repeated timing statistics;
-- fixed-concurrency load profile;
-- typed reliability/error metrics.
-
-Exit gate:
-
-- quality and runtime metrics are reported separately;
-- no unavailable metric is represented as zero;
-- benchmark protocol identity is persisted in the fingerprint.
-
-## M3 — Run store and compatible comparison
-
-Goal: make results useful across changes rather than disposable single runs.
-
-Required outcomes:
-
-- durable immutable completed-run store;
-- partial-run working state separated from completed evidence;
-- aggregate and per-sample query model;
-- portable run export/import;
-- run identity diff;
-- dimension-specific compatibility rules;
-- quality/runtime/resource delta reporting.
-
-Exit gate:
-
-- a user can select two runs and understand both the metric deltas and the configuration differences that produced them;
-- incompatible comparisons return reasons rather than misleading percentages.
-
-## M4 — Custom workload evaluation
-
-Goal: answer "which model is best for my scenario?" rather than only public benchmark questions.
-
-Required outcomes:
-
-- JSONL/CSV import;
-- explicit column/schema mapping;
-- reusable mapping configuration;
-- local dataset snapshot identity;
-- task/evaluator templates for classification, extraction, QA and structured output;
-- workload-pack versioning.
-
-Candidate first workload packs:
-
-- meeting intelligence;
-- PII/entity extraction;
-- structured document extraction.
-
-Exit gate:
-
-- a user can run the same workload dataset against multiple endpoints/configurations and compare task-relevant quality plus runtime metrics.
-
-## M5 — Resource-aware local evaluation
-
-Goal: correlate inference quality/performance with device resource cost.
-
-Required outcomes:
-
-- telemetry collector interface and typed availability states;
-- portable local host CPU/memory evidence where attributable;
-- optional instrumented inference telemetry protocol;
-- run-window correlation;
-- peak/average resource summaries with provenance;
-- first real integration with a local/device serving project.
-
-Later within the milestone:
-
-- GPU/VRAM/unified-memory collectors;
-- thermal state;
-- power/energy where reliable.
-
-Exit gate:
-
-- the report clearly distinguishes endpoint-only, host-observed and runtime-native evidence;
-- resource metrics can be used in compatible comparisons without contaminating basic endpoint evaluation.
-
-## M6 — Regression automation
-
-Goal: move evaluation into normal software/model engineering iteration.
-
-Required outcomes:
-
-- explicit baseline selection;
-- versioned threshold policy;
-- compatible dimension validation before threshold evaluation;
-- stable JSON result schema;
-- stable CLI exit codes;
-- CI-friendly summary artifact;
-- regression pass/fail with per-metric reasons.
-
-Exit gate:
-
-```text
-run candidate
--> compare to explicit baseline
--> reject incomparable metrics
--> evaluate thresholds
--> produce machine-readable PASS / FAIL / NOT_COMPARABLE
-```
-
-CI integration must not make same-hardware claims on uncontrolled heterogeneous runners.
+| Milestone | Status | Outcome / remaining gate |
+| --- | --- | --- |
+| M0 — Repository/contracts | DONE | foundation, immutable contracts and orchestrator integrated |
+| M1 — Black-box evaluation | IMPLEMENTED / EVIDENCE PENDING | representative real-endpoint lifecycle evidence |
+| M2 — Runtime performance | IMPLEMENTED / EVIDENCE PENDING | repeatability/load evidence on controlled hardware |
+| M3 — Run store/comparison | IMPLEMENTED / EVIDENCE PENDING | representative compatible + incompatible run pairs |
+| M4 — Workload evaluation | IMPLEMENTED / EVIDENCE PENDING | workload packs on representative models |
+| M5 — Resource-aware local evaluation | IMPLEMENTED / EVIDENCE PENDING | real identity/telemetry/device evidence |
+| M6 — Regression automation | IMPLEMENTED / EVIDENCE PENDING | real baseline/candidate CI evidence |
+| M7 — Local product UI | **DONE** | Compare, Library/Settings, J1-J6 browser acceptance and built-product lifecycle integrated |
+| M8 — External benchmark ecosystem | DEFERRED | start only when real product evidence exposes a concrete coverage gap |
+| M9 — Additional task families | FUTURE | ASR/embeddings/reranking/vision after the text product stabilizes |
 
 ## M7 — Local product UI
 
-Goal: make evaluation approachable without weakening evidence semantics.
+Goal: make Performance Lab the primary local benchmark/evaluation product without moving inference-runtime ownership into it.
 
-Primary surfaces:
+Integrated on `dev`:
 
-- Targets;
-- New Evaluation;
-- Live Run;
-- Results;
-- Compare;
-- Datasets/Suites;
-- Baselines/Policies;
-- Telemetry/Settings.
+- task-model-first Overview;
+- Model -> Scenario -> Test -> Review;
+- server-owned run launch/progress/cancellation/reconnect;
+- Runs and immutable Run Detail;
+- compatibility-first Compare/regression;
+- secondary read-only Library/Settings;
+- versioned UI read/preflight contracts;
+- executable semantic design system and loopback composition root;
+- Playwright Chromium J1-J6 browser acceptance, compact/wide checks and reduced-motion behavior;
+- unique built-product/source identity, immutable package publication, manifest/checksum, build delta, bounded retention and package smoke/cleanup.
 
-Exit gate:
+M7 software/productization is complete. Real-device evidence is intentionally tracked separately because synthetic CI cannot establish hardware performance, telemetry, thermal or device-specific claims. Local LLM Server deprecation/removal is also a separate migration lifecycle rather than a UI-completion gate.
 
-- every important CLI/engine concept has a clear visual representation;
-- identity differences and unavailable metrics remain visible;
-- UI never recalculates benchmark semantics independently from core read models.
+## Active evidence and migration tracks
 
-## M8 — External benchmark ecosystem
+Representative evidence: [`workstreams/representative-device-evidence.md`](workstreams/representative-device-evidence.md)
 
-Goal: reuse mature benchmark task ecosystems while keeping Performance Lab focused on orchestration, local-device evidence and regression.
+1. run a real Local LLM Server target through a representative suite/workload;
+2. retain the execution fingerprint and `.plab.zip`;
+3. exercise identity and `/status` telemetry on the real device;
+4. repeat/load the same controlled target;
+5. preserve representative comparison/regression outcomes.
 
-Required outcomes:
+LLS migration: [`workstreams/local-llm-migration.md`](workstreams/local-llm-migration.md)
 
-- external-runner plugin contract;
-- configuration translation;
-- version/provenance capture;
-- normalized result import;
-- artifact retention;
-- explicit distinction between native and external evaluator results.
+1. map every overlapping evaluation workflow and consumer;
+2. establish replacement parity plus history/data policy;
+3. deprecate before removal;
+4. remove redundant paths only after cross-repo and real-runtime evidence.
 
-Potential integrations should be selected based on concrete coverage needs rather than added as mandatory dependencies.
+## Product maturity
 
-## M9 — Additional AI task families
+**Engine-capable** — integrated core can execute and compare evidence through CLI/CI.
 
-Future after the text-generation evaluation contracts are stable.
+**Product-software complete for the current local UI scope** — M7 surfaces, browser acceptance and built-product lifecycle are integrated.
 
-Candidate families:
+**Evidence-backed local benchmark product** — product software + representative M1-M5 evidence.
 
-- ASR: WER/CER, real-time factor, latency, memory;
-- embeddings: retrieval quality, throughput, dimensionality/storage cost;
-- rerankers: ranking quality and latency;
-- vision/multimodal: task-specific accuracy plus image/token runtime cost.
+**Engineering regression platform** — evidence-backed product + representative M6 CI gate evidence.
 
-The core extension should add task-family contracts, not provider-specific special cases.
+**Broader platform** — only then add justified M8 integrations and selected M9 task families.
 
-## Product maturity boundaries
+## Explicitly deferred
 
-### Engine MVP
-
-M0 through the essential parts of M1, M2 and M3 plus a CLI execution path.
-
-### Practical local evaluation product
-
-Engine MVP + M4 custom datasets + basic M5 telemetry + baseline comparison.
-
-### Engineering regression platform
-
-Practical product + M6 automation/CI.
-
-### Broader platform
-
-M7 UI + M8 ecosystem + selected M9 task families.
-
-## Deferred until evidence justifies them
-
-- distributed multi-runner scheduling;
 - hosted SaaS control plane;
+- distributed multi-runner scheduling;
 - public global leaderboard;
-- automatic one-number model ranking;
-- autonomous model downloading/serving;
-- privileged device control as a requirement;
-- arbitrary generated-code execution without a hardened sandbox;
-- cross-device energy-efficiency ranking using incomparable sensor methods.
+- automatic universal one-number ranking;
+- autonomous model serving/downloading inside Performance Lab;
+- cross-device efficiency claims over incomparable sensors;
+- external benchmark bridges without demonstrated need.

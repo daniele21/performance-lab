@@ -1,45 +1,51 @@
 # Branching and integration policy
 
 Status: active
-Last reviewed: 2026-08-15
+Last reviewed: 2026-08-29
 
-The repository uses a lightweight two-line policy for concurrent implementation.
+Performance Lab uses a lightweight two-line policy for parallel implementation.
 
-- `main` is stable and release-oriented.
+- `main` is stable/release-oriented.
 - `dev` is the canonical integration branch for feature, fix, dependency, documentation and UX work.
-- Feature branches are short-lived and should use a descriptive prefix such as `feat/`, `fix/`, `docs/` or `agent/`.
-- Ordinary pull requests target `dev`; promotion from a validated `dev` to `main` is deliberate.
-- The direct-to-`main` bootstrap exception ended after the validated FND-001/FND-002 foundation. New parallel work starts from `dev`.
+- Ordinary branches start from the latest green `dev` and target `dev`.
+- Use short-lived descriptive prefixes such as `feat/`, `fix/`, `docs/`, `chore/` or `agent/`.
+- Promotion from validated `dev` to `main` is deliberate and is always a `FULL` validation profile.
 
 ## Parallel work
 
-The workstream IDs in `docs/implementation-plan.md` define ownership boundaries. Concurrent branches should avoid modifying another lane's implementation unless the shared contract change is coordinated first.
+Parallelism is defined by the active bounded workstream(s) under `docs/workstreams/`, not by historical bootstrap task IDs.
 
-When a shared domain contract changes:
+Parallel branches are safe when ownership/write boundaries do not conflict, or when a shared contract change has an explicit integration point and lands before dependent slices consume it.
 
-1. update the owning FND contract and tests;
-2. record material dependency/acceptance changes in `docs/plan-changelog.md`;
-3. rebase/update dependent workstreams;
-4. validate the complete integration before merging subsequent dependent changes.
+When a shared domain/application/design contract changes:
 
-Prefer separate branches for the currently unlocked lanes:
+1. update the canonical owner and focused tests first;
+2. update the active workstream only if dependencies/acceptance materially change;
+3. rebase/update dependent branches on the new integration contract;
+4. validate the complete shared boundary before merging dependent behavior.
 
-```text
-agent/fnd-003-plugin-contracts
-agent/adp-001-openai-adapter
-agent/dat-001-dataset-loading
-agent/tel-001-collector-contract
-agent/sto-001-run-store
-```
-
-These branches may proceed concurrently after `dev` exists. Shared contract changes should land in `dev` before dependent branches rely on them.
+Current high-value lanes are listed in [`docs/current-state.md`](docs/current-state.md) and routed through [`docs/workstreams/README.md`](docs/workstreams/README.md). Do not preserve branch lists in this policy; branches are ephemeral and Git already records them.
 
 ## Merge readiness
 
-A branch is merge-ready when the relevant Definition of Done is satisfied and:
+A branch is merge-ready when:
 
-```bash
-python scripts/validate.py
-```
+- applicable Definition of Done / workstream acceptance criteria are satisfied;
+- material ambiguity, base freshness and complete-diff review pass preflight;
+- `scripts/select_validation_profile.py` selects the narrowest safe `LEAN`/`SCOPED`/`STRONG`/`FULL` profile and every deterministic gate in that profile passes locally or through repository-owned remote automation;
+- repository-health checks pass;
+- browser/product/built-package E2E runs at the `.engineering/e2e.json` fidelity required by the changed claim;
+- exact evidence is recorded without upgrading unexecuted hardware/accessibility/usability claims to PASS;
+- owned processes/listeners/temp state are cleaned for lifecycle work.
 
-passes from a clean environment. A green feature branch is not release evidence if required real-endpoint or representative-device evidence is still deferred.
+`dev` branch protection should require applicable Repository Validation, Repository Health, Browser Acceptance and Built Product checks once repository settings are configured. Until then, review/CI convention remains the enforcement mechanism; repository administration is not replaced by application code.
+
+## Promotion to main
+
+Before `dev` -> `main` promotion:
+
+- force `FULL` validation regardless of changed-path narrowing;
+- reconcile any commits that landed directly on `main` so neither line silently drops product/documentation truth;
+- require applicable release/build lifecycle and packaged-product evidence;
+- preserve immutable run/build evidence and source identity where the release claim depends on it;
+- keep `RUNTIME-1` representative device/model evidence explicitly pending unless it was actually executed.

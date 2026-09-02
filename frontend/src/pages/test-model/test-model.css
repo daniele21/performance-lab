@@ -1,0 +1,335 @@
+.test-model-page {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 68rem;
+}
+
+.test-model-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--color-border-subtle);
+  list-style: none;
+}
+
+.test-model-steps li {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-tertiary);
+  background: var(--color-surface);
+}
+
+.test-model-steps li[data-active="true"] {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  box-shadow: inset 0 -2px 0 var(--color-primary);
+}
+
+.test-model-steps li > span {
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+.test-model-panel {
+  display: grid;
+  gap: var(--space-5);
+  min-height: 20rem;
+}
+
+.test-model-fields,
+.test-model-connection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.test-model-connection {
+  display: grid;
+  gap: var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-panel);
+  padding: var(--space-4);
+  background: var(--color-surface);
+}
+
+.test-model-connect-action,
+.test-model-discovery-heading {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.test-model-connect-action p,
+.test-model-discovery-warning,
+.test-model-disclosure-note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.test-model-connection-error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 0.86rem;
+}
+
+.test-model-discovery {
+  display: grid;
+  gap: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--space-4);
+}
+
+.test-model-discovery-heading > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.test-model-discovery-heading span {
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.test-model-capabilities {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.test-model-capabilities > div {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+}
+
+.test-model-capabilities > div > span:first-child {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.test-model-parameter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.test-model-parameter-tags code {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.test-model-runtime-parameters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0 0 var(--space-3);
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-border-subtle);
+}
+
+.test-model-runtime-parameters > div {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+}
+
+.test-model-runtime-parameters dt {
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.test-model-runtime-parameters dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.test-model-scenarios {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.test-model-scenario {
+  display: grid;
+  gap: var(--space-2);
+  min-height: 7rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-panel);
+  padding: var(--space-4);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.test-model-scenario span,
+.test-model-scenario small {
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.test-model-scenario[data-selected="true"] {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-subtle);
+  box-shadow: inset 2px 0 0 var(--color-primary);
+}
+
+.test-model-scenario:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.test-model-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--space-4);
+}
+
+.test-model-review {
+  display: grid;
+  gap: var(--space-5, 20px);
+}
+
+.test-model-review-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--color-border-subtle);
+}
+
+.test-model-review-grid > div {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--color-surface);
+}
+
+.test-model-review-grid dt,
+.test-model-digest span {
+  color: var(--color-text-tertiary);
+  font-size: 0.75rem;
+}
+
+.test-model-review-grid dd {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.test-model-digest {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.test-model-digest code,
+.test-model-config {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.test-model-digest code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.test-model-config {
+  max-height: 24rem;
+  overflow: auto;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  line-height: 1.55;
+}
+
+.test-model-launch {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.test-model-launch p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.test-model-launch-error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 54rem) {
+  .test-model-steps,
+  .test-model-fields,
+  .test-model-connection-grid,
+  .test-model-capabilities,
+  .test-model-runtime-parameters,
+  .test-model-scenarios,
+  .test-model-review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .test-model-steps li {
+    display: none;
+  }
+
+  .test-model-steps li[data-active="true"] {
+    display: flex;
+  }
+
+  .test-model-connect-action,
+  .test-model-discovery-heading,
+  .test-model-launch {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

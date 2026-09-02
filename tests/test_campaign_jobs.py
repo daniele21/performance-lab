@@ -1,0 +1,241 @@
+import asyncio
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+
+from performance_lab.application.campaign_jobs import (
+    CampaignJobManager,
+    CampaignLaunchPlan,
+    CampaignRunSpec,
+)
+from performance_lab.application.evaluation_capacity import EvaluationCapacity
+from performance_lab.application.run_jobs import (
+    RunJobCapacityError,
+    RunJobManager,
+    RunJobState,
+    starter_run_config_digest,
+)
+from performance_lab.datasets import build_general_starter_suite
+from performance_lab.domain import (
+    Campaign,
+    CampaignEntry,
+    CampaignEntryStatus,
+    CampaignStatus,
+    DecisionPolicyRef,
+    ExecutionFingerprint,
+    HardwareIdentity,
+    LoadProfile,
+    ModelIdentity,
+    Run,
+    RunStatus,
+    RuntimeIdentity,
+)
+from performance_lab.run_config import StarterRunConfig
+from performance_lab.runner import RunExecutionResult
+from performance_lab.storage import SQLiteCampaignStore
+
+
+def _config(tmp_path: Path, model_id: str) -> StarterRunConfig:
+    from performance_lab.domain import EndpointProfile
+
+    return StarterRunConfig(
+        target_id="target-a",
+        endpoint_identity="loopback:1234",
+        endpoint=EndpointProfile(
+            profile_id="endpoint-a",
+            base_url="http://127.0.0.1:1234/v1",
+        ),
+        model_id=model_id,
+        store_path=tmp_path / "runs.sqlite3",
+    )
+
+
+def _run(config: StarterRunConfig) -> Run:
+    bundle = build_general_starter_suite()
+    now = datetime.now(UTC)
+    return Run(
+        run_id=config.run_id or "missing-run-id",
+        status=RunStatus.SUCCEEDED,
+        fingerprint=ExecutionFingerprint(
+            target_id=config.target_id,
+            adapter_type="openai-compatible",
+            endpoint_identity=config.endpoint_identity,
+            model=ModelIdentity(model_id=config.model_id),
+            runtime=RuntimeIdentity(),
+            hardware=HardwareIdentity(),
+            generation=bundle.suite.generation,
+            prompt_template_version="direct-user-v1",
+            dataset_snapshots=tuple(dataset.snapshot for dataset in bundle.datasets.values()),
+            evaluator_versions=tuple(dict.fromkeys(task.evaluator for task in bundle.suite.tasks)),
+            benchmark_protocol_version="starter-quality-v1",
+            load_profile=LoadProfile(concurrency=1, request_count=23, streaming=False),
+        ),
+        suite=bundle.suite,
+        created_at=now,
+        completed_at=now,
+    )
+
+
+def _launch_plan(
+    tmp_path: Path,
+    candidates: tuple[tuple[str, str], ...] = (("candidate-a", "model-a"),),
+) -> CampaignLaunchPlan:
+    return CampaignLaunchPlan(
+        plan_digest="a" * 64,
+        use_case_id="general-capability",
+        use_case_version="1",
+        target_id="target-a",
+        suite_id="general-diagnostic-starter",
+        suite_version="2026-08-15-v1",
+        decision_policy=DecisionPolicyRef(
+            policy_id="strict-quality-dominance",
+            policy_version="1.0.0",
+        ),
+        runs=tuple(
+            CampaignRunSpec(candidate_id, model_id, _config(tmp_path, model_id))
+            for candidate_id, model_id in candidates
+        ),
+    )
+
+
+class BlockingExecutor:
+    def __init__(self) -> None:
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+
+    async def __call__(self, config: StarterRunConfig, *, progress_sink=None) -> RunExecutionResult:
+        self.started.set()
+        await self.release.wait()
+        return RunExecutionResult(
+            run=_run(config),
+            store_path=config.store_path,
+            bundle_path=config.store_path.parent / "artifact.plab.zip",
+        )
+
+
+def test_campaign_executes_bounded_run_specs_sequentially_and_persists_terminal_state(
+    tmp_path: Path,
+) -> None:
+    calls: list[str] = []
+
+    async def executor(config: StarterRunConfig, *, progress_sink=None) -> RunExecutionResult:
+        calls.append(config.model_id)
+        await asyncio.sleep(0)
+        return RunExecutionResult(
+            run=_run(config),
+            store_path=config.store_path,
+            bundle_path=config.store_path.parent / "artifact.plab.zip",
+        )
+
+    async def exercise() -> None:
+        manager = CampaignJobManager(
+            SQLiteCampaignStore(tmp_path / "runs.sqlite3"),
+            capacity=EvaluationCapacity(),
+            executor=executor,
+        )
+        campaign = await manager.launch(
+            _launch_plan(
+                tmp_path,
+                (("candidate-a", "model-a"), ("candidate-b", "model-b")),
+            )
+        )
+        async for _ in manager.stream(campaign.campaign_id):
+            pass
+        completed = manager.get(campaign.campaign_id)
+        assert completed.status == CampaignStatus.SUCCEEDED
+        assert [entry.model_id for entry in completed.entries] == ["model-a", "model-b"]
+        assert all(entry.run_id is not None for entry in completed.entries)
+
+    asyncio.run(exercise())
+    assert calls == ["model-a", "model-b"]
+
+
+def test_campaign_cancel_releases_shared_capacity_for_manual_run(tmp_path: Path) -> None:
+    async def exercise() -> None:
+        capacity = EvaluationCapacity()
+        blocking = BlockingExecutor()
+        campaigns = CampaignJobManager(
+            SQLiteCampaignStore(tmp_path / "runs.sqlite3"),
+            capacity=capacity,
+            executor=blocking,
+            poll_interval_seconds=0.001,
+        )
+
+        async def manual_executor(
+            config: StarterRunConfig,
+            *,
+            progress_sink=None,
+        ) -> RunExecutionResult:
+            return RunExecutionResult(
+                run=_run(config),
+                store_path=config.store_path,
+                bundle_path=config.store_path.parent / "manual.plab.zip",
+            )
+
+        manual = RunJobManager(capacity=capacity, executor=manual_executor)
+
+        campaign = await campaigns.launch(_launch_plan(tmp_path))
+        await blocking.started.wait()
+        manual_config = _config(tmp_path, "manual-model")
+        with pytest.raises(RunJobCapacityError):
+            await manual.launch(
+                manual_config,
+                config_digest=starter_run_config_digest(manual_config),
+            )
+
+        cancelled = await campaigns.cancel(campaign.campaign_id)
+        assert cancelled.status == CampaignStatus.CANCELLED
+        assert cancelled.entries[0].status == CampaignEntryStatus.CANCELLED
+        assert capacity.owner is None
+
+        job = await manual.launch(
+            manual_config,
+            config_digest=starter_run_config_digest(manual_config),
+        )
+        completed = await manual.wait(job.job_id)
+        assert completed.state == RunJobState.SUCCEEDED
+
+    asyncio.run(exercise())
+
+
+def test_campaign_restart_recovers_active_state_as_interrupted(tmp_path: Path) -> None:
+    store = SQLiteCampaignStore(tmp_path / "runs.sqlite3")
+    now = datetime.now(UTC)
+    store.save(
+        Campaign(
+            campaign_id="campaign-active",
+            plan_digest="a" * 64,
+            use_case_id="general-capability",
+            use_case_version="1",
+            target_id="target-a",
+            suite_id="general-diagnostic-starter",
+            suite_version="2026-08-15-v1",
+            decision_policy=DecisionPolicyRef(
+                policy_id="strict-quality-dominance",
+                policy_version="1.0.0",
+            ),
+            status=CampaignStatus.RUNNING,
+            created_at=now,
+            updated_at=now,
+            entries=(
+                CampaignEntry(
+                    entry_id="entry-1",
+                    candidate_id="candidate-a",
+                    model_id="model-a",
+                    config_digest="b" * 64,
+                    status=CampaignEntryStatus.RUNNING,
+                    run_id="run-active",
+                ),
+            ),
+        )
+    )
+
+    manager = CampaignJobManager(store, capacity=EvaluationCapacity())
+    recovered = manager.get("campaign-active")
+
+    assert recovered.status == CampaignStatus.INTERRUPTED
+    assert recovered.completed_at is not None
+    assert recovered.error_code == "process_restarted"
+    assert recovered.entries[0].status == CampaignEntryStatus.INTERRUPTED
+    assert recovered.entries[0].error_code == "process_restarted"

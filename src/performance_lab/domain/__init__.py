@@ -1,13 +1,23 @@
-"""Stable domain contracts for Performance Lab."""
+"""Stable public domain contracts for Performance Lab."""
 
-from .compatibility import (  # noqa: F401
+from .campaign import (
+    TERMINAL_CAMPAIGN_ENTRY_STATUSES,
+    TERMINAL_CAMPAIGN_STATUSES,
+    Campaign,
+    CampaignEntry,
+    CampaignEntryStatus,
+    CampaignStatus,
+    DecisionPolicyRef,
+)
+from .compatibility import (
     ComparisonDimension,
     CompatibilityResult,
     NonComparabilityCode,
     NonComparabilityReason,
     compare_fingerprints,
 )
-from .schemas import (  # noqa: F401
+from .evidence import CONTENT_EVIDENCE_SCHEMA_VERSION, EvidenceMode, SampleContentEvidence
+from .schemas import (
     SCHEMA_VERSION,
     AuthConfig,
     AuthStrategy,
@@ -37,10 +47,61 @@ from .schemas import (  # noqa: F401
     TelemetryDescriptor,
     TelemetryLevel,
 )
-from .serialization import (  # noqa: F401
+from .serialization import (
     InvalidSerializedModel,
     SchemaLoadError,
     UnsupportedSchemaVersion,
     load_dict,
     load_json,
 )
+
+__all__ = [
+    "CONTENT_EVIDENCE_SCHEMA_VERSION",
+    "SCHEMA_VERSION",
+    "TERMINAL_CAMPAIGN_ENTRY_STATUSES",
+    "TERMINAL_CAMPAIGN_STATUSES",
+    "AuthConfig",
+    "AuthStrategy",
+    "BenchmarkProtocol",
+    "Campaign",
+    "CampaignEntry",
+    "CampaignEntryStatus",
+    "CampaignStatus",
+    "Capability",
+    "ComparisonDimension",
+    "CompatibilityResult",
+    "DatasetSnapshot",
+    "DecisionPolicyRef",
+    "EndpointProfile",
+    "ErrorInfo",
+    "EvaluationSuite",
+    "EvaluatorRef",
+    "EvidenceMode",
+    "ExecutionFingerprint",
+    "GenerationConfig",
+    "HardwareIdentity",
+    "InvalidSerializedModel",
+    "LoadProfile",
+    "Measurement",
+    "MeasurementProvenance",
+    "MeasurementScope",
+    "ModelIdentity",
+    "NonComparabilityCode",
+    "NonComparabilityReason",
+    "Run",
+    "RunStatus",
+    "RuntimeIdentity",
+    "SampleContentEvidence",
+    "SampleExecution",
+    "SampleStatus",
+    "SchemaLoadError",
+    "Score",
+    "Target",
+    "TaskSpec",
+    "TelemetryDescriptor",
+    "TelemetryLevel",
+    "UnsupportedSchemaVersion",
+    "compare_fingerprints",
+    "load_dict",
+    "load_json",
+]

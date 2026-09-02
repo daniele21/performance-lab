@@ -1,94 +1,272 @@
-# AI Performance Lab
+![Performance Lab — choose the right model for the job](docs/assets/readme/performance-lab-hero.svg)
 
-AI Performance Lab is a model- and runtime-agnostic evaluation system for answering one practical deployment question:
+<p align="center">
+  <a href="#why-performance-lab">Why</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#see-the-product">Product</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#evidence-not-an-opaque-score">Evidence</a> ·
+  <a href="#documentation">Docs</a>
+</p>
 
-> **For my use case, which of the models available to me is the best fit for this device, and with which configuration?**
+<p align="center">
+  <a href="https://github.com/daniele21/performance-lab/actions/workflows/validate.yml"><img alt="Repository validation" src="https://github.com/daniele21/performance-lab/actions/workflows/validate.yml/badge.svg?branch=main"></a>
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+</p>
 
-Rather than ranking models in the abstract, Performance Lab evaluates **model × configuration × device** combinations against the requirements of a specific use case.
+## Why Performance Lab
 
-The use case determines what matters. Performance Lab maps it to relevant capabilities, benchmarks and evaluation datasets, runs the candidate combinations through an external inference service, measures both quality and runtime behavior, and stores reproducible evidence that can support a deployment decision.
+Once you have more than one model, quantization or runtime configuration, a generic leaderboard stops answering the deployment question that matters:
 
-The lab does not own model loading or inference runtimes. It connects to inference endpoints, executes reproducible evaluation suites, captures quality and runtime measurements, optionally correlates them with host/device telemetry, and compares the resulting evidence across compatible runs.
+> **For this use case on this device, which available model and configuration gives me the best evidence-backed trade-off — and why?**
 
-## Product question
+Performance Lab evaluates the candidates that are actually available to you against the requirements of a specific workload. It maps the use case to relevant benchmarks and datasets, executes candidate configurations through an external inference endpoint, keeps quality, runtime performance and resources as separate evidence dimensions, checks whether evidence is compatible before comparing it, and preserves the evidence behind the decision.
 
-> **Given my target use case, my target device and the models/configurations I can run, which combination gives me the best trade-off for what I actually need?**
+It is deliberately **not another generic LLM leaderboard**. A model name by itself is not a deployment answer, and an unavailable measurement is never repaired into a fake score.
 
-The goal is not to produce another generic LLM leaderboard. The goal is to turn benchmark and runtime evidence into a practical recommendation for a specific deployment context.
+Performance Lab also does **not** own model loading or inference-runtime lifecycle. Serving stays external; the lab owns evaluation, evidence, comparison, regression and decision support.
 
 ## How it works
 
-**Use case → required capabilities → relevant benchmarks/datasets → candidate model/configuration runs → quality + runtime comparison → recommendation**
-
-For example, a document-summarization workload may emphasize summarization quality, factual consistency, instruction following and long-context handling, while a structured-extraction workload may emphasize extraction accuracy, structured-output adherence and hallucination resistance. Each use case can also include user-provided datasets that better represent the real workload.
-
-Those quality signals are evaluated together with runtime measurements such as latency, TTFT, throughput, reliability and resource usage on the target device. The result should explain not only which candidate performed best, but why that trade-off is preferable for the stated objective and constraints.
-
-## Core principles
-
-- **Use case first.** Evaluation starts from the workload objective and its requirements; benchmarks are selected because they are relevant to that objective, not because they are popular in isolation.
-- **Inference is external.** The lab evaluates endpoints; it does not embed a model runtime in its core.
-- **A model name is not a benchmark identity.** Results belong to a complete execution fingerprint: model, quantization, runtime, generation configuration, endpoint, hardware, dataset snapshot and evaluator version.
-- **Quality and runtime performance are separate dimensions.** A single opaque performance score must never hide trade-offs.
-- **Black-box first, instrumentation optional.** Any compatible inference endpoint can be evaluated; richer RAM/VRAM/CPU/GPU/thermal measurements are enabled through optional telemetry adapters.
-- **Reproducibility before leaderboard aesthetics.** Runs are versioned, immutable and comparable only when their relevant identities are compatible.
-- **Use-case-aligned evaluation matters more than generic ranking.** General-purpose benchmarks, focused capability suites and user-provided datasets share the same execution model, but each evaluation should be justified by the target workload.
-- **Recommendations must remain evidence-backed.** The lab should surface the quality/runtime/resource trade-offs behind a preferred model/configuration instead of collapsing them into an unexplained winner.
-- **Regression testing is a first-class secondary use case.** The same evidence model should also support replacement validation, regression analysis, CLI automation and eventually CI quality/performance gates.
-
-## Initial scope
-
-The first product slice targets text-generation LLM endpoints, with an OpenAI-compatible adapter as the reference integration. The architecture remains extensible to other transports and later AI task families such as ASR, embeddings, reranking and vision.
-
-The first useful version should support endpoint registration/probing, use-case definition, general-purpose and custom datasets, capability scoring, latency/TTFT/throughput/reliability measurements, optional resource telemetry, immutable run storage, compatible comparison, evidence-backed candidate recommendation, regression analysis, CLI automation and a lightweight local UI.
-
-## Foundation
-
-The executable foundation is Python 3.12+ with strict immutable Pydantic domain contracts. The core package intentionally has no HTTP client, database, CLI/UI or model-runtime dependency yet.
-
-Implemented contracts include:
-
-- target and endpoint profile identity;
-- model/runtime/hardware/generation/load identity;
-- evaluation suites and immutable dataset snapshots;
-- execution fingerprints with deterministic SHA-256 identity;
-- run/sample/measurement/score evidence;
-- explicit schema versioning and unsupported-version rejection;
-- dimension-specific typed comparability.
-
-See [ADR 0001](docs/adr/0001-python-core-and-toolchain.md) and [ADR 0002](docs/adr/0002-versioned-immutable-domain-contracts.md).
-
-## Development
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e ".[dev]"
-python scripts/validate.py
+```text
+Use case + target device
+          ↓
+Relevant benchmarks / datasets
+          ↓
+Models × quantizations × runtime configurations
+          ↓
+Quality   ·   Performance   ·   Resources
+          ↓
+Compatibility + explicit decision policy
+          ↓
+Best supported trade-off — or an explicit reason not to rank
 ```
 
-The validation command is shared by local development and GitHub Actions and runs formatting checks, lint, strict typing and tests.
+| Evidence dimension | Question it answers |
+| --- | --- |
+| **Quality** | Does this model/configuration produce the right result for the workload? |
+| **Performance** | How fast does it execute under the observed runtime conditions? |
+| **Resources** | What does the execution cost on the target device when source-backed resource evidence is available? |
+
+Benchmark relevance comes from the use case. Compatibility comes before deltas and rankings. Unknown or unavailable evidence stays unknown or unavailable.
+
+## See the product
+
+<table>
+  <tr>
+    <th>Find best setup</th>
+    <th>Test a model</th>
+    <th>Inspect the evidence</th>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/assets/readme/find-best-setup.png"><img src="docs/assets/readme/find-best-setup.png" width="300" alt="Performance Lab campaign results showing an evidence-backed setup decision"></a></td>
+    <td align="center"><a href="docs/assets/readme/test-a-model.png"><img src="docs/assets/readme/test-a-model.png" width="300" alt="Performance Lab Test a model review showing a frozen evaluation configuration"></a></td>
+    <td align="center"><a href="docs/assets/readme/sample-evidence.png"><img src="docs/assets/readme/sample-evidence.png" width="300" alt="Performance Lab sample evidence showing quality, prompt, model output and expected output"></a></td>
+  </tr>
+  <tr>
+    <td align="center">Choose a use case and compare eligible candidates</td>
+    <td align="center">Run one explicit model/configuration</td>
+    <td align="center">Trace the result back to sample-level evidence</td>
+  </tr>
+</table>
+
+These are deterministic product captures used to show the current browser experience. They are not physical-device performance evidence.
+
+## What you can do today
+
+- **Find the best setup** — start from a use case, target device and candidate models/configurations; Performance Lab plans relevant evaluation work and returns an evidence-backed recommendation when the evidence permits one.
+- **Test a model** — connect an inference endpoint, freeze the evaluation configuration, execute it and inspect the resulting run.
+- **Inspect sample evidence** — see execution status separately from evaluator-owned quality, then inspect the prompt sent to the model, model output, expected output, evaluator result, latency, tokens and provenance when retained/available.
+- **Compare compatible runs** — differences are shown only after the relevant model/runtime/configuration/dataset/evaluator identities permit comparison.
+- **Gate regressions** — reuse immutable run evidence, explicit baselines and regression policies when replacing a model or runtime configuration.
+- **Export portable evidence** — completed runs can be exported as `.plab.zip` bundles without silently inventing missing identity, telemetry or sensitive content.
+
+## Evidence, not an opaque score
+
+Performance Lab keeps several invariants visible instead of collapsing everything into one universal number:
+
+- **Use case first.** Benchmark relevance follows the workload objective.
+- **Execution identity is explicit.** Model name alone is not enough; quantization, runtime/configuration, endpoint, dataset/evaluator and hardware identity remain part of reproducible evidence when known.
+- **Execution success is not correctness.** A request can execute successfully and still produce the wrong answer; evaluator-owned quality is shown separately.
+- **Compatibility before comparison.** No delta, ranking or regression verdict is produced across evidence that should not be compared.
+- **Unknown stays unknown.** Missing telemetry, identity or content is never rendered as zero.
+- **Completed evidence is immutable.** Run evidence and dataset snapshots are versioned and reproducible.
+
+For interactive **Test a model** runs started from the browser, Performance Lab can retain the exact prompt and model output in a local-only evidence sidecar so sample inspection can show what was actually tested. That sensitive content is kept outside canonical portable Run JSON and `.plab.zip` bundles. Campaign and CLI evaluation remain aggregate-safe by default.
+
+See [`docs/output-and-evidence-reference.md`](docs/output-and-evidence-reference.md) for the full persistence, retention and bundle contract.
+
+## Supported inference boundary
+
+The current executable product evaluates text-generation endpoints through an OpenAI-compatible adapter. The minimum surface is:
+
+```text
+GET  /v1/models
+POST /v1/chat/completions
+```
+
+For non-streaming chat, `choices[0].message.content` is the required model output. `model`, `finish_reason` and token usage are consumed when available; provider-specific identity/configuration is never guessed into the execution fingerprint.
+
+[`daniele21/local-llm-server`](https://github.com/daniele21/local-llm-server) / Korgis can additionally expose:
+
+```text
+GET /v1/runtime/identity   # stable execution identity
+GET /status                # dynamic runtime telemetry
+```
+
+Those endpoints enrich first-party evidence but are not required for generic black-box evaluation. See [`docs/local-llm-server-integration.md`](docs/local-llm-server-integration.md) and [`docs/local-llm-identity-contract.md`](docs/local-llm-identity-contract.md).
+
+## Quick start
+
+You need an externally served OpenAI-compatible model endpoint plus the repository-pinned local toolchain. `main` is the stable/release-oriented branch; `dev` is the integration line for ongoing development.
+
+### 1. Prepare the checkout
+
+```bash
+git clone https://github.com/daniele21/performance-lab.git
+cd performance-lab
+git switch main
+git pull --ff-only
+```
+
+### 2. Install the pinned environment
+
+Current repository pins:
+
+- `uv 0.12.5`;
+- Python `3.12` by default;
+- Node `24.18.0`;
+- pnpm `11.24.0`.
+
+With `uv` and Node/Corepack available:
+
+```bash
+uv python install 3.12
+uv sync --extra dev --locked
+
+corepack enable
+corepack install --global pnpm@11.24.0
+pnpm --dir frontend install --frozen-lockfile
+```
+
+`uv` owns the repository `.venv`; `uv.lock` and `frontend/pnpm-lock.yaml` are the dependency sources of truth.
+
+### 3. Point Performance Lab at a model
+
+Probe the endpoint first:
+
+```bash
+uv run --extra dev --locked performance-lab probe \
+  --base-url http://127.0.0.1:1235/v1/ \
+  --model my-model
+```
+
+Create `local-run.json`:
+
+```json
+{
+  "schema_version": 1,
+  "target_id": "local-model",
+  "endpoint_identity": "127.0.0.1:1235",
+  "endpoint": {
+    "profile_id": "local-endpoint",
+    "base_url": "http://127.0.0.1:1235/v1/",
+    "model_selector": "my-model"
+  },
+  "model_id": "my-model",
+  "store_path": ".performance-lab/runs.sqlite3"
+}
+```
+
+If the endpoint is Local LLM Server, the run configuration can also add explicit runtime identity and telemetry blocks. See [`docs/run-config-reference.md`](docs/run-config-reference.md).
+
+### 4. Start the browser product
+
+```bash
+pnpm --dir frontend run build
+
+uv run --extra dev --locked performance-lab-ui \
+  --config local-run.json \
+  --assets frontend/dist
+```
+
+Open:
+
+```text
+http://127.0.0.1:8765
+```
+
+The UI and API are served by the same loopback-owned process. Stop it with `Ctrl-C`; model serving remains external.
+
+For a complete first-run walkthrough, frontend development mode, CLI-only execution and troubleshooting, use [`docs/getting-started.md`](docs/getting-started.md).
+
+## How the pieces fit
+
+```text
+OpenAI-compatible endpoint / Local LLM Server
+                    |
+                    v
+             Performance Lab
+   evaluation · evidence · comparison
+        regression · decision support
+                    |
+                    v
+       immutable SQLite Run evidence
+          + portable .plab.zip
+```
+
+The inference runtime owns model loading, residency, scheduling and backend execution. Performance Lab consumes the endpoint and any explicit identity/telemetry it exposes; it does not silently take over runtime lifecycle.
+
+## Evidence and maturity
+
+The current browser product includes Overview, **Find best setup**, **Test a model**, Live Run recovery, Runs / Run Detail, Compare, benchmark/sample/same-case evidence drill-down, Library and Settings.
+
+Repository-owned automated workflows validate deterministic Python/frontend contracts, browser critical journeys, PRE_REAL product flows and the assembled packaged product. Those hosted environments prove product behavior at their declared fidelity; they do **not** prove representative physical-device model performance, memory, thermal behavior or repeated-load characteristics.
+
+Representative-human UX acceptance and representative real-model/runtime/device evidence remain separate gates for claims that depend on them. See [`docs/current-state.md`](docs/current-state.md) for the exact integrated/blocker/next state.
+
+## Develop and validate
+
+Contributors work against `dev` and follow [`AGENTS.md`](AGENTS.md). Canonical commands live in [`.engineering/commands.json`](.engineering/commands.json).
+
+Common deterministic gates:
+
+```bash
+uv run --extra dev --locked python scripts/validate.py
+pnpm --dir frontend run check
+pnpm --dir frontend run test
+pnpm --dir frontend run build
+```
+
+Complete deterministic Python product E2E:
+
+```bash
+uv run --extra dev --locked python -m pytest tests/e2e -v --tb=short
+```
+
+PRE_REAL browser evidence:
+
+```bash
+uv run --extra dev --locked python scripts/pre_real_e2e.py \
+  --output-root build/pre-real-e2e
+```
+
+Toolchain/dependency, CI-selector and release-promotion changes use the stronger validation profile required by the repository engineering contract.
 
 ## Documentation
 
-The documentation follows progressive disclosure inspired by `android-local-llm-harness`: one canonical source owns each kind of truth.
-
 | Question | Canonical source |
 | --- | --- |
-| What is integrated, blocked or next? | [`docs/current-state.md`](docs/current-state.md) |
-| What exactly are we building and what are the acceptance criteria? | [`docs/implementation-plan.md`](docs/implementation-plan.md) |
-| Which capability milestones come next? | [`docs/roadmap.md`](docs/roadmap.md) |
-| Which tasks can run in parallel and what blocks what? | [`docs/implementation-plan.md`](docs/implementation-plan.md) |
-| Why did the plan change? | [`docs/plan-changelog.md`](docs/plan-changelog.md) |
-| What architecture and boundaries should implementation preserve? | [`docs/architecture.md`](docs/architecture.md) |
-| How should benchmarks, datasets and metrics behave? | [`docs/evaluation-and-benchmarking.md`](docs/evaluation-and-benchmarking.md) |
-| What telemetry is required and optional? | [`docs/telemetry.md`](docs/telemetry.md) |
-| What is required before a task, milestone or release is considered done? | [`docs/definition-of-done.md`](docs/definition-of-done.md) |
-| Where is all active documentation indexed? | [`docs/README.md`](docs/README.md) |
-
-## Project status
-
-**M0 — repository and contracts is in implementation/validation.** FND-001 and FND-002 are implemented; the next fan-out is FND-003 + ADP-001 + DAT-001 + TEL-001 + STO-001. See [`docs/current-state.md`](docs/current-state.md) for the live ledger.
+| First setup / run | [`docs/getting-started.md`](docs/getting-started.md) |
+| Current integrated / blocked / next state | [`docs/current-state.md`](docs/current-state.md) |
+| Run configuration | [`docs/run-config-reference.md`](docs/run-config-reference.md) |
+| CLI commands | [`docs/cli-reference.md`](docs/cli-reference.md) |
+| Evidence / retention / bundles | [`docs/output-and-evidence-reference.md`](docs/output-and-evidence-reference.md) |
+| Architecture / ownership | [`docs/architecture.md`](docs/architecture.md) |
+| Evaluation semantics | [`docs/evaluation-and-benchmarking.md`](docs/evaluation-and-benchmarking.md) |
+| Local LLM Server integration | [`docs/local-llm-server-integration.md`](docs/local-llm-server-integration.md) |
+| Troubleshooting | [`docs/troubleshooting.md`](docs/troubleshooting.md) |
+| Documentation index | [`docs/README.md`](docs/README.md) |
 
 ## License
 

@@ -4,119 +4,80 @@ Status: active
 Document type: documentation-governance
 Owner: repository
 Canonical scope: documentation.routing
-Read when: locating the canonical source for a project question or deciding where documentation changes belong
-Last reviewed: 2026-08-15
+Last reviewed: 2026-08-30
 
-Documentation uses progressive disclosure. Read only the source that owns the question, then follow focused links as needed. A fact should have one canonical owner; summaries link to that owner rather than duplicating detailed truth.
+Performance Lab uses progressive disclosure: start from the single canonical owner of the question, then follow focused references. Do not duplicate behavioral truth across status, workstreams, architecture, design and operational docs.
 
-## Canonical sources
+## README ownership
 
-| Question | Canonical source |
+Treat the root README as two semantic owners:
+
+- **Identity** — what Performance Lab is, why it exists, primary audience/outcome and stable positioning. Update only when those claims materially change; do not rewrite them merely because implementation, commands, configuration or a feature changes.
+- **Usage** — prerequisites, setup/run, public configuration, CLI/API/UI workflow and copy-paste examples. Update in the same change whenever existing instructions would otherwise become incomplete, wrong, removed, newly mandatory or misleading.
+
+A change may therefore correctly report `README_IDENTITY: N/A` and `README_USAGE: UPDATED`.
+
+## Start here
+
+To **use the current product**:
+
+1. [`getting-started.md`](getting-started.md)
+2. [`run-config-reference.md`](run-config-reference.md)
+3. [`cli-reference.md`](cli-reference.md)
+4. [`output-and-evidence-reference.md`](output-and-evidence-reference.md)
+5. [`troubleshooting.md`](troubleshooting.md)
+
+To **work on the repository**:
+
+1. [`../AGENTS.md`](../AGENTS.md) — task routing and durable invariants.
+2. [`current-state.md`](current-state.md) — integrated / blocked / next state.
+3. [`architecture.md`](architecture.md) — ownership and dependency boundaries.
+4. [`workstreams/README.md`](workstreams/README.md) — active coordinated work only.
+5. [`../.engineering/commands.json`](../.engineering/commands.json) — canonical operating commands.
+
+For **product UI / UX** also read:
+
+- [`../design/ux-contract.json`](../design/ux-contract.json) — user jobs, task model, hierarchy, states, accessibility, motion/graphics and J1-J6;
+- [`../design/brand-kit.json`](../design/brand-kit.json) — semantic brand and motion tokens;
+- [`../frontend/AGENTS.md`](../frontend/AGENTS.md) — browser-specific ownership and validation.
+
+## Canonical owners
+
+| Question | Source |
 | --- | --- |
-| What is integrated, blocked or next? | [`current-state.md`](current-state.md) |
-| What exactly are we building? | [`implementation-plan.md`](implementation-plan.md) |
-| What can run in parallel and what depends on what? | [`implementation-plan.md`](implementation-plan.md) |
-| Which capability milestone is next? | [`roadmap.md`](roadmap.md) |
-| Why did a dependency/priority/scope change? | [`plan-changelog.md`](plan-changelog.md) |
-| What architectural boundary owns this behavior? | [`architecture.md`](architecture.md) |
-| How should datasets, evaluators and benchmark protocols work? | [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) |
-| How should resource/device telemetry work? | [`telemetry.md`](telemetry.md) |
-| What is required before something is considered complete? | [`definition-of-done.md`](definition-of-done.md) |
-| Where should a durable architectural decision be recorded? | [`adr/README.md`](adr/README.md) |
+| What is the project/why/for whom? | README identity sections |
+| How should a person set up, configure, run or use it? | README usage summary plus `getting-started.md`, `run-config-reference.md`, `cli-reference.md` |
+| What is integrated and what happens next? | [`current-state.md`](current-state.md) |
+| Which active implementation plan coordinates remaining work? | [`workstreams/README.md`](workstreams/README.md) |
+| What are the durable architecture boundaries? | [`architecture.md`](architecture.md) |
+| Who owns benchmark/evaluation long term? | [`adr/0004-performance-lab-owns-evaluation-product.md`](adr/0004-performance-lab-owns-evaluation-product.md) |
+| What product experience/design rules apply? | [`../design/`](../design/) |
+| How should benchmark/dataset/evaluator semantics work? | [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) |
+| How should telemetry/provenance work? | [`telemetry.md`](telemetry.md) |
+| How does Local LLM Server integrate? | [`local-llm-server-integration.md`](local-llm-server-integration.md) |
+| How is Local LLM identity mapped? | [`local-llm-identity-contract.md`](local-llm-identity-contract.md) |
+| What is persisted/exported? | [`output-and-evidence-reference.md`](output-and-evidence-reference.md) |
+| How does regression CI behave? | [`ci-regression.md`](ci-regression.md) |
+| What does deterministic product E2E prove? | [`e2e-product-acceptance.md`](e2e-product-acceptance.md) |
+| What is required before DONE? | [`definition-of-done.md`](definition-of-done.md) |
+| Where are durable architecture decisions? | [`adr/README.md`](adr/README.md) |
+| Where should durable feature behavior live when extra docs are needed? | [`features/README.md`](features/README.md) |
 
-## Active source index
+## Documentation impact contract
 
-### Product and delivery
+Code and durable documentation ship together. Assess impact from the observable result, not filenames. Before publication classify `README_IDENTITY`, `README_USAGE`, `FEATURE_DOCS`, `ARCHITECTURE`, `ADR`, `SECURITY_DATA`, `OPERATIONS`, `PRODUCT_EXPERIENCE` and `CURRENT_STATE` as `UPDATED` or `N/A`; give a short reason when impact was plausible but `N/A`.
 
-- [`implementation-plan.md`](implementation-plan.md) — repository target, task IDs, dependencies, workstreams, parallel waves and acceptance criteria.
-- [`current-state.md`](current-state.md) — live operational ledger and immediate next work.
-- [`roadmap.md`](roadmap.md) — capability milestones and exit gates.
-- [`plan-changelog.md`](plan-changelog.md) — material plan-decision history.
-- [`definition-of-done.md`](definition-of-done.md) — task, milestone, merge and evidence completion rules.
+Readiness requires `DOCS_CURRENT_WITH_IMPLEMENTATION: PASS`. Existing feature docs update in the same change when the shipped behavior they describe changes. Create a new feature doc only when durable non-obvious behavior is not sufficiently discoverable from code, public contracts, tests, architecture or the focused operational references.
 
-### Architecture and domain behavior
+Preserve stronger local owners: CLI/config/evidence semantics belong in their focused references; README usage should expose a reliable shortest-success path and link rather than duplicate exhaustive contracts.
 
-- [`architecture.md`](architecture.md) — dependency direction, domain objects, inference adapter, run lifecycle, fingerprint, persistence and extension rules.
-- [`evaluation-and-benchmarking.md`](evaluation-and-benchmarking.md) — dataset snapshots, sampling, evaluator semantics, performance protocols, workload suites and regression comparability.
-- [`telemetry.md`](telemetry.md) — black-box/host/instrumented telemetry levels, metric provenance, sampling and resource comparison.
-- [`adr/README.md`](adr/README.md) — durable architectural decision log and template.
+## Documentation lifecycle
 
-## Document ownership rules
+- `current-state.md` is the only short repository-level operational ledger.
+- `workstreams/` contains only active bounded plans; completed plans are deleted after durable knowledge is transferred.
+- `architecture.md`, `features/`, focused operational references and ADRs own durable truth.
+- `design/` owns product-experience and brand/design-system contracts; generated screenshots/traces are evidence, not default durable design truth.
+- Git history owns implementation/completed-plan history; do not create new plan changelogs or per-branch progress docs.
+- Documentation and agent-context budgets are enforced by `.engineering/documentation-policy.json` as adoption checks are wired in.
 
-### `current-state`
-
-Owns only current integrated status, blockers, parallel-ready work and the immediate next block. Update frequently.
-
-### `implementation-plan`
-
-Owns intended target, task decomposition, dependencies and acceptance criteria. Update only when the plan itself materially changes.
-
-### `roadmap`
-
-Owns capability-level milestones and exit gates. It should not become a branch/commit history.
-
-### `plan-changelog`
-
-Owns rationale for material planning changes. Append decisions; do not use it for routine task status movement.
-
-### Feature specifications
-
-Own durable behavior for one bounded domain such as evaluation or telemetry. New focused specs should be created only when a real concern becomes too detailed for the existing owner.
-
-### ADRs
-
-Own durable decisions with meaningful alternatives/trade-offs, such as the implementation stack, persistence architecture or plugin mechanism.
-
-## Required metadata
-
-Every active Markdown document under `docs/` except ADR entries should start with:
-
-```text
-Status: active
-Document type: <type>
-Owner: <repository or domain>
-Canonical scope: <unique dotted scope>
-Read when: <specific trigger>
-Last reviewed: YYYY-MM-DD
-```
-
-## Before creating a new document
-
-1. Check this map for an existing canonical owner.
-2. Update the existing source if the information fits its scope.
-3. Create a new file only for a durable independently readable concern.
-4. Give it a unique canonical scope.
-5. Link it from this map or the closest future domain index.
-6. If the new document replaces an old source, explicitly redirect/archive the old one.
-
-Do not create a document merely to report that one branch or task completed.
-
-## Update workflow
-
-For a normal implementation change:
-
-```text
-code/tests
-  + current-state status update
-  + focused spec if behavior changed
-  + roadmap only if milestone changed
-  + implementation-plan only if plan/dependencies changed
-  + plan-changelog only if the plan changed materially
-```
-
-This separation is important: it keeps frequent progress tracking from rewriting durable specifications and preserves a readable history of why the roadmap changed.
-
-## Precedence
-
-When documentation conflicts, prefer in this order:
-
-1. executable tests/contracts;
-2. accepted ADRs;
-3. architecture/focused feature specifications;
-4. implementation plan;
-5. current state;
-6. roadmap;
-7. root README;
-8. historical/archive material.
-
-A contradiction that changes behavior should be corrected in the canonical owner, not silently reconciled in a summary.
+When sources conflict, prefer executable contracts/tests -> accepted ADRs -> architecture/design/feature owners -> operational references -> active workstream/current state -> roadmap/root README.

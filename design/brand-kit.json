@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "contract_version": "0.6.0",
+  "product_name": "Performance Lab",
+  "assets": {
+    "logo_primary": "docs/assets/brand/logo-lockup.svg",
+    "logo_compact": "docs/assets/brand/mark.svg",
+    "logo_monochrome": "docs/assets/brand/mark.svg",
+    "app_icon": "docs/assets/brand/app-icon.webp",
+    "favicon": "docs/assets/brand/mark.svg"
+  },
+  "themes": {"light": false, "dark": true},
+  "tokens": {
+    "colors": {
+      "surface": "#080A0D",
+      "surface_elevated": "#0E1116",
+      "surface_subtle": "#141820",
+      "surface_raised": "#191E27",
+      "text_primary": "#F4F6F8",
+      "text_secondary": "#A0A8B2",
+      "text_tertiary": "#707A86",
+      "primary": "#7DD6E8",
+      "secondary": "#9A8CF7",
+      "quality": "#67D5E3",
+      "performance": "#A78BFA",
+      "resources": "#7AB8F5",
+      "success": "#4FD18B",
+      "warning": "#E9B44C",
+      "error": "#F06D78",
+      "evidence_unknown": "#6F7782",
+      "evidence_unavailable": "#484F58",
+      "border": "#222831",
+      "border_subtle": "#1A1F27",
+      "border_strong": "#303844",
+      "focus": "#9AE7F3"
+    },
+    "typography": "Inter/system UI; use 450-500 for body, 550-600 for labels/actions and 600-650 for headings; avoid blanket bold. Use tabular numerals for metrics and monospace only for fingerprints/raw evidence.",
+    "typography_roles": {
+      "decision": "28-36px, 600-650, tight tracking",
+      "page_title": "24-30px, 600-650, tight tracking",
+      "section": "16-20px, 600",
+      "body": "14-15px, 450-500",
+      "supporting": "13px, 450-500",
+      "metadata": "12px, 500-550",
+      "technical": "12-13px monospace, 450-500"
+    },
+    "spacing": "4px base scale: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64",
+    "control_height": "32px compact; 36px default; 40px only for high-emphasis or touch-constrained contexts",
+    "radius": "7px controls; 10px panels; 14px major surfaces; pills only for semantic status or compact segmented controls",
+    "elevation": "canvas and inline surfaces stay flat; raised surfaces use subtle border plus two-layer shadow; strong elevation is reserved for dialogs, menus and overlays",
+    "borders": "border_subtle separates low-priority regions; border is the default interactive/data separator; border_strong is reserved for focus, selected or deliberately emphasized boundaries"
+  },
+  "style": {
+    "direction": "Precision Instrument: calm, neutral graphite, evidence-first, high-density without visual noise",
+    "reference_qualities": "Linear hierarchy and restraint; Raycast polish and compact control treatment; Vercel neutral technical precision. Never copy brand-specific chrome or identity.",
+    "accent_usage": "primary accent is sparse and semantic: focus, selected state, key evidence affordance or primary action. Do not use accent simultaneously for generic links, progress, navigation, cards and decorative emphasis.",
+    "surface_language": "prefer hierarchy from spacing, typography and controlled depth before borders; avoid repeated equal-weight bordered cards",
+    "evidence_language": "Quality, Performance and Resources keep distinct semantic identifiers. Rails/markers may encode availability, trustworthy ranges, confidence or relative position only when the evidence supports that encoding; never imply an invented normalized score and never render unknown/unavailable/not-comparable as zero.",
+    "iconography": "simple outline icons with consistent 1.5-2px stroke; compact and quiet; never decorative when text is clearer",
+    "motion": "short functional transitions only; motion communicates feedback, continuity, progress or state change and honors reduced-motion preferences",
+    "imagery": "no decorative stock imagery, glassmorphism or ornamental gradients in core workflows; charts and evidence visuals must encode real data",
+    "voice_microcopy": "decision-first and concise. Essential outcome/status comes first; contextual protocol/provenance copy moves behind existing disclosure affordances when it is not required for trust or recovery.",
+    "premium_quality_bar": "no accidental wrapping, inconsistent baselines, oversized CTA treatment, noisy dividers, ambiguous disabled states or visually equal hierarchy between primary decisions and secondary diagnostics"
+  },
+  "motion_tokens": {
+    "durations": {"instant": "0ms", "fast": "100ms", "standard": "140ms", "large": "220ms"},
+    "easing": {
+      "enter": "cubic-bezier(0.2, 0, 0, 1)",
+      "exit": "cubic-bezier(0.4, 0, 1, 1)",
+      "move": "cubic-bezier(0.2, 0, 0, 1)"
+    },
+    "spring": {
+      "default": "n/a - restrained CSS transitions are canonical",
+      "bounce": "none for repeated product workflows"
+    },
+    "reduced_motion_strategy": "remove non-essential transitions and spatial movement while preserving immediate state, focus and progress feedback"
+  }
+}

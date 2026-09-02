@@ -5,276 +5,169 @@ Document type: completion-policy
 Owner: repository
 Canonical scope: delivery.definition-of-done
 Read when: assessing task completion, merge readiness, milestone completion or release readiness
-Last reviewed: 2026-08-15
+Last reviewed: 2026-08-24
 
-A Performance Lab feature is complete only when behavior, evidence semantics, tests, failure paths, observability and documentation are complete.
+A Performance Lab change is complete only when the behavior, evidence semantics, failure/resource lifecycle, tests and applicable durable documentation agree. A successful happy-path demo or green compile is not sufficient.
 
-Compilation or a successful happy-path demo is not sufficient.
+## Completion levels
 
-## 1. Completion levels
+1. **Implementation complete** — behavior exists behind the intended owner/boundary and focused deterministic tests pass.
+2. **Merge ready** — applicable repository/product checks pass and current state/contracts are truthful.
+3. **Benchmark trustworthy** — enough real endpoint/device evidence exists for the claims enabled by the feature.
+4. **Release ready** — milestone, build/artifact, compatibility/migration and representative-evidence gates required by the release are satisfied.
 
-The repository distinguishes:
+A change may be merge-ready while representative hardware evidence remains pending, but docs/UI must preserve that distinction.
 
-1. **Implementation complete** — behavior exists behind the intended boundary and focused tests pass.
-2. **Merge ready** — repository validation passes from a clean checkout and documentation/status is current.
-3. **Benchmark trustworthy** — the feature has enough real endpoint/device evidence to support the claims it enables.
-4. **Release ready** — all required milestone gates and compatibility/migration checks pass.
+## Universal completion path
 
-A feature can be merge-ready while device-specific evidence remains pending, but documentation and UI must not describe unvalidated metrics or integrations as proven.
+Applicable slices should satisfy:
 
-## 2. Functional completion
+```text
+OWNER / CONTRACT
+-> CODE
+-> DIRECT CONSUMERS
+-> FAILURE + CANCELLATION + RECOVERY
+-> RESOURCE + DATA LIFECYCLE
+-> SECURITY / TRUST BOUNDARY
+-> OBSERVABILITY
+-> TEST / INTEGRATION / E2E AS JUSTIFIED
+-> DURABLE DOCS / DESIGN CONTRACT
+-> PRODUCT CLAIM
+```
 
-A task is functionally complete when:
+For user-facing work, insert the `design/ux-contract.json` decision order before component/polish decisions.
 
-- intended behavior exists through the correct architectural boundary;
-- public behavior is represented through typed/stable contracts rather than implementation internals;
-- invalid configuration, network failure, timeout, cancellation and partial failure are handled where applicable;
-- unavailable measurements remain unavailable rather than becoming fake zeros/defaults;
-- effective endpoint configuration is recorded or explicitly unknown;
-- completed run evidence is immutable;
-- partial state cannot be mistaken for completed evidence;
-- resource ownership and cleanup are explicit.
+## Core evidence invariants
 
-## 3. Reproducibility completion
+Changes affecting evaluation evidence preserve:
 
-Any change that affects evaluation evidence must preserve:
+- schema and protocol versions;
+- dataset snapshot / sample-selection identity;
+- task/evaluator versions;
+- effective generation/load configuration;
+- complete execution fingerprint or explicit unknown fields;
+- immutable completed run evidence;
+- typed partial/interrupted state that cannot masquerade as completion;
+- quality, runtime and resource dimensions as separate evidence;
+- endpoint-reported vs lab-observed provenance.
 
-- schema/version identity;
-- dataset snapshot identity;
-- task/evaluator versioning;
-- benchmark protocol versioning;
-- effective generation configuration;
-- execution fingerprint stability;
-- deterministic sample-selection behavior when configured;
-- explicit unknown fields rather than inferred identity.
+Materially different executions must not collapse into indistinguishable fingerprints.
 
-A benchmark feature is incomplete if two materially different configurations can produce indistinguishable fingerprints.
+## Comparison / regression
 
-## 4. Comparison completion
+Complete only when:
 
-A comparison/regression feature is complete only when:
+- identity differences and compatibility are established before deltas;
+- comparability is dimension-specific with typed reasons;
+- invalid/incomparable deltas are absent rather than made visually plausible;
+- missing metrics never silently pass policy;
+- explicit baselines/policies are versioned and auditable;
+- PASS / FAIL / NOT_COMPARABLE / NOT_EVALUATED remain distinct outcomes.
 
-- it computes and displays identity differences first;
-- it determines comparability per metric dimension;
-- incompatible metrics return typed reasons;
-- quality, runtime and resource dimensions remain separable;
-- explicit baselines are immutable;
-- relative deltas handle zero/near-zero baselines safely;
-- missing metrics do not pass thresholds silently;
-- user-configured thresholds are versioned and auditable.
+## Adapter / dataset / evaluator
 
-## 5. Adapter completion
+Adapters cover applicable probe, streaming/non-streaming, malformed/provider error, timeout, cancellation, token-usage absence, unsupported parameter and secret-redaction paths. Provider-specific behavior remains inside the adapter.
 
-An inference adapter must test:
+Dataset/task changes preserve stable source/snapshot identity, deterministic selection, invalid/empty behavior, mapping/parser failures, evaluator assignment and provenance/license information where relevant.
 
-- capability probe success/failure;
-- non-streaming success;
-- streaming success where supported;
-- malformed response;
-- provider/server error;
-- timeout;
-- cancellation;
-- token usage present/absent;
-- unsupported generation parameters;
-- effective/unknown parameter recording;
-- secret/header redaction.
+Evaluators have static fixtures for known correct/incorrect/malformed behavior, deterministic normalization/versioning and mathematically consistent aggregation. Evaluator infrastructure failures are not counted as model errors. Judge-based evaluation persists judge/rubric/config identity.
 
-Provider-specific behavior remains inside the adapter and must not leak conditionals into the orchestrator.
+## Runtime / telemetry
 
-## 6. Dataset/task completion
+Runtime measurements define clock, exact event boundaries, warmup, repetitions, cold-state assumptions, token-count provenance, aggregation and failure denominators. TTFT is reported only when a first-output event can actually be observed; tokens/sec requires trustworthy token counts.
 
-A dataset/task feature must cover:
+Telemetry defines metric scope/unit/provenance, unavailable/permission/error states, collector version/sampling protocol and overhead limitations. Telemetry can fail independently unless explicitly required by the suite. Device-specific performance/resource claims require representative hardware evidence.
 
-- stable source/snapshot identity;
-- deterministic sample selection;
-- empty/invalid dataset behavior;
-- requested sample count larger than available population;
-- mapping validation for custom data;
-- parser failures;
-- evaluator assignment/version identity;
-- upstream license/provenance documentation where relevant.
+## Persistence / API / CLI
 
-## 7. Evaluator completion
+Persistence changes cover schema/migration, atomic publication, interruption, completed-run immutability, export/import, corrupt/incompatible artifacts, secret exclusion and retention/delete behavior where implemented.
 
-An evaluator must have static fixture tests that prove:
+CLI/API behavior provides typed/stable validation/failure semantics, cancellation, machine-readable outputs where automation is intended, deterministic configuration parsing and IDs/links to persisted evidence. Automation must not depend on parsing human console prose.
 
-- known correct output scores correctly;
-- known incorrect output scores correctly;
-- malformed/unparseable output has explicit behavior;
-- normalization rules are deterministic and versioned;
-- aggregation is mathematically consistent;
-- evaluator exceptions are not counted as model errors.
+## Product UI
 
-Judge-based evaluators additionally require judge identity/rubric/configuration persistence.
+Meaningful UI work follows the durable experience contract:
 
-## 8. Runtime benchmark completion
+```text
+user outcome
+-> task model
+-> IA / critical journey
+-> information + action hierarchy
+-> progressive disclosure / defaults
+-> interactions / states / feedback / recovery
+-> adaptive/platform behavior
+-> accessibility
+-> semantic components/tokens
+-> purposeful motion
+-> visual polish / functional graphics
+-> validation
+```
 
-A runtime measurement feature must define:
+UI completion additionally requires:
 
-- what clock is used;
-- exact start/end events;
-- warmup policy;
-- repetition/sample count;
-- cold-state assumptions;
-- token-count provenance;
-- statistical aggregation;
-- failure/timeout denominator semantics.
+- canonical application/read models rather than frontend reimplementation of benchmark truth;
+- loading, empty, error, disabled and other reachable critical states;
+- explicit unknown/unavailable/partial/not-comparable evidence;
+- clear primary/secondary/destructive action hierarchy;
+- keyboard/focus/assistive semantics and reduced-motion behavior where applicable;
+- supported compact/standard/wide contexts preserving content priority;
+- semantic component/token reuse instead of one-off drift;
+- motion only for feedback/continuity/progress/state/orientation purposes;
+- critical-journey E2E when lower levels cannot prove the complete user outcome.
 
-TTFT is complete only for a protocol that can observe a first streamed output event or a clearly sourced provider timing. Total latency must never be relabeled TTFT.
+A screenshot alone does not prove interaction, accessibility, recovery, adaptive behavior or usability.
 
-Tokens/second is complete only when token counts are trustworthy.
+## Privacy / security
 
-## 9. Telemetry completion
+By default, normal evidence/logs/CI artifacts must not expose API keys, authorization headers, signed tokens, arbitrary environment variables, private paths or prompt/output content when aggregate-safe mode is selected.
 
-Telemetry features must:
+Evidence-rich prompt/output storage must be explicit, visibly sensitive and have a defined retention/delete boundary. Local-only behavior must not silently fall back to cloud processing.
 
-- identify metric scope, unit and provenance;
-- report unavailable/permission/collector error states;
-- fail independently from inference unless the suite explicitly requires the metric;
-- record collector version and sampling protocol;
-- avoid overclaiming process attribution;
-- document sampling overhead/limitations;
-- redact sensitive process/environment data.
+## Resource and operational lifecycle
 
-Device-specific performance claims require representative hardware evidence.
+Changes that create processes, listeners, queues, caches, temp files, browser profiles, workspaces or other owned resources define bounds, timeout/cancellation and cleanup across success, failure, timeout, cancellation, interrupt and partial initialization.
 
-## 10. Storage completion
+When build/package/release behavior is affected, the strict `.engineering/commands.json` contract requires:
 
-Persistence changes must test:
+- unique build identity plus source revision/dirty state;
+- immutable successful artifacts promoted only after validation;
+- manifest and SHA-256 checksums;
+- build delta against the previous successful comparable build;
+- bounded local/CI retention;
+- smoke/stop/clean proving no orphan project-owned process/listener/temp state.
 
-- schema creation/migration;
-- atomic publication of completed runs;
-- interrupted/partial run handling;
-- completed-run immutability;
-- export/import round trip;
-- corrupt/incompatible artifact behavior;
-- credential/secret exclusion;
-- retention/delete behavior where implemented.
+These guarantees are enforced by the canonical Built Product and strict operations-verifier paths; changes to that lifecycle must keep those gates green rather than weakening the contract.
 
-## 11. CLI/API completion
+## Validation evidence
 
-Command/API features must provide:
+Choose the lowest deterministic layer that proves the invariant, then expand with blast radius:
 
-- stable validation errors;
-- non-zero exit/status for real failures;
-- cancellation behavior;
-- machine-readable output where automation is intended;
-- deterministic configuration parsing;
-- no requirement to parse human console text for CI;
-- links/IDs to persisted run evidence.
+- unit/component tests for local logic/state;
+- contract/integration tests for shared boundaries;
+- canonical repository `check`/`test` for broad changes;
+- E2E for complete critical workflows not established below that level;
+- smoke for built/runtime viability;
+- accessibility/adaptive/visual/usability evidence when the product claim requires it;
+- real endpoint/device evidence for hardware/runtime/thermal/resource or real-integration claims.
 
-## 12. UI completion
+Record evidence as PASS / FAIL / PENDING / N/A. Synthetic/emulator/fixture evidence cannot satisfy a stronger representative claim.
 
-UI features must:
+## Documentation completion
 
-- consume domain/read models instead of recalculating benchmark semantics;
-- show loading, empty, unavailable, partial and error states;
-- surface identity differences in comparisons;
-- distinguish unavailable from zero;
-- preserve quality/runtime/resource separation;
-- support keyboard/accessibility fundamentals;
-- avoid exposing stored secrets;
-- preserve cancellation and long-running progress state safely.
+Update exactly the canonical owner that changed:
 
-## 13. Test completion
-
-Every implementation change should use the lowest useful deterministic layer.
-
-Expected categories as applicable:
-
-- unit tests for domain/evaluator/statistics logic;
-- adapter tests using deterministic local fake servers;
-- persistence integration tests;
-- orchestrator tests using fake adapters/collectors/stores;
-- end-to-end local test with a fake inference endpoint;
-- real endpoint smoke evidence for benchmark claims;
-- representative device evidence for hardware/resource claims.
-
-Regression fixes should include a test that fails under the old behavior where practical.
-
-## 14. Privacy/security completion
-
-By default, evidence must not contain:
-
-- API keys or authorization headers;
-- signed URLs/tokens;
-- arbitrary environment variables;
-- private file paths unless sanitized;
-- prompt/output content when aggregate-safe mode is selected.
-
-If evidence-rich mode stores prompt/output text, the UI/report must clearly mark the artifact as potentially sensitive and retention/delete behavior must be defined.
-
-## 15. Documentation completion
-
-The same change updates the canonical owner:
-
-- architecture/dependency boundary -> `architecture.md` or ADR;
-- target/task/dependency/acceptance change -> `implementation-plan.md`;
-- live integrated/blocker/next state -> `current-state.md`;
-- milestone outcome/status -> `roadmap.md`;
-- material planning decision -> `plan-changelog.md`;
+- architecture/ownership -> `architecture.md` or ADR;
+- durable shipped behavior needing explanation -> `features/` or the focused operational reference;
+- integrated/blocker/next state -> `current-state.md`;
+- milestone outcome -> `roadmap.md`;
+- coordinated active dependencies/acceptance -> the single owning `workstreams/*.md`;
 - benchmark/evaluator protocol -> `evaluation-and-benchmarking.md`;
 - telemetry semantics -> `telemetry.md`;
-- developer navigation/validation -> `AGENTS.md` when present.
+- UX/design-system contract -> `design/`;
+- agent routing -> `AGENTS.md` only when durable routing/invariants change.
 
-Do not duplicate a detailed status table across multiple documents.
+Do not create or append plan/progress/changelog documents for implementation history. When a workstream completes, transfer durable truth, update current state and delete the workstream by default; Git history is the normal archive.
 
-## 16. Plan/task completion rule
+## Milestone / release rule
 
-A task ID in the implementation plan may be marked `DONE` in current state only when:
-
-- all listed deliverables exist;
-- acceptance criteria are met;
-- required tests pass;
-- required real-world evidence exists or the parent task explicitly distinguishes implementation from evidence;
-- documentation is current;
-- any remaining limitation is moved to a new explicit task rather than hidden in prose.
-
-## 17. Milestone completion rule
-
-A roadmap milestone closes only when its exit gate is satisfied.
-
-Do not close a milestone because most code exists if:
-
-- comparable identities are incomplete;
-- sample/evaluator versions are ambiguous;
-- real TTFT/token throughput semantics are unproven;
-- resource metrics lack provenance;
-- regression thresholds can compare incompatible runs;
-- automation requires manual interpretation.
-
-## 18. Validation discipline
-
-FND-001 will establish the exact repository commands. The expected shape is one canonical local validation entrypoint that covers:
-
-```text
-format/lint
-static/type checks
-unit tests
-integration tests
-schema/documentation checks
-build/package checks where applicable
-git diff --check equivalent
-```
-
-CI should run the same core validation from a clean checkout.
-
-A documentation-only change may use a narrower gate, but still requires link/navigation and formatting validation.
-
-## 19. Merge checklist
-
-```text
-correct domain ownership
-no provider/runtime coupling in core
-explicit schema/version changes
-stable execution fingerprint semantics
-failure/cancellation paths covered
-unavailable metrics remain unavailable
-quality/runtime/resources not conflated
-immutable completed evidence
-privacy-safe persisted artifacts
-focused + repository tests passing
-current-state/roadmap/plan docs updated
-material planning changes logged
-claims match available evidence
-```
+Do not close a milestone or make a release claim merely because most code exists. Required comparability, evidence identity, cleanup, migration, browser/user, build/artifact or representative-device gates must either pass or remain explicitly pending.

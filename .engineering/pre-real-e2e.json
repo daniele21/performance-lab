@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "gate_id": "PRE_REAL_E2E",
+  "source_of_truth": ".engineering/e2e.json",
+  "blocks_real_environment": true,
+  "real_environment_gate": "RUNTIME-1",
+  "required_journeys": ["J0", "J1", "J2", "J3", "J4", "J5", "J6", "J7", "J8", "J9"],
+  "layers": [
+    {
+      "id": "browser-emulated-journeys",
+      "execution_environment_ref": "browser-built-mocked-api",
+      "browser_context": "desktop-standard-emulated",
+      "viewport": {"width": 1280, "height": 900},
+      "required_journeys": ["J0", "J1", "J2", "J3", "J4", "J5", "J6", "J7", "J8", "J9"],
+      "required_evidence": ["playwright-json", "final-screenshot", "trace"],
+      "known_gap": "Performance Lab Python API/persistence remain mocked in this layer; the browser/device context is emulated but the overall fidelity remains host_or_fake."
+    },
+    {
+      "id": "packaged-product-journeys",
+      "execution_environment_ref": "packaged-product-fixture",
+      "required_journeys": ["J0", "J1", "J8", "J9"],
+      "required_evidence": ["playwright-json", "final-screenshot", "trace", "built-artifact"],
+      "known_gap": "The external inference runtime/model and physical hardware remain deterministic/virtual fixtures."
+    }
+  ],
+  "readiness_rule": "PASS only when every required journey passes its declared layer and every required evidence attachment is retained; otherwise REAL_ENVIRONMENT remains blocked.",
+  "evidence_retention_days": 7
+}

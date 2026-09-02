@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "target_type": "approved-design-target",
+  "viewport": {
+    "width": 1536,
+    "height": 960,
+    "class": "desktop-standard"
+  },
+  "source_of_truth": "design/ux-contract.json",
+  "brand_source": "design/brand-kit.json",
+  "notes": [
+    "These images express approved design intent and are not pixel-regression goldens.",
+    "Browser screenshots from an accepted implementation should become visual-regression goldens only after semantic, accessibility and journey validation pass."
+  ],
+  "targets": {
+    "overview": {
+      "file": "overview.png",
+      "surface": "Overview",
+      "status": "approved-design-target"
+    },
+    "campaign-results": {
+      "file": "campaign-results.png",
+      "surface": "Find best setup / Results",
+      "status": "approved-design-target"
+    },
+    "test-a-model-review": {
+      "file": "test-a-model-review.png",
+      "surface": "Test a model / Review frozen configuration",
+      "status": "approved-design-target"
+    },
+    "benchmark-detail": {
+      "file": "benchmark-detail.png",
+      "surface": "Library / Benchmarks / Benchmark Detail",
+      "status": "approved-design-target"
+    },
+    "sample-evidence-detail": {
+      "file": "sample-evidence-detail.png",
+      "surface": "Run Detail / Sample Evidence Detail",
+      "status": "approved-design-target"
+    },
+    "models": {
+      "file": "models.png",
+      "surface": "Library / Models",
+      "status": "approved-design-target"
+    },
+    "datasets": {
+      "file": "datasets.png",
+      "surface": "Library / Datasets",
+      "status": "approved-design-target"
+    },
+    "evaluators": {
+      "file": "evaluators.png",
+      "surface": "Library / Evaluators",
+      "status": "approved-design-target"
+    },
+    "evidence": {
+      "file": "evidence.png",
+      "surface": "Library / Evidence",
+      "status": "approved-design-target"
+    },
+    "settings": {
+      "file": "settings.png",
+      "surface": "Settings / Model connections",
+      "status": "approved-design-target"
+    }
+  },
+  "not_yet_in_this_target_set": [
+    "Find best setup setup steps before Results",
+    "Campaign Live",
+    "Runs history",
+    "Run Detail / Samples",
+    "Case Comparison Across Candidates",
+    "Compare compatible/incompatible states",
+    "Failure / recovery"
+  ]
+}

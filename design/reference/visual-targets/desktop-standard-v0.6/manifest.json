@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "target_type": "approved-design-target",
+  "target_set_version": "0.6.0",
+  "status": "approved-bounded-v0.6-target",
+  "viewport": {
+    "width": 1536,
+    "height": 960,
+    "class": "desktop-standard"
+  },
+  "source_of_truth": "design/ux-contract.json",
+  "brand_source": "design/brand-kit.json",
+  "capture": {
+    "source_head_sha": "1c37ec2447515a5d75b27c680d552ce232fb5bda",
+    "workflow_run_id": 33445346076,
+    "artifact_id": 9777817615,
+    "artifact_name": "pvr08-target-candidate-33445346076-1",
+    "artifact_sha256": "d0aa52e49b64276dd1f6f8287e43bb89bb110c38c7cc455798176ffee31ff065",
+    "platform": "GitHub-hosted Ubuntu 24.04",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "color_scheme": "dark",
+    "reduced_motion": "reduce"
+  },
+  "review": {
+    "method": "manual visual inspection of the exact bounded CI capture against the v0.6 brand and UX contracts",
+    "decision": "approved as bounded v0.6 design target",
+    "human_reference_grade_claim": false
+  },
+  "targets": {
+    "benchmark-detail": {
+      "file": "benchmark-detail.png",
+      "sha256": "32335866e03f84fb46bf7e6ec36f693d00450515fba0ed5a7372e9f13ef740c5",
+      "status": "approved-v0.6-design-target"
+    },
+    "campaign-results": {
+      "file": "campaign-results.png",
+      "sha256": "6c308a2f01d0fcf38f52411c05db2f2832bb4051051121c9f75fd8c09fcae310",
+      "status": "approved-v0.6-design-target"
+    },
+    "overview": {
+      "file": "overview.png",
+      "sha256": "e534c8ce7bee81ece8af7d89da674ad80585932d7d9ef3ed3410e919f202d6ad",
+      "status": "approved-v0.6-design-target"
+    },
+    "sample-evidence-detail": {
+      "file": "sample-evidence-detail.png",
+      "sha256": "c1f351ed74d3f8d15ccc5acd9bfe3f863953f588f55bde64f995c852c1d3edb2",
+      "status": "approved-v0.6-design-target"
+    },
+    "test-a-model-review": {
+      "file": "test-a-model-review.png",
+      "sha256": "e7fb30fb5b025433c54ae5d3831633416176af55d195a9e7c4f76a8797421aab",
+      "status": "approved-v0.6-design-target"
+    }
+  },
+  "scope_note": "Only these five stable surfaces are approved as v0.6 visual targets. Broader J0-J9 screenshot/trace evidence remains owned by PRE_REAL."
+}
