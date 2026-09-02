@@ -234,7 +234,9 @@ test("J8: sample evidence distinguishes prompt, output, expected and correctness
   await page.getByRole("link", { name: "Inspect sample evidence" }).click();
 
   await expect(page.getByRole("heading", { name: "sample-a" })).toBeVisible();
-  await expect(page.getByText("Quality", { exact: true })).toBeVisible();
+  await expect(
+    page.getByLabel("Sample evidence summary").getByText("Quality", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("Incorrect", { exact: true })).toBeVisible();
   await expect(page.getByText("accuracy · 0 · 0%", { exact: true })).toBeVisible();
   await expect(page.getByText("Prompt sent to model", { exact: true })).toBeVisible();
