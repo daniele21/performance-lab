@@ -244,9 +244,12 @@ def verify_value01_evidence(
     assert run is not None
     completed_detail = "run is completed immutable SUCCEEDED evidence"
     if run.status != RunStatus.SUCCEEDED:
-        completed_detail = (
-            f"run completed with status {run.status.value}; "
-            "VALUE-01 requires a successful loop"
+        completed_detail = " ".join(
+            (
+                "run completed with status",
+                f"{run.status.value};",
+                "VALUE-01 requires a successful loop",
+            )
         )
     _check(
         checks,
