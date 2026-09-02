@@ -110,7 +110,9 @@ def _verify_bundle_round_trip(
 
 def _verify_identity(checks: list[dict[str, Any]], run: Run) -> None:
     fingerprint = run.fingerprint
-    runtime_ok = fingerprint.runtime.name is not None and fingerprint.runtime.config_digest is not None
+    runtime_ok = (
+        fingerprint.runtime.name is not None and fingerprint.runtime.config_digest is not None
+    )
     hardware_ok = (
         fingerprint.hardware.device_class is not None and fingerprint.hardware.os is not None
     )
