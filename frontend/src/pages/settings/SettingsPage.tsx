@@ -12,16 +12,26 @@ import {
   Status,
   type DataColumn,
 } from "../../components";
+import {
+  getThemePreference,
+  setThemePreference,
+  type ThemePreference,
+} from "../../theme";
 import "../secondary.css";
 
-export type SettingsSection = "model-connections" | "devices-targets" | "advanced";
+export type SettingsSection =
+  | "model-connections"
+  | "devices-targets"
+  | "appearance"
+  | "advanced";
 
 const SECTION_LABEL: Record<
   SettingsSection,
-  "Model connections" | "Devices / targets" | "Advanced"
+  "Model connections" | "Devices / targets" | "Appearance" | "Advanced"
 > = {
   "model-connections": "Model connections",
   "devices-targets": "Devices / targets",
+  appearance: "Appearance",
   advanced: "Advanced",
 };
 
@@ -30,6 +40,8 @@ const SECTION_DESCRIPTION: Record<SettingsSection, string> = {
     "Performance Lab evaluates external serving runtimes without taking ownership of model loading or runtime lifecycle.",
   "devices-targets":
     "Configured evaluation targets identify where requests run and which backend-reported capabilities are available.",
+  appearance:
+    "Choose the workspace theme. Light is the canonical default; Dark is optional and System follows your operating system.",
   advanced:
     "Inspect runtime ownership and target capability boundaries without promoting backend configuration into browser-owned state.",
 };
@@ -55,6 +67,61 @@ const TARGET_COLUMNS: readonly DataColumn<TargetSummaryReadModel>[] = [
     render: (item) => item.capabilities.join(", ") || "Not reported",
   },
 ];
+
+const APPEARANCE_OPTIONS: readonly {
+  value: ThemePreference;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "light",
+    label: "Light",
+    description: "Canonical Performance Lab workspace. Bright, calm and evidence-first.",
+  },
+  {
+    value: "dark",
+    label: "Dark",
+    description: "Lower-luminance workspace using the same semantic hierarchy and evidence colors.",
+  },
+  {
+    value: "system",
+    label: "System",
+    description: "Follow the operating system light or dark appearance automatically.",
+  },
+];
+
+function AppearanceSettings() {
+  const [preference, setPreference] = useState<ThemePreference>(getThemePreference);
+
+  return (
+    <fieldset className="appearance-settings">
+      <legend>Theme</legend>
+      <p className="appearance-settings__description">
+        Light is the default product reference. Your choice is stored only in this browser.
+      </p>
+      <div className="appearance-settings__options">
+        {APPEARANCE_OPTIONS.map((option) => (
+          <label className="appearance-option" key={option.value}>
+            <input
+              type="radio"
+              name="theme"
+              value={option.value}
+              checked={preference === option.value}
+              onChange={() => {
+                setPreference(option.value);
+                setThemePreference(option.value);
+              }}
+            />
+            <span className="appearance-option__copy">
+              <strong>{option.label}</strong>
+              <span>{option.description}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
 
 interface SettingsViewProps {
   section: SettingsSection;
@@ -99,6 +166,8 @@ export function SettingsView({ section, targets }: SettingsViewProps) {
             />
           ))}
 
+        {section === "appearance" && <AppearanceSettings />}
+
         {section === "advanced" && (
           <div className="secondary-page__cards" aria-label="Advanced evaluation context">
             <article className="secondary-card">
@@ -135,10 +204,17 @@ type LoadState =
 
 export function SettingsPage({ section }: { section: SettingsSection }) {
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [state, setState] = useState<LoadState>(() =>
+    section === "appearance" ? { status: "ready", targets: [] } : { status: "loading" },
+  );
   const label = SECTION_LABEL[section];
 
   useEffect(() => {
+    if (section === "appearance") {
+      setState({ status: "ready", targets: [] });
+      return;
+    }
+
     const controller = new AbortController();
     setState({ status: "loading" });
     listTargets({ signal: controller.signal })
@@ -151,7 +227,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         });
       });
     return () => controller.abort();
-  }, [attempt]);
+  }, [attempt, section]);
 
   if (state.status === "loading") {
     return (
