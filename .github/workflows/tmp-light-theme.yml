@@ -1,0 +1,714 @@
+name: Temporary light theme implementation
+
+on:
+  push:
+    branches:
+      - feat/desktop-ux-hierarchy
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/desktop-ux-hierarchy
+
+      - name: Apply light-first theme system
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f'expected fragment not found in {path}: {old[:80]!r}')
+              p.write_text(text.replace(old, new, 1))
+
+          # Canonical brand contract: light-first, dark optional, system follows OS.
+          brand_path = Path('design/brand-kit.json')
+          brand = json.loads(brand_path.read_text())
+          brand['themes'] = {
+              'default': 'light',
+              'light': True,
+              'dark': True,
+              'system': True,
+          }
+          light_colors = {
+              'surface': '#F6F8FA',
+              'surface_elevated': '#FFFFFF',
+              'surface_subtle': '#EFF2F5',
+              'surface_raised': '#FFFFFF',
+              'text_primary': '#171A1F',
+              'text_secondary': '#5D6672',
+              'text_tertiary': '#818B98',
+              'primary': '#247F91',
+              'secondary': '#6959D9',
+              'quality': '#26899B',
+              'performance': '#7059D6',
+              'resources': '#3F78AD',
+              'success': '#217A55',
+              'warning': '#9A6317',
+              'error': '#C44754',
+              'evidence_unknown': '#707A86',
+              'evidence_unavailable': '#A2A9B2',
+              'border': '#D6DCE4',
+              'border_subtle': '#E6EAF0',
+              'border_strong': '#B9C2CE',
+              'focus': '#176F80',
+          }
+          dark_colors = {
+              'surface': '#080A0D',
+              'surface_elevated': '#0E1116',
+              'surface_subtle': '#141820',
+              'surface_raised': '#191E27',
+              'text_primary': '#F4F6F8',
+              'text_secondary': '#A0A8B2',
+              'text_tertiary': '#707A86',
+              'primary': '#7DD6E8',
+              'secondary': '#9A8CF7',
+              'quality': '#67D5E3',
+              'performance': '#A78BFA',
+              'resources': '#7AB8F5',
+              'success': '#4FD18B',
+              'warning': '#E9B44C',
+              'error': '#F06D78',
+              'evidence_unknown': '#6F7782',
+              'evidence_unavailable': '#484F58',
+              'border': '#222831',
+              'border_subtle': '#1A1F27',
+              'border_strong': '#303844',
+              'focus': '#9AE7F3',
+          }
+          brand['tokens']['colors'] = light_colors
+          brand['tokens']['dark_colors'] = dark_colors
+          brand['style']['direction'] = (
+              'Precision Instrument: light-first, calm off-white workspace, neutral graphite text, '
+              'evidence-first, high-density without visual noise; dark remains an optional user preference.'
+          )
+          brand['style']['surface_language'] = (
+              'Light is canonical: use an off-white canvas, white raised surfaces and a quiet light sidebar. '
+              'Prefer hierarchy from spacing and typography before borders; dark uses the same semantic roles '
+              'without becoming a separate composition.'
+          )
+          brand_path.write_text(json.dumps(brand, indent=2) + '\n')
+
+          # Executable semantic theme tokens.
+          Path('frontend/src/design/tokens.css').write_text(r'''/* Executable semantic tokens synchronized with design/brand-kit.json contract 0.6.0. */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-surface: #f6f8fa;
+  --color-surface-elevated: #ffffff;
+  --color-surface-subtle: #eff2f5;
+  --color-surface-raised: #ffffff;
+  --color-text-primary: #171a1f;
+  --color-text-secondary: #5d6672;
+  --color-text-tertiary: #818b98;
+  --color-primary: #247f91;
+  --color-secondary: #6959d9;
+  --color-quality: #26899b;
+  --color-performance: #7059d6;
+  --color-resources: #3f78ad;
+  --color-success: #217a55;
+  --color-warning: #9a6317;
+  --color-error: #c44754;
+  --color-evidence-unknown: #707a86;
+  --color-evidence-unavailable: #a2a9b2;
+  --color-border: #d6dce4;
+  --color-border-subtle: #e6eaf0;
+  --color-border-strong: #b9c2ce;
+  --color-focus: #176f80;
+  --shadow-raised: 0 1px 2px rgb(17 24 39 / 6%), 0 10px 30px rgb(17 24 39 / 7%);
+  --shadow-overlay: 0 2px 6px rgb(17 24 39 / 10%), 0 24px 70px rgb(17 24 39 / 16%);
+
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+
+  --font-weight-body: 475;
+  --font-weight-medium: 550;
+  --font-weight-semibold: 600;
+  --font-weight-heading: 625;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --control-height-compact: 2rem;
+  --control-height-default: 2.25rem;
+  --control-height-emphasis: 2.5rem;
+
+  --radius-control: 7px;
+  --radius-panel: 10px;
+  --radius-major: 14px;
+  --radius-lg: var(--radius-panel);
+
+  --motion-instant: 0ms;
+  --motion-fast: 100ms;
+  --motion-standard: 140ms;
+  --motion-large: 220ms;
+  --motion-ease-enter: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-move: cubic-bezier(0.2, 0, 0, 1);
+  --transition-functional: var(--motion-standard) var(--motion-ease-move);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-surface: #080a0d;
+  --color-surface-elevated: #0e1116;
+  --color-surface-subtle: #141820;
+  --color-surface-raised: #191e27;
+  --color-text-primary: #f4f6f8;
+  --color-text-secondary: #a0a8b2;
+  --color-text-tertiary: #707a86;
+  --color-primary: #7dd6e8;
+  --color-secondary: #9a8cf7;
+  --color-quality: #67d5e3;
+  --color-performance: #a78bfa;
+  --color-resources: #7ab8f5;
+  --color-success: #4fd18b;
+  --color-warning: #e9b44c;
+  --color-error: #f06d78;
+  --color-evidence-unknown: #6f7782;
+  --color-evidence-unavailable: #484f58;
+  --color-border: #222831;
+  --color-border-subtle: #1a1f27;
+  --color-border-strong: #303844;
+  --color-focus: #9ae7f3;
+  --shadow-raised: 0 1px 1px rgb(0 0 0 / 28%), 0 8px 24px rgb(0 0 0 / 16%);
+  --shadow-overlay: 0 2px 4px rgb(0 0 0 / 28%), 0 20px 64px rgb(0 0 0 / 44%);
+}
+
+:root[data-theme="system"] {
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --color-surface: #080a0d;
+    --color-surface-elevated: #0e1116;
+    --color-surface-subtle: #141820;
+    --color-surface-raised: #191e27;
+    --color-text-primary: #f4f6f8;
+    --color-text-secondary: #a0a8b2;
+    --color-text-tertiary: #707a86;
+    --color-primary: #7dd6e8;
+    --color-secondary: #9a8cf7;
+    --color-quality: #67d5e3;
+    --color-performance: #a78bfa;
+    --color-resources: #7ab8f5;
+    --color-success: #4fd18b;
+    --color-warning: #e9b44c;
+    --color-error: #f06d78;
+    --color-evidence-unknown: #6f7782;
+    --color-evidence-unavailable: #484f58;
+    --color-border: #222831;
+    --color-border-subtle: #1a1f27;
+    --color-border-strong: #303844;
+    --color-focus: #9ae7f3;
+    --shadow-raised: 0 1px 1px rgb(0 0 0 / 28%), 0 8px 24px rgb(0 0 0 / 16%);
+    --shadow-overlay: 0 2px 4px rgb(0 0 0 / 28%), 0 20px 64px rgb(0 0 0 / 44%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-standard: 0ms;
+    --motion-large: 0ms;
+    --transition-functional: 0ms linear;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+  }
+}
+''')
+
+          # Light sidebar / off-white workspace while preserving semantic tokens.
+          replace_once(
+              'frontend/src/design/design-system.css',
+              '  background: var(--color-surface);\n}\n\n.app-shell__brand',
+              '  background: var(--color-surface-elevated);\n}\n\n.app-shell__brand',
+          )
+
+          # Theme preference owner.
+          Path('frontend/src/theme.ts').write_text(r'''export const THEME_STORAGE_KEY = "performance-lab.theme";
+
+export type ThemePreference = "light" | "dark" | "system";
+
+export function normalizeThemePreference(value: unknown): ThemePreference {
+  return value === "dark" || value === "system" ? value : "light";
+}
+
+export function getThemePreference(): ThemePreference {
+  if (typeof window === "undefined") return "light";
+  try {
+    return normalizeThemePreference(window.localStorage.getItem(THEME_STORAGE_KEY));
+  } catch {
+    return "light";
+  }
+}
+
+export function applyThemePreference(preference: ThemePreference): void {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset.theme = preference;
+}
+
+export function setThemePreference(preference: ThemePreference): void {
+  applyThemePreference(preference);
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, preference);
+  } catch {
+    // A blocked storage API must not prevent the local appearance change.
+  }
+}
+''')
+
+          # Apply saved preference before the app module renders; default remains light even on dark OS.
+          Path('frontend/index.html').write_text(r'''<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (() => {
+        try {
+          const value = localStorage.getItem("performance-lab.theme");
+          document.documentElement.dataset.theme =
+            value === "dark" || value === "system" ? value : "light";
+        } catch {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+    <title>Performance Lab</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+''')
+
+          # Navigation + routing.
+          replace_once(
+              'frontend/src/navigation.ts',
+              '    { label: "Devices / targets", href: "#devices-targets" },\n',
+              '    { label: "Devices / targets", href: "#devices-targets" },\n    { label: "Appearance", href: "#appearance" },\n',
+          )
+          replace_once(
+              'frontend/src/routing.ts',
+              '| { kind: "settings"; section: "model-connections" | "devices-targets" | "advanced" }',
+              '| {\n      kind: "settings";\n      section: "model-connections" | "devices-targets" | "appearance" | "advanced";\n    }',
+          )
+          replace_once(
+              'frontend/src/routing.ts',
+              '  if (raw === "devices-targets" || raw === "advanced") {\n',
+              '  if (raw === "devices-targets" || raw === "appearance" || raw === "advanced") {\n',
+          )
+
+          # Settings appearance surface.
+          settings_path = Path('frontend/src/pages/settings/SettingsPage.tsx')
+          settings = settings_path.read_text()
+          settings = settings.replace(
+              'import { listTargets, type TargetSummaryReadModel } from "../../api";\n',
+              'import { listTargets, type TargetSummaryReadModel } from "../../api";\nimport {\n  getThemePreference,\n  setThemePreference,\n  type ThemePreference,\n} from "../../theme";\n',
+              1,
+          )
+          settings = settings.replace(
+              'export type SettingsSection = "model-connections" | "devices-targets" | "advanced";',
+              'export type SettingsSection =\n  | "model-connections"\n  | "devices-targets"\n  | "appearance"\n  | "advanced";',
+              1,
+          )
+          settings = settings.replace(
+              '  SettingsSection,\n  "Model connections" | "Devices / targets" | "Advanced"\n> = {\n  "model-connections": "Model connections",\n  "devices-targets": "Devices / targets",\n  advanced: "Advanced",\n};',
+              '  SettingsSection,\n  "Model connections" | "Devices / targets" | "Appearance" | "Advanced"\n> = {\n  "model-connections": "Model connections",\n  "devices-targets": "Devices / targets",\n  appearance: "Appearance",\n  advanced: "Advanced",\n};',
+              1,
+          )
+          settings = settings.replace(
+              '  "devices-targets":\n    "Configured evaluation targets identify where requests run and which backend-reported capabilities are available.",\n  advanced:',
+              '  "devices-targets":\n    "Configured evaluation targets identify where requests run and which backend-reported capabilities are available.",\n  appearance:\n    "Choose the workspace theme. Light is the canonical default; Dark is optional and System follows your operating system.",\n  advanced:',
+              1,
+          )
+          marker = 'interface SettingsViewProps {\n'
+          appearance_component = r'''const APPEARANCE_OPTIONS: readonly {
+  value: ThemePreference;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "light",
+    label: "Light",
+    description: "Canonical Performance Lab workspace. Bright, calm and evidence-first.",
+  },
+  {
+    value: "dark",
+    label: "Dark",
+    description: "Lower-luminance workspace using the same semantic hierarchy and evidence colors.",
+  },
+  {
+    value: "system",
+    label: "System",
+    description: "Follow the operating system light or dark appearance automatically.",
+  },
+];
+
+function AppearanceSettings() {
+  const [preference, setPreference] = useState<ThemePreference>(getThemePreference);
+
+  return (
+    <fieldset className="appearance-settings">
+      <legend>Theme</legend>
+      <p className="appearance-settings__description">
+        Light is the default product reference. Your choice is stored only in this browser.
+      </p>
+      <div className="appearance-settings__options">
+        {APPEARANCE_OPTIONS.map((option) => (
+          <label className="appearance-option" key={option.value}>
+            <input
+              type="radio"
+              name="theme"
+              value={option.value}
+              checked={preference === option.value}
+              onChange={() => {
+                setPreference(option.value);
+                setThemePreference(option.value);
+              }}
+            />
+            <span className="appearance-option__copy">
+              <strong>{option.label}</strong>
+              <span>{option.description}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+'''
+          if marker not in settings:
+              raise SystemExit('SettingsViewProps marker missing')
+          settings = settings.replace(marker, appearance_component + marker, 1)
+          settings = settings.replace(
+              '        {section === "advanced" && (',
+              '        {section === "appearance" && <AppearanceSettings />}\n\n        {section === "advanced" && (',
+              1,
+          )
+          settings = settings.replace(
+              '  useEffect(() => {\n    const controller = new AbortController();\n    setState({ status: "loading" });\n',
+              '  useEffect(() => {\n    if (section === "appearance") {\n      setState({ status: "ready", targets: [] });\n      return undefined;\n    }\n\n    const controller = new AbortController();\n    setState({ status: "loading" });\n',
+              1,
+          )
+          settings = settings.replace('  }, [attempt]);', '  }, [attempt, section]);', 1)
+          settings_path.write_text(settings)
+
+          # Settings visual treatment.
+          secondary_path = Path('frontend/src/pages/secondary.css')
+          secondary = secondary_path.read_text()
+          secondary += r'''
+
+.appearance-settings {
+  display: grid;
+  max-width: 54rem;
+  gap: var(--space-4);
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.appearance-settings legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.appearance-settings__description {
+  max-width: 64ch;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+}
+
+.appearance-settings__options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.appearance-option {
+  display: flex;
+  min-height: 8rem;
+  gap: var(--space-3);
+  align-items: flex-start;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  padding: var(--space-4);
+  background: var(--color-surface-elevated);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-functional),
+    background var(--transition-functional),
+    box-shadow var(--transition-functional);
+}
+
+.appearance-option:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-raised);
+}
+
+.appearance-option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--color-primary) 68%, var(--color-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.appearance-option input {
+  margin: 0.2rem 0 0;
+  accent-color: var(--color-primary);
+}
+
+.appearance-option__copy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.appearance-option__copy strong {
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.appearance-option__copy span {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .appearance-settings__options {
+    grid-template-columns: 1fr;
+  }
+
+  .appearance-option {
+    min-height: auto;
+  }
+}
+'''
+          secondary_path.write_text(secondary)
+
+          # Unit contracts.
+          replace_once(
+              'frontend/src/navigation.test.ts',
+              '      "Devices / targets",\n      "Evidence retention",',
+              '      "Devices / targets",\n      "Appearance",\n      "Evidence retention",',
+          )
+          replace_once(
+              'frontend/src/navigation.test.ts',
+              ').toBe("#model-connections");\n',
+              ').toBe("#model-connections");\n    expect(SECONDARY_NAVIGATION.Settings.find((item) => item.label === "Appearance")?.href).toBe(\n      "#appearance",\n    );\n',
+          )
+          replace_once(
+              'frontend/src/routing.test.ts',
+              '    expect(parseHash("#devices-targets")).toEqual({\n      kind: "settings",\n      section: "devices-targets",\n    });\n',
+              '    expect(parseHash("#devices-targets")).toEqual({\n      kind: "settings",\n      section: "devices-targets",\n    });\n    expect(parseHash("#appearance")).toEqual({\n      kind: "settings",\n      section: "appearance",\n    });\n',
+          )
+          settings_test = Path('frontend/src/pages/settings/SettingsPage.test.tsx')
+          test_text = settings_test.read_text()
+          test_text = test_text.replace(
+              '  it("keeps advanced capabilities read-only and does not infer missing hardware", () => {',
+              '  it("renders Appearance as a product-owned local preference surface", () => {\n    const markup = renderToStaticMarkup(<SettingsView section="appearance" targets={[]} />);\n\n    expect(markup).toContain("Appearance");\n    expect(markup).toContain("Light");\n    expect(markup).toContain("Dark");\n    expect(markup).toContain("System");\n    expect(markup).toContain("stored only in this browser");\n  });\n\n  it("keeps advanced capabilities read-only and does not infer missing hardware", () => {',
+              1,
+          )
+          settings_test.write_text(test_text)
+
+          # Cross-surface and theme behavior E2E.
+          replace_once(
+              'frontend/e2e/cross-surface-integrity.spec.ts',
+              '  "devices-targets",\n  "advanced",',
+              '  "devices-targets",\n  "appearance",\n  "advanced",',
+          )
+          Path('frontend/e2e/appearance.spec.ts').write_text(r'''import { expect, test } from "@playwright/test";
+
+test.use({ colorScheme: "dark" });
+
+test("Appearance defaults to Light, persists explicit choice and lets System follow the OS", async ({
+  page,
+}) => {
+  await page.goto("/#appearance");
+
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.getByRole("radio", { name: "Light" })).toBeChecked();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue("--color-surface").trim(),
+      ),
+    )
+    .toBe("#f6f8fa");
+
+  await page.getByRole("radio", { name: "Dark" }).check();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("performance-lab.theme")))
+    .toBe("dark");
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.getByRole("radio", { name: "Dark" })).toBeChecked();
+
+  await page.getByRole("radio", { name: "System" }).check();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue("--color-surface").trim(),
+      ),
+    )
+    .toBe("#080a0d");
+
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue("--color-surface").trim(),
+      ),
+    )
+    .toBe("#f6f8fa");
+});
+''')
+
+          # Visual baseline becomes canonical light.
+          replace_once(
+              'frontend/e2e/visual-acceptance.spec.ts',
+              '  colorScheme: "dark",',
+              '  colorScheme: "light",',
+          )
+
+          # Durable design docs.
+          design_readme = Path('design/README.md')
+          readme = design_readme.read_text()
+          readme = readme.replace(
+              '- **Devices / targets**\n- **Evidence retention**',
+              '- **Devices / targets**\n- **Appearance** — Light / Dark / System; Light is the canonical default.\n- **Evidence retention**',
+              1,
+          )
+          appearance_note = '''\n### Appearance\n\nPerformance Lab is **light-first**. The canonical product reference uses an off-white canvas, white raised surfaces, graphite text and a quiet light sidebar. Dark is a supported optional preference; System follows the operating-system color scheme. The default remains Light even when the OS is dark until the user explicitly selects System or Dark. Theme choice is browser-local UI state and does not belong to the evaluation backend.\n\nBoth themes preserve the same semantic hierarchy, evidence dimensions, states and accessibility meaning; theme selection must never change benchmark semantics or evidence interpretation.\n\n'''
+          settings_header = '### Settings\n\nOnly expose product-owned configuration.'
+          if settings_header not in readme:
+              raise SystemExit('Settings header missing in design README')
+          readme = readme.replace(settings_header, appearance_note + settings_header, 1)
+          design_readme.write_text(readme)
+
+          workstream_path = Path('docs/workstreams/product-ux-ui-convergence.md')
+          workstream = workstream_path.read_text()
+          workstream = workstream.replace(
+              'Status: active — refreshed implementation automated evidence passed; representative-human acceptance pending',
+              'Status: active — representative-human theme mismatch reopened visual-system acceptance',
+              1,
+          )
+          workstream = workstream.replace(
+              '| PVR-11 | Fresh browser/PRE_REAL/visual + representative-human acceptance | AUTOMATED PRODUCT/VISUAL PASS — final exact-head confirmation + representative-human acceptance pending |',
+              '| PVR-11 | Fresh browser/PRE_REAL/visual + representative-human acceptance | FAIL — representative-human review found dark-only implementation inconsistent with approved light desktop direction |\n| PVR-12 | Light-first theme system + Appearance preference + refreshed visual evidence | IN PROGRESS |',
+              1,
+          )
+          anchor = '## PVR-11 acceptance gate\n'
+          note = '''## Representative-human theme correction\n\nThe product owner rejected the dark-only implementation as inconsistent with the approved desktop reference. This is a visual-system contract failure: `design/brand-kit.json` still declared dark-only and the executable tokens had no light theme. PVR-12 corrects the owning brand/theme contract rather than restyling individual pages.\n\nSettled direction: Light is canonical/default, Dark is optional, System follows the operating system, and the preference is browser-local product-owned UI state under Settings -> Appearance. All themes preserve the same task hierarchy and evidence semantics. The stable implementation goldens must be refreshed from the real light implementation and independently reproduced before automated visual acceptance returns to PASS.\n\n'''
+          if anchor not in workstream:
+              raise SystemExit('PVR-11 anchor missing')
+          workstream = workstream.replace(anchor, note + anchor, 1)
+          workstream_path.write_text(workstream)
+          PY
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+          run_install: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frozen frontend dependencies
+        run: pnpm --dir frontend install --frozen-lockfile
+
+      - name: Format changed text files
+        run: |
+          pnpm --dir frontend exec prettier --write \
+            ../design/brand-kit.json \
+            ../design/README.md \
+            ../docs/workstreams/product-ux-ui-convergence.md \
+            index.html \
+            src/design/tokens.css \
+            src/design/design-system.css \
+            src/theme.ts \
+            src/navigation.ts \
+            src/routing.ts \
+            src/pages/settings/SettingsPage.tsx \
+            src/pages/settings/SettingsPage.test.tsx \
+            src/pages/secondary.css \
+            src/navigation.test.ts \
+            src/routing.test.ts \
+            e2e/cross-surface-integrity.spec.ts \
+            e2e/appearance.spec.ts \
+            e2e/visual-acceptance.spec.ts
+
+      - name: Check, test and build frontend
+        run: |
+          pnpm --dir frontend run check
+          pnpm --dir frontend run test
+          pnpm --dir frontend run build
+
+      - name: Commit implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            design/brand-kit.json \
+            design/README.md \
+            docs/workstreams/product-ux-ui-convergence.md \
+            frontend/index.html \
+            frontend/src/design/tokens.css \
+            frontend/src/design/design-system.css \
+            frontend/src/theme.ts \
+            frontend/src/navigation.ts \
+            frontend/src/routing.ts \
+            frontend/src/pages/settings/SettingsPage.tsx \
+            frontend/src/pages/settings/SettingsPage.test.tsx \
+            frontend/src/pages/secondary.css \
+            frontend/src/navigation.test.ts \
+            frontend/src/routing.test.ts \
+            frontend/e2e/cross-surface-integrity.spec.ts \
+            frontend/e2e/appearance.spec.ts \
+            frontend/e2e/visual-acceptance.spec.ts
+          git commit -m "Add light-first theme and appearance preference"
+          git push origin HEAD:feat/desktop-ux-hierarchy
