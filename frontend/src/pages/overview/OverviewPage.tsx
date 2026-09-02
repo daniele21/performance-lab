@@ -217,7 +217,7 @@ export function OverviewView({ models, runs, onFindBestSetup, onTestModel }: Ove
 
         <section className="overview-page__section overview-page__section--secondary">
           <SectionHeader
-            title="Tested models"
+            title="Your tested models"
             description={
               models.length
                 ? `${models.length} model${models.length === 1 ? "" : "s"} with retained evidence. Exact recommendations still require explicit comparability.`
