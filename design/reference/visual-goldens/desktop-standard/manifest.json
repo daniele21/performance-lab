@@ -8,7 +8,7 @@
     "class": "desktop-standard"
   },
   "capture": {
-    "source_head_sha": "HEAD^",
+    "source_head_sha": "c0bd3f44279db0f294e03aa0d33e8a078e210150",
     "browser_capture_run_id": 33649543902,
     "artifact_id": 9854232790,
     "artifact_name": "light-first-golden-candidate-33649543902-1",
@@ -21,8 +21,8 @@
     "reduced_motion": "reduce"
   },
   "review": {
-    "method": "real Playwright implementation capture; independent Browser Acceptance reproduction pending",
-    "decision": "candidate pending independent CI match",
+    "method": "agent-inspected real Playwright implementation captures; independent Browser Acceptance reproduction pending",
+    "decision": "five light-first stable surfaces inspected with no blocking visual regression; candidate pending independent CI match",
     "human_reference_grade_claim": false
   },
   "source_of_truth": "design/ux-contract.json",
