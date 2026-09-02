@@ -39,10 +39,21 @@ Do not wait for EVID-001..004 as one monolithic campaign before delivering VALUE
 | Task | State | Acceptance |
 | --- | --- | --- |
 | EVID-000 pre-real E2E | DONE | Built Product reports `READY_FOR_REAL_ENVIRONMENT: YES`; J0-J9 retain browser screenshots/traces and packaged J0/J1/J8/J9 retain assembled-product screenshots/traces |
-| EVID-001 representative run | READY | re-check a current `PRE_REAL_E2E = PASS`, then real endpoint completes and retained `.plab.zip` identifies model/runtime/device/suite/datasets/config |
+| EVID-001 representative run | ACTIVE | VALUE-01A/B/C integrate first; then #120 re-checks exact-head `PRE_REAL_E2E = PASS`, runs one real endpoint/browser loop and retains verified store + `.plab.zip` + identity/telemetry/media evidence |
 | EVID-002 repeat/load evidence | PLANNED | controlled repeated runs document warmup/load assumptions, variability and failures without hiding denominators |
 | EVID-003 telemetry validation | PLANNED | supported sensors/metrics have explicit scope/unit/provenance; unavailable data remains typed |
 | EVID-004 comparison/regression evidence | PLANNED | representative compatible and incompatible pairs preserve comparison reasons and valid-delta boundaries; at least one regression policy outcome is retained where applicable |
+
+## EVID-001 convergence
+
+The software/readiness work may proceed in parallel, but the representative claim is singular:
+
+- #117 supplies the real built-browser Test -> Run Detail -> Sample Evidence path;
+- #118 verifies canonical store/bundle identity, telemetry provenance, local evidence-rich content and portable-bundle privacy boundaries;
+- #119 supplies the exact-head PRE_REAL-gated operator run/config/manifest;
+- #120 is the only retained `REAL_ENVIRONMENT` acceptance run and may begin only after the first three lanes are integrated.
+
+A green A/B/C CI run is not EVID-001 evidence by itself.
 
 ## Evidence rules
 
