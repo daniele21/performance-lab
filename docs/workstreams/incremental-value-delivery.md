@@ -32,12 +32,13 @@ M1-M9 in `docs/roadmap.md` remain the capability/maturity coverage map. This wor
 - Search ranges/capabilities come from canonical backend/runtime contracts; the browser never invents them.
 - Every slice is accepted by the cheapest evidence environment sufficient for its claim; real-device claims require `REAL_ENVIRONMENT` evidence.
 - A slice is `DONE` only when its user-visible loop, failure/recovery semantics, retained evidence and applicable validation agree.
+- Parallel lanes must have explicit non-conflicting write ownership and one convergence gate; they must not implement competing sources of truth.
 
 ## Work graph
 
 | ID | User value unlocked | Owns/writes | Depends on | Parallel | State |
 | --- | --- | --- | --- | --- | --- |
-| VALUE-01 | **Real single-model evidence loop** — one real target/model can be discovered, tested, inspected and exported | PL real-target integration/evidence path; representative evidence artifacts | current PRE_REAL readiness | no | READY |
+| VALUE-01 | **Real single-model evidence loop** — one real target/model can be discovered, tested, inspected and exported | PL real-target integration/evidence path; representative evidence artifacts | current PRE_REAL readiness | internal A/B/C parallel lanes | ACTIVE |
 | VALUE-02 | **Real model decision** — compare 2+ real candidates for one use case/device and return an explainable recommendation or explicit no-rank | campaign decision journey + real comparison evidence | VALUE-01 | no | BLOCKED |
 | VALUE-03 | **Configuration decision** — answer which supported configuration should be used, not only which model | capability-backed optimization/search path + real config evidence | VALUE-02 | yes, with VALUE-04/08 | BLOCKED |
 | VALUE-04 | **Device-aware decision** — device performance/resource evidence materially informs the trade-off | telemetry/resource provenance + result presentation | VALUE-02 | yes, with VALUE-03/08 | BLOCKED |
@@ -50,9 +51,22 @@ Allowed states: `READY`, `ACTIVE`, `BLOCKED`, `DONE`.
 
 The graph is deliberately not a single chain. After VALUE-02, configuration optimization, device-aware evidence and distribution may proceed in parallel when ownership does not conflict.
 
+## VALUE-01 execution graph
+
+VALUE-01 is split only where ownership is independent. The first three lanes start from the same `dev` base and may merge in any order; the real-device execution is the single convergence gate.
+
+| ID | Work | Owns/writes | Depends on | Parallel | State |
+| --- | --- | --- | --- | --- | --- |
+| VALUE-01A / #117 | Real built-browser loop against Local LLM Server | target-environment Playwright spec/config + bounded browser launcher | current product contracts | yes, B/C | ACTIVE |
+| VALUE-01B / #118 | Evidence completeness + portability verifier | real-runtime verifier + deterministic verifier tests | canonical Run/store/bundle contracts | yes, A/C | ACTIVE |
+| VALUE-01C / #119 | Exact-head real-run operator entry point | existing real-runtime smoke/runbook + deterministic readiness tests | PRE_REAL contract + canonical CLI | yes, A/B | ACTIVE |
+| VALUE-01D / #120 | Retained representative device execution | retained RUNTIME-1 artifact set and state transition only | A + B + C integrated; exact-head PRE_REAL PASS | no | BLOCKED |
+
+Integration rule: A/B/C may not change benchmark, recommendation, persistence or serving semantics merely to simplify the real run. If a lane exposes a genuine product defect, fix its canonical owner in a separate coherent change and revalidate affected lanes.
+
 ## Current executable slice
 
-`VALUE-01 — Real single-model evidence loop`
+`VALUE-01 — Real single-model evidence loop`, with `VALUE-01A`, `VALUE-01B` and `VALUE-01C` executable in parallel.
 
 User outcome:
 
