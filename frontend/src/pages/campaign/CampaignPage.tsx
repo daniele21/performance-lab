@@ -294,6 +294,11 @@ function CampaignResults({
 
   return (
     <section className="campaign-results" aria-label="Campaign results">
+      <SectionHeader
+        title="Results"
+        description="Compatibility and the explicit decision policy come first; the recommendation then explains the best fit without collapsing evidence into an overall score."
+      />
+
       <div className="campaign-results-context">
         <div>
           <span>Evidence compatibility</span>
