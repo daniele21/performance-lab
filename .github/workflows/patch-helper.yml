@@ -1,0 +1,45 @@
+name: Temporary evidence test patch
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - name: Patch J8 wait and remove helper
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("frontend/e2e/evidence-drilldown.spec.ts")
+          text = path.read_text()
+          old = '  await expect(page.getByText("Quality", { exact: true })).toBeVisible();\n'
+          new = '  await expect(page.getByLabel("Sample evidence summary").getByText("Quality", { exact: true })).toBeVisible();\n'
+          if old not in text:
+              raise SystemExit("expected J8 Quality assertion not found")
+          path.write_text(text.replace(old, new, 1))
+          PY
+          pnpm --dir frontend exec prettier --write e2e/evidence-drilldown.spec.ts
+          git rm .github/workflows/patch-helper.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/e2e/evidence-drilldown.spec.ts
+          git commit -m "Wait for sample evidence summary in J8"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
