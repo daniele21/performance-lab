@@ -106,22 +106,37 @@ class UIQueryService(EvidenceUIQueryService):
         supported_generation_parameters: tuple[str, ...] = (),
     ) -> TargetSummaryReadModel:
         target = super().register_session_connection(connection)
-        self._session_discovered_models[target.target_id] = tuple(discovered_models)
-        self._session_generation_parameters[target.target_id] = tuple(
+        self.register_target_probe_result(
+            target.target_id,
+            discovered_models=discovered_models,
+            supported_generation_parameters=supported_generation_parameters,
+        )
+        return target
+
+    def register_target_probe_result(
+        self,
+        target_id: str,
+        *,
+        discovered_models: tuple[DiscoveredModelReadModel, ...] = (),
+        supported_generation_parameters: tuple[str, ...] = (),
+    ) -> None:
+        current_target_ids = {item.target_id for item in self.list_targets()}
+        if target_id not in current_target_ids:
+            raise LookupError(target_id)
+        self._session_discovered_models[target_id] = tuple(discovered_models)
+        self._session_generation_parameters[target_id] = tuple(
             sorted(dict.fromkeys(supported_generation_parameters))
         )
-        current_target_ids = {item.target_id for item in self.list_targets()}
         self._session_discovered_models = {
-            target_id: models
-            for target_id, models in self._session_discovered_models.items()
-            if target_id in current_target_ids
+            current_target_id: models
+            for current_target_id, models in self._session_discovered_models.items()
+            if current_target_id in current_target_ids
         }
         self._session_generation_parameters = {
-            target_id: parameters
-            for target_id, parameters in self._session_generation_parameters.items()
-            if target_id in current_target_ids
+            current_target_id: parameters
+            for current_target_id, parameters in self._session_generation_parameters.items()
+            if current_target_id in current_target_ids
         }
-        return target
 
     def campaign_planning_context(self) -> CampaignPlanningContextReadModel:
         use_cases = self._use_cases()
@@ -406,7 +421,18 @@ class UIQueryService(EvidenceUIQueryService):
             "suite_id": suite_id,
             "suite_version": suite_version,
         }
-        if target.target_id != configured_target_id:
+        if target.target_id == configured_target_id and self.starter_run_template is not None:
+            identity = self.starter_run_template.local_llm_server_identity
+            telemetry = self.starter_run_template.local_llm_server_telemetry
+            if identity is not None:
+                overrides["local_llm_server_identity"] = identity.model_copy(
+                    update={"model_id": model_id}
+                )
+            if telemetry is not None:
+                overrides["local_llm_server_telemetry"] = telemetry.model_copy(
+                    update={"model_id": model_id}
+                )
+        else:
             overrides.update(
                 {
                     "hardware": HardwareIdentity(),

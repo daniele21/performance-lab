@@ -126,6 +126,12 @@ def create_ui_app(
                 endpoint,
                 endpoint_identity_value=target.endpoint_identity,
             )
+        if result.healthy:
+            queries.register_target_probe_result(
+                target.target_id,
+                discovered_models=result.models,
+                supported_generation_parameters=result.supported_generation_parameters,
+            )
         return result.model_copy(update={"target": target})
 
     @app.get("/api/v1/campaign-planning", response_model=CampaignPlanningContextReadModel)
