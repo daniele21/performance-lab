@@ -5,49 +5,114 @@ on:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
+  actions: read
   contents: read
+
+concurrency:
+  group: performance-lab-validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   scope:
-    name: Select validation profile
+    name: Validation scope and repository guards
     runs-on: ubuntu-latest
     outputs:
+      stage: ${{ steps.stage.outputs.stage }}
       profile: ${{ steps.selector.outputs.profile }}
       reason: ${{ steps.selector.outputs.reason }}
+      risk_dimensions: ${{ steps.selector.outputs.risk_dimensions }}
+      required_gates: ${{ steps.selector.outputs.required_gates }}
       run_python: ${{ steps.selector.outputs.run_python }}
       run_frontend: ${{ steps.selector.outputs.run_frontend }}
       run_product_e2e: ${{ steps.selector.outputs.run_product_e2e }}
+      run_browser_e2e: ${{ steps.selector.outputs.run_browser_e2e }}
+      run_built_product: ${{ steps.selector.outputs.run_built_product }}
+      head_sha: ${{ steps.identity.outputs.head_sha }}
+      base_sha: ${{ steps.identity.outputs.base_sha }}
+      source_tree: ${{ steps.identity.outputs.source_tree }}
     steps:
+      - id: stage
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            if [[ "${{ github.base_ref }}" == "main" ]]; then stage=release
+            elif [[ "${{ github.event.pull_request.draft }}" == "true" ]]; then stage=iteration
+            else stage=integration
+            fi
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then stage=release
+          else stage=integration
+          fi
+          echo "stage=$stage" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+      - id: identity
+        shell: bash
+        run: |
+          HEAD_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then BASE_SHA="${{ github.event.pull_request.base.sha }}"; else BASE_SHA="${{ github.event.before }}"; fi
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "base_sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "source_tree=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - id: selector
-        name: Resolve blast radius
+        name: Resolve risks and gates
         shell: bash
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            args=(
-              --base "${{ github.event.pull_request.base.sha }}"
-              --head "${{ github.event.pull_request.head.sha }}"
-              --github-output "$GITHUB_OUTPUT"
-            )
-            if [[ "${{ github.base_ref }}" == "main" ]]; then
-              args+=(--promotion)
-            fi
-            python scripts/select_validation_profile.py "${args[@]}"
-          else
-            python scripts/select_validation_profile.py --full --github-output "$GITHUB_OUTPUT"
-          fi
+          args=(--base "${{ steps.identity.outputs.base_sha }}" --head "${{ steps.identity.outputs.head_sha }}" --stage "${{ steps.stage.outputs.stage }}" --github-output "$GITHUB_OUTPUT")
+          if [[ "${{ github.base_ref }}" == "main" || "${{ github.ref_name }}" == "main" ]]; then args+=(--promotion); fi
+          python scripts/select_validation_profile.py "${args[@]}"
+          python scripts/select_validation_profile.py --self-test
+      - name: Repository contracts
+        run: |
+          python scripts/verify_repository.py
+          python scripts/verify_operations.py
+          python scripts/verify_e2e.py
+          python scripts/verify_product_experience.py
+          python scripts/verify_docs.py
+          python scripts/verify_agent_context.py
 
-  validate:
-    name: Python ${{ matrix.python-version }}
+  reuse:
+    name: Reuse equivalent validation evidence
     needs: scope
-    if: needs.scope.outputs.run_python == 'true'
+    if: needs.scope.outputs.stage != 'iteration'
+    runs-on: ubuntu-latest
+    outputs:
+      reused: ${{ steps.find.outputs.reused }}
+      reuse_kind: ${{ steps.find.outputs.reuse_kind }}
+    steps:
+      - id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          HEAD_SHA: ${{ needs.scope.outputs.head_sha }}
+          SOURCE_TREE: ${{ needs.scope.outputs.source_tree }}
+          BASE_SHA: ${{ needs.scope.outputs.base_sha }}
+          PROFILE: ${{ needs.scope.outputs.profile }}
+          GATES: ${{ needs.scope.outputs.required_gates }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          key=$(printf '%s' "$GATES" | sha256sum | cut -c1-16)
+          if [[ "$EVENT_NAME" == "push" && "$REF_NAME" == "dev" ]]; then name="validation-tree-evidence-${SOURCE_TREE}-${BASE_SHA}-${PROFILE}-${key}"; kind=tree-equivalent
+          elif [[ "$EVENT_NAME" == "pull_request" ]]; then name="validation-evidence-${HEAD_SHA}-${BASE_SHA}-${PROFILE}-${key}"; kind=exact-head
+          else echo "reused=false" >> "$GITHUB_OUTPUT"; echo "reuse_kind=none" >> "$GITHUB_OUTPUT"; exit 0; fi
+          artifact=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?name=${name}&per_page=20" --jq '.artifacts | map(select(.expired == false)) | sort_by(.created_at) | reverse | .[0] // empty')
+          if [[ -z "$artifact" ]]; then echo "reused=false" >> "$GITHUB_OUTPUT"; echo "reuse_kind=none" >> "$GITHUB_OUTPUT"; exit 0; fi
+          echo "reused=true" >> "$GITHUB_OUTPUT"; echo "reuse_kind=$kind" >> "$GITHUB_OUTPUT"; echo "Reusing $kind validation evidence: $name"
+
+  python:
+    name: Python ${{ matrix.python-version }}
+    needs: [scope, reuse]
+    if: always() && needs.scope.outputs.run_python == 'true' && needs.reuse.outputs.reused != 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -57,67 +122,160 @@ jobs:
       UV_PYTHON: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v4
+        with: {ref: "${{ needs.scope.outputs.head_sha }}"}
       - uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.12.5"
-          python-version: ${{ matrix.python-version }}
-          enable-cache: true
-      - name: Sync locked Python environment
-        run: uv sync --extra dev --locked
-      - name: Validate repository
-        run: uv run --extra dev --locked python scripts/validate.py
+        with: {version: "0.12.5", python-version: "${{ matrix.python-version }}", enable-cache: true}
+      - run: uv sync --extra dev --locked
+      - run: uv run --extra dev --locked python scripts/validate.py
 
   frontend:
     name: Frontend (Node 24)
-    needs: scope
-    if: needs.scope.outputs.run_frontend == 'true'
+    needs: [scope, reuse]
+    if: always() && needs.scope.outputs.run_frontend == 'true' && needs.scope.outputs.run_built_product != 'true' && needs.reuse.outputs.reused != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: {ref: "${{ needs.scope.outputs.head_sha }}"}
       - uses: pnpm/action-setup@v4
-        with:
-          version: 11.24.0
-          run_install: false
+        with: {version: 11.24.0, run_install: false}
       - uses: actions/setup-node@v4
-        with:
-          node-version-file: frontend/.nvmrc
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-      - name: Install frozen frontend dependencies
-        run: pnpm --dir frontend install --frozen-lockfile
-      - name: Check frontend
-        run: pnpm --dir frontend run check
-      - name: Test frontend
-        run: pnpm --dir frontend run test
-      - name: Build frontend
-        run: pnpm --dir frontend run build
+        with: {node-version-file: frontend/.nvmrc, cache: pnpm, cache-dependency-path: frontend/pnpm-lock.yaml}
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - run: pnpm --dir frontend run check && pnpm --dir frontend run test && pnpm --dir frontend run build
 
   product-e2e:
-    name: Product E2E (Python 3.12)
-    needs: scope
-    if: needs.scope.outputs.run_product_e2e == 'true'
+    name: Product E2E
+    needs: [scope, reuse]
+    if: always() && needs.scope.outputs.run_product_e2e == 'true' && needs.scope.outputs.run_built_product != 'true' && needs.reuse.outputs.reused != 'true'
+    runs-on: ubuntu-latest
+    env: {UV_PYTHON: "3.12"}
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: "${{ needs.scope.outputs.head_sha }}"}
+      - uses: astral-sh/setup-uv@v6
+        with: {version: "0.12.5", python-version: "3.12", enable-cache: true}
+      - run: uv sync --extra dev --locked
+      - run: uv run --extra dev --locked python -m pytest tests/e2e -v --tb=short
+
+  browser-e2e:
+    name: Browser acceptance
+    needs: [scope, reuse]
+    if: always() && needs.scope.outputs.run_browser_e2e == 'true' && needs.scope.outputs.run_built_product != 'true' && needs.reuse.outputs.reused != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: "${{ needs.scope.outputs.head_sha }}"}
+      - uses: pnpm/action-setup@v4
+        with: {version: 11.24.0, run_install: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: frontend/.nvmrc, cache: pnpm, cache-dependency-path: frontend/pnpm-lock.yaml}
+      - uses: astral-sh/setup-uv@v6
+        with: {version: "0.12.5", python-version: "3.12", enable-cache: true}
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - run: pnpm --dir frontend exec playwright install --with-deps chromium
+      - run: pnpm --dir frontend run check && pnpm --dir frontend run test && pnpm --dir frontend run test:e2e
+      - name: Verify risk-selected browser evidence
+        run: uv run --no-project python scripts/verify_e2e_media.py frontend/test-results/results.json J0 J1 J2 J3 J4 J5 J6 J7 J8 J9
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: "browser-acceptance-evidence-${{ github.run_id }}-${{ github.run_attempt }}", path: frontend/test-results, if-no-files-found: ignore, retention-days: 7}
+
+  built-product:
+    name: Built product
+    needs: [scope, reuse]
+    if: always() && needs.scope.outputs.run_built_product == 'true' && needs.reuse.outputs.reused != 'true'
     runs-on: ubuntu-latest
     env:
+      PERFORMANCE_LAB_BUILD_ID: gh-${{ github.run_id }}-${{ github.run_attempt }}
+      PERFORMANCE_LAB_VARIANT: browser-ui
+      PERFORMANCE_LAB_CHANNEL: ci
       UV_PYTHON: "3.12"
     steps:
       - uses: actions/checkout@v4
+        with: {ref: "${{ needs.scope.outputs.head_sha }}", fetch-depth: 0}
       - uses: astral-sh/setup-uv@v6
+        with: {version: "0.12.5", python-version: "3.12", enable-cache: true}
+      - uses: pnpm/action-setup@v4
+        with: {version: 11.24.0, run_install: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: frontend/.nvmrc, cache: pnpm, cache-dependency-path: frontend/pnpm-lock.yaml}
+      - uses: actions/cache/restore@v4
         with:
-          version: "0.12.5"
-          python-version: "3.12"
-          enable-cache: true
-      - name: Sync locked Python environment
-        run: uv sync --extra dev --locked
-      - name: Run deterministic product acceptance workflow
+          path: build/artifacts
+          key: performance-lab-build-history-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: performance-lab-build-history-${{ runner.os }}-${{ runner.arch }}-
+      - run: uv sync --extra dev --locked
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - run: pnpm --dir frontend exec playwright install --with-deps chromium
+      - run: uv run --extra dev --locked python scripts/validate.py
+      - run: pnpm --dir frontend run check && pnpm --dir frontend run test
+      - run: uv run --extra dev --locked python -m pytest tests/e2e -v --tb=short
+      - run: uv run --extra dev --locked python scripts/pre_real_e2e.py --output-root build/pre-real-e2e
+      - run: uv run --extra dev --locked python scripts/verify_e2e_media.py build/pre-real-e2e/playwright-report.json J0 J1 J2 J3 J4 J5 J6 J7 J8 J9
+      - run: uv run --extra dev --locked python scripts/package_release.py --validated --require-full-product-e2e
+      - run: uv run --extra dev --locked python scripts/verify_e2e_media.py frontend/test-results-full-product/report.json J0 J1 J8 J9
+      - run: uv run --extra dev --locked python scripts/finalize_pre_real_e2e.py --browser-manifest build/pre-real-e2e/browser-manifest.json --packaged-report frontend/test-results-full-product/report.json --output-root build/pre-real-e2e
+      - run: uv run --extra dev --locked python scripts/verify_operations.py && uv run --extra dev --locked python scripts/verify_e2e.py
+      - uses: actions/cache/save@v4
+        with: {path: build/artifacts, key: "performance-lab-build-history-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}"}
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: "performance-lab-built-${{ github.run_id }}-${{ github.run_attempt }}", path: build/artifacts/**, if-no-files-found: error, retention-days: 7}
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: "pre-real-e2e-${{ github.run_id }}-${{ github.run_attempt }}", path: build/pre-real-e2e/**, if-no-files-found: error, retention-days: 7}
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: "packaged-e2e-${{ github.run_id }}-${{ github.run_attempt }}", path: frontend/test-results-full-product/**, if-no-files-found: error, retention-days: 7}
+
+  validation:
+    name: Repository validation / ${{ needs.scope.outputs.stage }} / ${{ needs.scope.outputs.profile }}
+    needs: [scope, reuse, python, frontend, product-e2e, browser-e2e, built-product]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          REUSED: ${{ needs.reuse.outputs.reused }}
+          PY: ${{ needs.python.result }}
+          FRONT: ${{ needs.frontend.result }}
+          PRODUCT: ${{ needs.product-e2e.result }}
+          BROWSER: ${{ needs.browser-e2e.result }}
+          BUILT: ${{ needs.built-product.result }}
+          RUN_PY: ${{ needs.scope.outputs.run_python }}
+          RUN_FRONT: ${{ needs.scope.outputs.run_frontend }}
+          RUN_PRODUCT: ${{ needs.scope.outputs.run_product_e2e }}
+          RUN_BROWSER: ${{ needs.scope.outputs.run_browser_e2e }}
+          RUN_BUILT: ${{ needs.scope.outputs.run_built_product }}
         shell: bash
         run: |
-          set -o pipefail
-          uv run --extra dev --locked python -m pytest tests/e2e -v --tb=short 2>&1 | tee product-e2e.log
-      - name: Upload product E2E failure log
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: product-e2e-failure-log-${{ github.run_id }}-${{ github.run_attempt }}
-          path: product-e2e.log
-          if-no-files-found: error
-          retention-days: 7
+          set -euo pipefail
+          [[ "$REUSED" == true ]] && exit 0
+          [[ "$RUN_PY" != true || "$PY" == success ]] || exit 1
+          if [[ "$RUN_BUILT" == true ]]; then [[ "$BUILT" == success ]] || exit 1; exit 0; fi
+          [[ "$RUN_FRONT" != true || "$FRONT" == success ]] || exit 1
+          [[ "$RUN_PRODUCT" != true || "$PRODUCT" == success ]] || exit 1
+          [[ "$RUN_BROWSER" != true || "$BROWSER" == success ]] || exit 1
+
+  evidence:
+    name: Publish reusable validation evidence
+    needs: [scope, reuse, validation]
+    if: needs.scope.outputs.stage != 'iteration' && needs.validation.result == 'success' && needs.reuse.outputs.reused != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - id: identity
+        env:
+          HEAD: ${{ needs.scope.outputs.head_sha }}
+          TREE: ${{ needs.scope.outputs.source_tree }}
+          BASE: ${{ needs.scope.outputs.base_sha }}
+          PROFILE: ${{ needs.scope.outputs.profile }}
+          GATES: ${{ needs.scope.outputs.required_gates }}
+        shell: bash
+        run: |
+          key=$(printf '%s' "$GATES" | sha256sum | cut -c1-16); mkdir evidence
+          printf '{"head":"%s","source_tree":"%s","target_base":"%s","profile":"%s","required_gates":"%s","e2e_environment":"selected-by-gates","run_id":"%s"}\n' "$HEAD" "$TREE" "$BASE" "$PROFILE" "$GATES" "$GITHUB_RUN_ID" > evidence/evidence.json
+          echo "exact=validation-evidence-${HEAD}-${BASE}-${PROFILE}-${key}" >> "$GITHUB_OUTPUT"
+          echo "tree=validation-tree-evidence-${TREE}-${BASE}-${PROFILE}-${key}" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with: {name: "${{ steps.identity.outputs.exact }}", path: evidence/evidence.json, retention-days: 7}
+      - uses: actions/upload-artifact@v4
+        with: {name: "${{ steps.identity.outputs.tree }}", path: evidence/evidence.json, retention-days: 7}
