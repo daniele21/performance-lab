@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
@@ -246,7 +247,10 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     assets = args.assets.expanduser().resolve()
     if not (assets / "index.html").is_file():
-        print("VALUE-02 real multi-model E2E failed: built frontend assets are missing", file=sys.stderr)
+        print(
+            "VALUE-02 real multi-model E2E failed: built frontend assets are missing",
+            file=sys.stderr,
+        )
         return 1
 
     source_revision = _git_revision()
@@ -308,9 +312,17 @@ def main() -> int:
             stderr=subprocess.PIPE,
         )
         _wait_ready(f"{base_ui_url}/api/v1/health", product)
-        step("ui_ready", "PASS", "built Performance Lab product is ready on an owned loopback port")
+        step(
+            "ui_ready",
+            "PASS",
+            "built Performance Lab product is ready on an owned loopback port",
+        )
 
-        probe = _request_json("POST", f"{base_ui_url}/api/v1/targets/{TARGET_ID}/probe", payload={})
+        probe = _request_json(
+            "POST",
+            f"{base_ui_url}/api/v1/targets/{TARGET_ID}/probe",
+            payload={},
+        )
         if not isinstance(probe, dict) or probe.get("healthy") is not True:
             raise RuntimeError("configured Local LLM Server target probe is not healthy")
         discovered = {
@@ -320,8 +332,14 @@ def main() -> int:
         }
         missing_probe = [model for model in models if model not in discovered]
         if missing_probe:
-            raise RuntimeError(f"requested models are not discoverable from /v1/models: {missing_probe}")
-        step("target_probe", "PASS", "all requested models are discoverable from one Local LLM Server target")
+            raise RuntimeError(
+                f"requested models are not discoverable from /v1/models: {missing_probe}"
+            )
+        step(
+            "target_probe",
+            "PASS",
+            "all requested models are discoverable from one Local LLM Server target",
+        )
 
         planning = _request_json("GET", f"{base_ui_url}/api/v1/campaign-planning")
         planned_models = set(_candidate_models(planning, target_id=TARGET_ID))
@@ -331,13 +349,19 @@ def main() -> int:
                 "configured-target discovery is not reflected in campaign planning: "
                 f"{missing_planning}"
             )
-        step("campaign_inventory", "PASS", "requested discovered models are campaign candidates")
+        step(
+            "campaign_inventory",
+            "PASS",
+            "requested discovered models are campaign candidates",
+        )
 
         environment = os.environ.copy()
         environment["PERFORMANCE_LAB_REAL_E2E_BASE_URL"] = base_ui_url
         environment["PERFORMANCE_LAB_VALUE02_MODELS"] = ",".join(models)
         environment["PERFORMANCE_LAB_VALUE02_BROWSER_RESULT"] = str(browser_result_path)
-        environment["PERFORMANCE_LAB_REAL_E2E_OUTPUT_DIR"] = str(output_dir / "browser-artifacts")
+        environment["PERFORMANCE_LAB_REAL_E2E_OUTPUT_DIR"] = str(
+            output_dir / "browser-artifacts"
+        )
         environment["PERFORMANCE_LAB_REAL_E2E_REPORT"] = str(browser_report_path)
         completed = subprocess.run(
             [
@@ -356,15 +380,25 @@ def main() -> int:
             check=False,
         )
         if completed.returncode != 0:
-            raise RuntimeError(f"VALUE-02 real browser Playwright failed with exit {completed.returncode}")
-        step("browser_journey", "PASS", "Find best setup completed a real multi-model Campaign and decision drill-down")
+            raise RuntimeError(
+                f"VALUE-02 real browser Playwright failed with exit {completed.returncode}"
+            )
+        step(
+            "browser_journey",
+            "PASS",
+            "Find best setup completed a real multi-model Campaign and decision drill-down",
+        )
 
         browser_result = json.loads(browser_result_path.read_text(encoding="utf-8"))
-        if not isinstance(browser_result, dict) or not isinstance(browser_result.get("campaign_id"), str):
+        if not isinstance(browser_result, dict) or not isinstance(
+            browser_result.get("campaign_id"), str
+        ):
             raise RuntimeError("VALUE-02 browser result did not retain a campaign id")
         campaign_id = browser_result["campaign_id"]
         campaign = _request_json("GET", f"{base_ui_url}/api/v1/campaigns/{campaign_id}")
-        if not isinstance(campaign, dict) or campaign.get("status") not in TERMINAL_CAMPAIGN_STATES:
+        if not isinstance(campaign, dict) or campaign.get(
+            "status"
+        ) not in TERMINAL_CAMPAIGN_STATES:
             raise RuntimeError("campaign did not reach a terminal state")
         if campaign.get("status") != "succeeded":
             raise RuntimeError(f"real multi-model campaign ended with {campaign.get('status')!r}")
@@ -383,7 +417,10 @@ def main() -> int:
 
         case_identity = _case_from_hash(str(browser_result.get("case_route") or ""))
         if case_identity is None:
-            cases = _request_json("GET", f"{base_ui_url}/api/v1/campaigns/{campaign_id}/cases")
+            cases = _request_json(
+                "GET",
+                f"{base_ui_url}/api/v1/campaigns/{campaign_id}/cases",
+            )
             if not isinstance(cases, list):
                 raise RuntimeError("campaign cases response is invalid")
             selected = next(
@@ -407,7 +444,11 @@ def main() -> int:
         _write_json(case_path, comparison)
 
         results = campaign.get("results") if isinstance(campaign.get("results"), dict) else {}
-        policy = results.get("decision_policy") if isinstance(results.get("decision_policy"), dict) else {}
+        policy = (
+            results.get("decision_policy")
+            if isinstance(results.get("decision_policy"), dict)
+            else {}
+        )
         manifest.update(
             {
                 "status": "PASS",
@@ -425,7 +466,11 @@ def main() -> int:
                 "browser_report_path": str(browser_report_path),
             }
         )
-        step("retained_evidence", "PASS", "campaign, immutable Run ids and same-case comparison are retained")
+        step(
+            "retained_evidence",
+            "PASS",
+            "campaign, immutable Run ids and same-case comparison are retained",
+        )
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         manifest["error"] = {"type": type(exc).__name__, "message": str(exc)[:500]}
         step("value02_operator", "FAIL", str(exc)[:500])
