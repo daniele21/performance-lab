@@ -94,9 +94,10 @@ def runtime_is_current(root: Path, runtime_dir: Path) -> bool:
     if marker is None or marker.get("state") != "ready":
         return False
     expected = runtime_identity(root)
-    return all(marker.get(key) == value for key, value in expected.items()) and _runtime_python(
-        runtime_dir
-    ).is_file()
+    return (
+        all(marker.get(key) == value for key, value in expected.items())
+        and _runtime_python(runtime_dir).is_file()
+    )
 
 
 def _assert_runtime_owned(runtime_dir: Path) -> None:
