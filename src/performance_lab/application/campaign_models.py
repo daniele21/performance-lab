@@ -26,6 +26,7 @@ class CampaignDimensionReadModel(UIModel):
     dimension: ComparisonDimension
     comparable: bool
     evidence_available: bool
+    evidence_note: str | None = None
     reasons: tuple[CampaignCompatibilityReasonReadModel, ...] = ()
 
 
