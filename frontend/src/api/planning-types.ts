@@ -1,5 +1,6 @@
 import type {
   DatasetSummaryReadModel,
+  GenerationParameterDomainReadModel,
   SuiteSummaryReadModel,
   TargetSummaryReadModel,
   UIModelIdentity,
@@ -28,6 +29,7 @@ export interface CandidateModelReadModel extends UIModelIdentity {
   runtime_name: string | null;
   runtime_version: string | null;
   runtime_config_digest: string | null;
+  generation_parameter_domains: GenerationParameterDomainReadModel[];
   source: "configured" | "discovered";
 }
 
