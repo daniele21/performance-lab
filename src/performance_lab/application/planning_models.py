@@ -11,6 +11,7 @@ from performance_lab.domain import GenerationConfig
 
 from .ui_models import (
     DatasetSummaryReadModel,
+    GenerationParameterDomainReadModel,
     SuiteSummaryReadModel,
     TargetSummaryReadModel,
     UIModel,
@@ -46,6 +47,7 @@ class CandidateModelReadModel(UIModel):
     runtime_name: str | None = None
     runtime_version: str | None = None
     runtime_config_digest: str | None = None
+    generation_parameter_domains: tuple[GenerationParameterDomainReadModel, ...] = ()
     source: Literal["configured", "discovered"]
 
 
