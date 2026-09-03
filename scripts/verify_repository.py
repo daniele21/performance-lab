@@ -82,9 +82,7 @@ def main() -> int:
         ):
             errors.append(f"baseline skill metadata invalid: {n}")
     present = [
-        x
-        for x in ("node_modules", ".venv", "build", "dist", "__pycache__")
-        if (root / x).exists()
+        x for x in ("node_modules", ".venv", "build", "dist", "__pycache__") if (root / x).exists()
     ]
     if present:
         warnings.append("generated/local directories present: " + ", ".join(present))
