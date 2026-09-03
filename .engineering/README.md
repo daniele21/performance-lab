@@ -1,31 +1,28 @@
 # Engineering contract
 
-Performance Lab targets the `daniele21/repo-template-sw` **0.8.0** L2 operating model with the `python`, `typescript` and `product-ui` profiles.
+Performance Lab targets the `daniele21/repo-template-sw` **0.9.1** L2 operating model with the `python`, `typescript` and `product-ui` profiles.
 
 Canonical machine-readable contracts:
 
-- `baseline.json` — adopted template version, target level/profiles and Skill lineage;
-- `commands.json` — native setup/check/test/E2E/build/runtime/cleanup intents plus publication, execution-capability and validation-profile routing;
-- `e2e.json` — critical journeys, target/execution environments, environment fidelity and residual real-environment gaps;
+- `baseline.json` — adopted standard/version, target level/profiles and Skill lineage;
+- `commands.json` — native commands plus delivery stages, risk/gate routing and reusable validation evidence;
+- `e2e.json` — critical journeys, target/execution environments, risk-based UI evidence modes and residual real-environment gaps;
 - `documentation-policy.json` — repository documentation and agent-context budgets.
 
-Use the canonical `uv`/`pnpm` commands declared in `commands.json` rather than inventing parallel wrappers. `uv.lock` is the locked Python project environment and `frontend/pnpm-lock.yaml` is the frozen browser dependency source; local Python execution is isolated in the repository-owned `.venv` managed by `uv`.
+Use the canonical `uv`/`pnpm` commands rather than inventing parallel wrappers. `uv.lock` and `frontend/pnpm-lock.yaml` are the frozen dependency sources.
 
 ## Current adoption boundary
 
-The repository truthfully enforces:
+Performance Lab separates delivery stage from validation depth:
 
-- bounded documentation and agent context;
-- deterministic Python/frontend checks and Product E2E;
-- Playwright Chromium browser acceptance for J1-J6;
-- packaged full-product E2E for the J1 golden path;
-- explicit separation of executor capability from environment fidelity;
-- automatic LEAN/SCOPED/STRONG/FULL validation selection with fail-safe escalation;
-- repository-owned remote validation rather than user-as-runner fallback;
-- executable product-experience, adaptive and reduced-motion contracts;
-- unique build/source identity, immutable artifact publication, manifest/checksum/build delta and bounded retention;
-- built-product smoke, stop/clean and strict operations/E2E-contract verification.
+- `ITERATION` keeps feedback focused and does not run browser/product/package gates merely because they exist;
+- `INTEGRATION` selects concrete required gates from changed risk dimensions and requires exact-head/documentation readiness;
+- `RELEASE` forces FULL plus release-critical evidence.
 
-`.engineering/commands.json` and `.engineering/e2e.json` must remain truthful owners. `scripts/verify_operations.py`, `scripts/verify_e2e.py` and `scripts/select_validation_profile.py --self-test` are blocking repository-health checks.
+`LEAN | SCOPED | STRONG | FULL` are summaries. `scripts/select_validation_profile.py` owns the concrete `repository-guards`, Python, frontend, product-E2E, browser-E2E and built-product gate selection.
 
-Repository-local automation does not prove representative hardware/model performance. Real runtime/model/device/telemetry/thermal claims remain explicit `REAL_ENVIRONMENT` evidence under `RUNTIME-1`; hosted CI or deterministic fixtures must never be promoted into those claims.
+Repository PR automation is consolidated in `.github/workflows/validate.yml`. When `built-product` is required it satisfies the overlapping frontend/product/browser acceptance cone rather than re-running those workflows independently. Dedicated browser/built-product workflows remain manual/tag surfaces.
+
+Successful integration evidence is reusable. Exact-head identity is used before merge; a content-preserving merge to `dev` may reuse the same evidence only when Git tree, prior target/base and required gates/profile are equivalent. Direct pushes without trusted evidence validate normally; release does not silently inherit integration proof.
+
+E2E UI evidence is risk-based: `ASSERTIONS`, `SCREENSHOTS`, `FULL_MEDIA`. Timing/progress/retry/cancel journeys retain FULL_MEDIA; stable inspection/comparison journeys use screenshots. `RUNTIME-1` retains real runtime/model/device/telemetry/thermal evidence as `REAL_ENVIRONMENT`; hosted CI never upgrades those claims.
