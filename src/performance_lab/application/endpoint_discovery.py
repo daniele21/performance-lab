@@ -204,7 +204,8 @@ async def _probe_local_llm_server_registry(
         domain_result[model_id] = tuple(sorted(domains, key=lambda item: item.name))
 
     warning = (
-        "Local LLM Server returned invalid generation-domain metadata; invalid domains were ignored."
+        "Local LLM Server returned invalid generation-domain metadata; "
+        "invalid domains were ignored."
         if invalid_domain_metadata
         else None
     )
