@@ -80,6 +80,7 @@ export type {
   EvidenceContentState,
   ExplanationState,
   FrozenExecutionPreviewReadModel,
+  GenerationParameterDomainReadModel,
   IdentityDifference,
   IdentitySummary,
   MetricDelta,
