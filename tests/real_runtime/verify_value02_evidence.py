@@ -124,11 +124,15 @@ def _verify_campaign_contract(
     )
 
     dimensions_raw = results.get("compatibility")
-    dimensions = {
-        item.get("dimension"): item
-        for item in dimensions_raw
-        if isinstance(dimensions_raw, list) and isinstance(item, dict)
-    } if isinstance(dimensions_raw, list) else {}
+    dimensions = (
+        {
+            item.get("dimension"): item
+            for item in dimensions_raw
+            if isinstance(dimensions_raw, list) and isinstance(item, dict)
+        }
+        if isinstance(dimensions_raw, list)
+        else {}
+    )
     dimension_ok = {"capability", "runtime", "resource"}.issubset(dimensions)
     _check(
         checks,
@@ -145,7 +149,9 @@ def _verify_campaign_contract(
     reason = results.get("recommendation_reason")
     entry_by_run = {run_id: (candidate_id, model_id) for candidate_id, model_id, run_id in entries}
     if recommendation is None:
-        no_rank_ok = isinstance(reason, str) and bool(reason.strip()) and results.get("state") == "ready"
+        no_rank_ok = (
+            isinstance(reason, str) and bool(reason.strip()) and results.get("state") == "ready"
+        )
         _check(
             checks,
             "recommendation_or_no_rank",
@@ -211,10 +217,14 @@ def _verify_runs(
     _check(
         checks,
         "immutable_candidate_runs",
-        len(runs) == len(entries) and len(runs) >= 2 and all(run.status == RunStatus.SUCCEEDED for run in runs),
+        len(runs) == len(entries)
+        and len(runs) >= 2
+        and all(run.status == RunStatus.SUCCEEDED for run in runs),
         detail=(
             "every candidate maps to an immutable completed SUCCEEDED Run"
-            if len(runs) == len(entries) and len(runs) >= 2 and all(run.status == RunStatus.SUCCEEDED for run in runs)
+            if len(runs) == len(entries)
+            and len(runs) >= 2
+            and all(run.status == RunStatus.SUCCEEDED for run in runs)
             else f"candidate Run evidence is missing or unsuccessful: {missing}"
         ),
     )
@@ -277,15 +287,19 @@ def _verify_case_comparison(
     run_ids: set[str],
 ) -> None:
     candidates = comparison.get("candidates")
-    comparable = [
-        item
-        for item in candidates
+    comparable = (
+        [
+            item
+            for item in candidates
+            if isinstance(candidates, list)
+            and isinstance(item, dict)
+            and item.get("comparable_to_reference") is True
+            and isinstance(item.get("evidence"), dict)
+            and item.get("run_id") in run_ids
+        ]
         if isinstance(candidates, list)
-        and isinstance(item, dict)
-        and item.get("comparable_to_reference") is True
-        and isinstance(item.get("evidence"), dict)
-        and item.get("run_id") in run_ids
-    ] if isinstance(candidates, list) else []
+        else []
+    )
     same_case_ok = (
         comparison.get("campaign_id") == campaign.get("campaign_id")
         and comparison.get("suite_id") == campaign.get("suite_id")
