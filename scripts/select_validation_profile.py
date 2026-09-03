@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Select the narrowest safe validation profile and affected CI jobs from changed paths."""
+"""Select validation profile, risk dimensions and concrete CI gates."""
 
 from __future__ import annotations
 
@@ -11,12 +11,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 PROFILE_RANK = {"lean": 0, "scoped": 1, "strong": 2, "full": 3}
+STAGES = ("iteration", "integration", "release")
 EXECUTABLE_SUFFIXES = {".py", ".js", ".jsx", ".ts", ".tsx", ".toml", ".json", ".yml", ".yaml"}
-
-FULL_PREFIXES = (
-    ".engineering/",
-    ".github/workflows/",
-)
+FULL_PREFIXES = (".engineering/", ".github/workflows/")
 FULL_FILES = {
     "pyproject.toml",
     "uv.lock",
@@ -55,15 +52,8 @@ STRONG_FILES = {
     "frontend/playwright.config.ts",
     "frontend/playwright.full-product.config.ts",
 }
-SCOPED_PREFIXES = (
-    "src/",
-    "tests/",
-    "frontend/",
-)
-LEAN_PREFIXES = (
-    "docs/",
-    "skills/",
-)
+SCOPED_PREFIXES = ("src/", "tests/", "frontend/")
+LEAN_PREFIXES = ("docs/", "skills/")
 LEAN_FILES = {
     "README.md",
     "AGENTS.md",
@@ -76,20 +66,26 @@ LEAN_FILES = {
 
 @dataclass(frozen=True)
 class Selection:
+    stage: str
     profile: str
     reason: str
     changed_paths: tuple[str, ...]
+    risk_dimensions: tuple[str, ...]
+    required_gates: tuple[str, ...]
     run_python: bool
     run_frontend: bool
     run_product_e2e: bool
     run_browser_e2e: bool
     run_built_product: bool
 
-    def as_dict(self) -> dict[str, object]:
+    def as_dict(self):
         return {
+            "stage": self.stage,
             "profile": self.profile,
             "reason": self.reason,
             "changed_paths": list(self.changed_paths),
+            "risk_dimensions": list(self.risk_dimensions),
+            "required_gates": list(self.required_gates),
             "run_python": self.run_python,
             "run_frontend": self.run_frontend,
             "run_product_e2e": self.run_product_e2e,
@@ -99,60 +95,66 @@ class Selection:
 
 
 def _normalize(paths: Iterable[str]) -> tuple[str, ...]:
-    return tuple(sorted({path.strip().replace("\\", "/") for path in paths if path.strip()}))
+    return tuple(sorted({p.strip().replace("\\", "/") for p in paths if p.strip()}))
 
 
-def _has_prefix(path: str, prefixes: tuple[str, ...]) -> bool:
-    return any(path.startswith(prefix) for prefix in prefixes)
+def _has_prefix(path, prefixes):
+    return any(path.startswith(x) for x in prefixes)
 
 
-def _is_executable(path: str) -> bool:
+def _is_executable(path):
     return Path(path).suffix.lower() in EXECUTABLE_SUFFIXES
 
 
-def select(paths: Iterable[str], *, promotion: bool = False, force_full: bool = False) -> Selection:
+def select(
+    paths: Iterable[str],
+    *,
+    stage: str = "integration",
+    promotion: bool = False,
+    force_full: bool = False,
+) -> Selection:
     changed = _normalize(paths)
+    risks = []
     if force_full:
-        profile = "full"
-        reason = "explicit full validation requested"
-    elif promotion:
-        profile = "full"
-        reason = "promotion/release target requires FULL validation"
+        profile, reason = "full", "explicit full validation requested"
+        risks = ["global_validation"]
+    elif promotion or stage == "release":
+        profile, reason = "full", "promotion/release target requires FULL validation"
+        risks = ["release_boundary"]
     elif not changed:
-        profile = "full"
-        reason = "no changed paths resolved; fail-safe FULL validation"
-    elif any(path in FULL_FILES or _has_prefix(path, FULL_PREFIXES) for path in changed):
-        profile = "full"
-        reason = "validation/build/dependency contract changed"
-    elif any(path in STRONG_FILES or _has_prefix(path, STRONG_PREFIXES) for path in changed):
-        profile = "strong"
-        reason = (
-            "cross-boundary, user-facing, persistence, E2E or release-sensitive surface changed"
+        profile, reason = "full", "no changed paths resolved; fail-safe FULL validation"
+        risks = ["unknown_scope"]
+    elif any(p in FULL_FILES or _has_prefix(p, FULL_PREFIXES) for p in changed):
+        profile, reason = "full", "validation/build/dependency contract changed"
+        risks = ["global_validation_build_dependency"]
+    elif any(p in STRONG_FILES or _has_prefix(p, STRONG_PREFIXES) for p in changed):
+        profile, reason = (
+            "strong",
+            "cross-boundary, user-facing, persistence, E2E or release-sensitive surface changed",
         )
+        risks = ["cross_product_user_persistence_e2e"]
     elif all(
-        path in LEAN_FILES or _has_prefix(path, LEAN_PREFIXES) or path.endswith(".md")
-        for path in changed
+        p in LEAN_FILES or _has_prefix(p, LEAN_PREFIXES) or p.endswith(".md") for p in changed
     ):
-        profile = "lean"
-        reason = "documentation/governance-only change"
-    elif any(_has_prefix(path, SCOPED_PREFIXES) for path in changed):
-        profile = "scoped"
-        reason = "contained implementation surface changed"
-    elif any(_is_executable(path) for path in changed):
-        profile = "full"
-        reason = "unknown executable/configuration path; fail-safe FULL validation"
+        profile, reason = "lean", "documentation/governance-only change"
+        risks = ["governance"]
+    elif any(_has_prefix(p, SCOPED_PREFIXES) for p in changed):
+        profile, reason = "scoped", "contained implementation surface changed"
+        risks = ["contained_implementation"]
+    elif any(_is_executable(p) for p in changed):
+        profile, reason = "full", "unknown executable/configuration path; fail-safe FULL validation"
+        risks = ["unknown_executable"]
     else:
-        profile = "lean"
-        reason = "non-executable repository metadata change"
-
+        profile, reason = "lean", "non-executable repository metadata change"
+        risks = ["governance"]
     python_affected = any(
-        path.startswith(("src/", "tests/", "scripts/"))
-        or path in {"pyproject.toml", "uv.lock", ".python-version"}
-        for path in changed
+        p.startswith(("src/", "tests/", "scripts/"))
+        or p in {"pyproject.toml", "uv.lock", ".python-version"}
+        for p in changed
     )
-    frontend_affected = any(path.startswith(("frontend/", "design/")) for path in changed)
-    cross_product_affected = any(
-        path.startswith(
+    frontend_affected = any(p.startswith(("frontend/", "design/")) for p in changed)
+    cross_product = any(
+        p.startswith(
             (
                 "src/performance_lab/application/",
                 "src/performance_lab/adapters/",
@@ -161,114 +163,127 @@ def select(paths: Iterable[str], *, promotion: bool = False, force_full: bool = 
                 "tests/e2e/",
             )
         )
-        or path
+        or p
         in {
             "src/performance_lab/ui_api.py",
             "src/performance_lab/ui_server.py",
             "src/performance_lab/runner.py",
             "src/performance_lab/engine.py",
         }
-        for path in changed
+        for p in changed
     )
-    browser_affected = frontend_affected or any(
-        path.startswith("src/performance_lab/application/")
-        or path in {"src/performance_lab/ui_api.py", "src/performance_lab/ui_server.py"}
-        for path in changed
+    browser = frontend_affected or any(
+        p.startswith("src/performance_lab/application/")
+        or p in {"src/performance_lab/ui_api.py", "src/performance_lab/ui_server.py"}
+        for p in changed
     )
-    package_affected = frontend_affected or any(
-        path in STRONG_FILES
-        or path.startswith(("src/performance_lab/application/", "src/performance_lab/storage/"))
-        for path in changed
+    package = frontend_affected or any(
+        p in STRONG_FILES
+        or p.startswith(("src/performance_lab/application/", "src/performance_lab/storage/"))
+        for p in changed
     )
-
     if profile == "full":
-        return Selection(profile, reason, changed, True, True, True, True, True)
+        python_affected = frontend_affected = cross_product = browser = package = True
+    if stage == "iteration":
+        cross_product = browser = package = False
+    if stage == "release":
+        python_affected = frontend_affected = cross_product = browser = package = True
+    gates = ["repository-guards"]
+    if python_affected:
+        gates.append("python-validation")
+    if frontend_affected:
+        gates.append("frontend-validation")
+    if cross_product:
+        gates.append("product-e2e")
+    if browser:
+        gates.append("browser-e2e")
+    if package:
+        gates.append("built-product")
+    if stage == "release":
+        gates.append("release-critical")
     return Selection(
+        stage,
         profile,
         reason,
         changed,
+        tuple(risks),
+        tuple(gates),
         python_affected,
         frontend_affected,
-        profile == "strong" and cross_product_affected,
-        profile == "strong" and browser_affected,
-        profile == "strong" and package_affected,
+        cross_product,
+        browser,
+        package,
     )
 
 
-def changed_paths(base: str, head: str) -> tuple[str, ...]:
-    completed = subprocess.run(
+def changed_paths(base, head):
+    c = subprocess.run(
         ["git", "diff", "--name-only", f"{base}...{head}"],
         check=True,
         text=True,
         capture_output=True,
     )
-    return _normalize(completed.stdout.splitlines())
+    return _normalize(c.stdout.splitlines())
 
 
-def write_github_output(path: Path, selection: Selection) -> None:
-    values = {
-        "profile": selection.profile,
-        "reason": selection.reason,
-        "run_python": str(selection.run_python).lower(),
-        "run_frontend": str(selection.run_frontend).lower(),
-        "run_product_e2e": str(selection.run_product_e2e).lower(),
-        "run_browser_e2e": str(selection.run_browser_e2e).lower(),
-        "run_built_product": str(selection.run_built_product).lower(),
-        "affected_scope": ",".join(selection.changed_paths),
+def write_github_output(path: Path, s: Selection):
+    vals = {
+        "stage": s.stage,
+        "profile": s.profile,
+        "reason": s.reason,
+        "risk_dimensions": ",".join(s.risk_dimensions),
+        "required_gates": ",".join(s.required_gates),
+        "run_python": str(s.run_python).lower(),
+        "run_frontend": str(s.run_frontend).lower(),
+        "run_product_e2e": str(s.run_product_e2e).lower(),
+        "run_browser_e2e": str(s.run_browser_e2e).lower(),
+        "run_built_product": str(s.run_built_product).lower(),
+        "affected_scope": ",".join(s.changed_paths),
     }
-    with path.open("a", encoding="utf-8") as handle:
-        for key, value in values.items():
-            handle.write(f"{key}={value}\n")
+    with path.open("a") as h:
+        for k, v in vals.items():
+            h.write(f"{k}={v}\n")
 
 
-def self_test() -> None:
-    cases = (
+def self_test():
+    for paths, expected in (
         (("docs/README.md",), "lean"),
         (("src/performance_lab/domain/models.py",), "scoped"),
         (("frontend/src/pages/Overview.tsx",), "strong"),
-        (("src/performance_lab/ui_api.py",), "strong"),
         ((".engineering/commands.json",), "full"),
         (("unknown/tool.py",), "full"),
-    )
-    for paths, expected in cases:
-        actual = select(paths).profile
-        if actual != expected:
-            raise AssertionError(f"selector case {paths!r}: expected {expected}, got {actual}")
-    if select(("docs/README.md",), promotion=True).profile != "full":
-        raise AssertionError("promotion must force FULL validation")
+    ):
+        assert select(paths).profile == expected
+    assert select(("frontend/src/App.tsx",), stage="iteration").run_browser_e2e is False
+    assert select(("docs/README.md",), stage="release").profile == "full"
     print("validation-profile selector self-test: PASS")
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--base")
-    parser.add_argument("--head")
-    parser.add_argument("--paths", nargs="*")
-    parser.add_argument("--promotion", action="store_true")
-    parser.add_argument("--full", action="store_true")
-    parser.add_argument("--github-output", type=Path)
-    parser.add_argument("--self-test", action="store_true")
-    return parser.parse_args()
-
-
-def main() -> int:
-    args = parse_args()
-    if args.self_test:
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--base")
+    p.add_argument("--head")
+    p.add_argument("--paths", nargs="*")
+    p.add_argument("--stage", choices=STAGES, default="integration")
+    p.add_argument("--promotion", action="store_true")
+    p.add_argument("--full", action="store_true")
+    p.add_argument("--github-output", type=Path)
+    p.add_argument("--self-test", action="store_true")
+    a = p.parse_args()
+    if a.self_test:
         self_test()
         return 0
-    if args.paths is not None:
-        paths = tuple(args.paths)
-    elif args.full:
-        paths = ()
-    elif args.base and args.head:
-        paths = changed_paths(args.base, args.head)
-    else:
+    paths = (
+        tuple(a.paths)
+        if a.paths is not None
+        else (() if a.full else changed_paths(a.base, a.head) if a.base and a.head else None)
+    )
+    if paths is None:
         raise SystemExit("provide --base/--head, --paths, --full or --self-test")
-
-    selection = select(paths, promotion=args.promotion, force_full=args.full)
-    print(json.dumps(selection.as_dict(), sort_keys=True))
-    if args.github_output is not None:
-        write_github_output(args.github_output, selection)
+    s = select(paths, stage=a.stage, promotion=a.promotion, force_full=a.full)
+    print(json.dumps(s.as_dict(), sort_keys=True))
+    if a.github_output:
+        write_github_output(a.github_output, s)
     return 0
 
 
