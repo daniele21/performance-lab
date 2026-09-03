@@ -132,7 +132,10 @@ def test_configured_target_probe_discovers_models_through_owned_endpoint_profile
         return EndpointProbeReadModel(
             healthy=True,
             endpoint_identity=endpoint_identity_value,
-            models=(DiscoveredModelReadModel(model_id="nvidia/nemotron-3-nano-4b"),),
+            models=(
+                DiscoveredModelReadModel(model_id="nvidia/nemotron-3-nano-4b"),
+                DiscoveredModelReadModel(model_id="model-b"),
+            ),
             supported_generation_parameters=("temperature", "top_p"),
         )
 
@@ -151,6 +154,77 @@ def test_configured_target_probe_discovers_models_through_owned_endpoint_profile
     assert payload["target"]["target_id"] == "configured-target"
     assert payload["models"][0]["model_id"] == "nvidia/nemotron-3-nano-4b"
     assert payload["endpoint_identity"] == "127.0.0.1:1235/v1/"
+
+    planning = client.get("/api/v1/campaign-planning")
+    assert planning.status_code == 200
+    planned_target = planning.json()["targets"][0]
+    assert [candidate["model_id"] for candidate in planned_target["candidates"]] == [
+        "model-b",
+        "nvidia/nemotron-3-nano-4b",
+    ]
+    assert planned_target["supported_generation_parameters"] == ["temperature", "top_p"]
+
+
+def test_unhealthy_configured_probe_preserves_last_successful_candidate_inventory(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    endpoint = EndpointProfile(
+        profile_id="configured-profile",
+        base_url="http://127.0.0.1:1235/v1/",
+    )
+    target = Target(
+        target_id="configured-target",
+        display_name="Configured local runtime",
+        adapter_type="openai-compatible",
+        endpoint_profile_id=endpoint.profile_id,
+        endpoint_identity="127.0.0.1:1235/v1/",
+    )
+    probe_count = 0
+
+    async def fake_profile_probe(
+        profile: EndpointProfile,
+        *,
+        endpoint_identity_value: str,
+    ) -> EndpointProbeReadModel:
+        nonlocal probe_count
+        probe_count += 1
+        if probe_count == 1:
+            return EndpointProbeReadModel(
+                healthy=True,
+                endpoint_identity=endpoint_identity_value,
+                models=(
+                    DiscoveredModelReadModel(model_id="model-a"),
+                    DiscoveredModelReadModel(model_id="model-b"),
+                ),
+                supported_generation_parameters=("temperature",),
+            )
+        return EndpointProbeReadModel(
+            healthy=False,
+            endpoint_identity=endpoint_identity_value,
+            models=(),
+            supported_generation_parameters=(),
+        )
+
+    monkeypatch.setattr("performance_lab.ui_api.probe_endpoint_profile", fake_profile_probe)
+    queries = UIQueryService(
+        SQLiteRunStore(tmp_path / "runs.sqlite3"),
+        targets=(target,),
+        endpoint_profiles=(endpoint,),
+    )
+    client = TestClient(create_ui_app(queries))
+
+    first = client.post("/api/v1/targets/configured-target/probe")
+    second = client.post("/api/v1/targets/configured-target/probe")
+
+    assert first.json()["healthy"] is True
+    assert second.json()["healthy"] is False
+    planned_target = client.get("/api/v1/campaign-planning").json()["targets"][0]
+    assert [candidate["model_id"] for candidate in planned_target["candidates"]] == [
+        "model-a",
+        "model-b",
+    ]
+    assert planned_target["supported_generation_parameters"] == ["temperature"]
 
 
 def test_configured_target_probe_rejects_unknown_target(tmp_path) -> None:
