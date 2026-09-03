@@ -197,7 +197,11 @@ class GenerationParameterDomainReadModel(UIModel):
         ):
             raise ValueError("integer generation domains require integer bounds")
         if self.step is not None:
-            if isinstance(self.step, bool) or self.step <= 0 or self.step > self.maximum - self.minimum:
+            if (
+                isinstance(self.step, bool)
+                or self.step <= 0
+                or self.step > self.maximum - self.minimum
+            ):
                 raise ValueError("generation domain step must be positive and within the span")
             if self.kind == "integer" and not isinstance(self.step, int):
                 raise ValueError("integer generation domains require an integer step")
