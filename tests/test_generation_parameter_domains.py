@@ -9,7 +9,9 @@ from performance_lab.application import (
     GenerationParameterDomainReadModel,
     UIQueryService,
 )
-from performance_lab.application.endpoint_discovery import _probe_local_llm_server_registry
+from performance_lab.application.endpoint_discovery import (
+    _probe_local_llm_server_registry,
+)
 from performance_lab.storage import SQLiteRunStore
 
 
@@ -45,7 +47,9 @@ def _patch_registry(monkeypatch, payload: object) -> None:
     )
 
 
-def test_local_llm_registry_preserves_declared_model_scoped_domains(monkeypatch) -> None:
+def test_local_llm_registry_preserves_declared_model_scoped_domains(
+    monkeypatch,
+) -> None:
     _patch_registry(
         monkeypatch,
         {
@@ -101,7 +105,9 @@ def test_local_llm_registry_preserves_declared_model_scoped_domains(monkeypatch)
     assert temperature.step == 0.1
 
 
-def test_invalid_domain_metadata_is_ignored_without_losing_registry_model(monkeypatch) -> None:
+def test_invalid_domain_metadata_is_ignored_without_losing_registry_model(
+    monkeypatch,
+) -> None:
     _patch_registry(
         monkeypatch,
         {
