@@ -2,6 +2,8 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+from tests.real_runtime.verify_value02_evidence import verify_value02_evidence
+
 from performance_lab.datasets import build_general_starter_suite
 from performance_lab.domain import (
     EvaluatorRef,
@@ -16,7 +18,6 @@ from performance_lab.domain import (
     TelemetryLevel,
 )
 from performance_lab.storage import SQLiteRunStore
-from tests.real_runtime.verify_value02_evidence import verify_value02_evidence
 
 
 def _run(model_id: str, run_id: str) -> Run:
