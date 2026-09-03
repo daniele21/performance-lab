@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Literal
 
 import httpx
-from pydantic import HttpUrl
+from pydantic import HttpUrl, ValidationError
 
 from performance_lab.adapters import OpenAICompatibleAdapter
 from performance_lab.domain import EndpointProfile
@@ -17,6 +17,7 @@ from .ui_models import (
     DiscoveredModelReadModel,
     EndpointConnectionInput,
     EndpointProbeReadModel,
+    GenerationParameterDomainReadModel,
     RuntimeParameterReadModel,
 )
 
@@ -66,18 +67,22 @@ async def probe_endpoint_profile(
 
     capabilities = _capability_evidence(passive.capabilities, healthy=passive.healthy)
     runtime_parameters: dict[str, tuple[RuntimeParameterReadModel, ...]] = {}
+    generation_domains: dict[str, tuple[GenerationParameterDomainReadModel, ...]] = {}
     warning: str | None = None
     if (
         passive.healthy
         and local_connection is not None
         and local_connection.server_type == "local_llm_server"
     ):
-        runtime_parameters, warning = await _probe_local_llm_server_registry(local_connection)
+        runtime_parameters, generation_domains, warning = await _probe_local_llm_server_registry(
+            local_connection
+        )
 
     models = tuple(
         DiscoveredModelReadModel(
             model_id=model_id,
             runtime_parameters=runtime_parameters.get(model_id, ()),
+            generation_parameter_domains=generation_domains.get(model_id, ()),
         )
         for model_id in passive.models
     )
@@ -131,7 +136,11 @@ def _capability_evidence(
 
 async def _probe_local_llm_server_registry(
     connection: EndpointConnectionInput,
-) -> tuple[dict[str, tuple[RuntimeParameterReadModel, ...]], str | None]:
+) -> tuple[
+    dict[str, tuple[RuntimeParameterReadModel, ...]],
+    dict[str, tuple[GenerationParameterDomainReadModel, ...]],
+    str | None,
+]:
     """Best-effort first-party enrichment; generic OpenAI discovery stays authoritative."""
     root = str(local_server_root(connection)).rstrip("/")
     url = f"{root}/api/v1/models/registry"
@@ -143,16 +152,19 @@ async def _probe_local_llm_server_registry(
     except (httpx.HTTPError, ValueError, TypeError):
         return (
             {},
+            {},
             "Model discovery succeeded, but Local LLM Server runtime details are unavailable.",
         )
 
     if not isinstance(payload, Mapping):
-        return {}, "Local LLM Server returned an invalid runtime registry response."
+        return {}, {}, "Local LLM Server returned an invalid runtime registry response."
     raw_models = payload.get("models")
     if not isinstance(raw_models, list):
-        return {}, "Local LLM Server runtime registry did not include a model list."
+        return {}, {}, "Local LLM Server runtime registry did not include a model list."
 
-    result: dict[str, tuple[RuntimeParameterReadModel, ...]] = {}
+    runtime_result: dict[str, tuple[RuntimeParameterReadModel, ...]] = {}
+    domain_result: dict[str, tuple[GenerationParameterDomainReadModel, ...]] = {}
+    invalid_domain_metadata = False
     for raw_model in raw_models:
         if not isinstance(raw_model, Mapping):
             continue
@@ -163,7 +175,7 @@ async def _probe_local_llm_server_registry(
         runtime_config = raw_model.get("runtime_config")
         config = runtime_config if isinstance(runtime_config, Mapping) else {}
         names = raw_capabilities if isinstance(raw_capabilities, list) else []
-        parameters = tuple(
+        runtime_result[model_id] = tuple(
             RuntimeParameterReadModel(
                 name=name,
                 current_value=config.get(name),
@@ -171,8 +183,32 @@ async def _probe_local_llm_server_registry(
             for name in names
             if isinstance(name, str) and name
         )
-        result[model_id] = parameters
-    return result, None
+
+        raw_domains = raw_model.get("generation_parameter_domains")
+        if raw_domains is None:
+            domain_result[model_id] = ()
+            continue
+        if not isinstance(raw_domains, list):
+            invalid_domain_metadata = True
+            domain_result[model_id] = ()
+            continue
+        domains: list[GenerationParameterDomainReadModel] = []
+        for raw_domain in raw_domains:
+            if not isinstance(raw_domain, Mapping):
+                invalid_domain_metadata = True
+                continue
+            try:
+                domains.append(GenerationParameterDomainReadModel.model_validate(dict(raw_domain)))
+            except ValidationError:
+                invalid_domain_metadata = True
+        domain_result[model_id] = tuple(sorted(domains, key=lambda item: item.name))
+
+    warning = (
+        "Local LLM Server returned invalid generation-domain metadata; invalid domains were ignored."
+        if invalid_domain_metadata
+        else None
+    )
+    return runtime_result, domain_result, warning
 
 
 def _model_id(raw_model: Mapping[object, object]) -> str | None:
