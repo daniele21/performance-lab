@@ -52,6 +52,23 @@ The software/readiness lanes are integrated. The representative-device run remai
 
 PR #141 intentionally moved `dev` to integrate the completed VALUE-02 software for end-to-end testing. Therefore older PRE_REAL handoffs are historical evidence only; #120 must use a fresh PRE_REAL/Built Product PASS for the current `dev` revision.
 
+## Current acceptance — VALUE-01
+
+User outcome:
+
+> Connect a real Local LLM Server target on a representative device, run one real model, inspect trustworthy Run/Sample Evidence, and retain a portable evidence bundle.
+
+Acceptance:
+
+- fresh exact-head PRE_REAL/Built Product readiness passes before the real run;
+- real `/v1/models` discovery and inference complete through **Test a model**;
+- first-party runtime identity and `/status` telemetry are retained when supplied, with explicit provenance;
+- Run Detail and at least one retained Sample Evidence view are inspectable;
+- canonical store + `.plab.zip` pass the VALUE-01B verifier; missing/not-retained evidence stays typed;
+- one retained `real-runtime-device` / `RUNTIME-1` run is sufficient for a reviewer to reproduce or bound the claim.
+
+`representative-device-evidence.md` owns the detailed real-device protocol/artifact rules.
+
 ## VALUE-02 execution graph
 
 The deterministic/software portions are already integrated on `dev`; only representative acceptance remains.
@@ -83,11 +100,10 @@ Prepared isolated lanes already exist and remain intentionally unmerged until VA
 - VALUE-04A / PR #148 — policy-eligible device evidence classification;
 - VALUE-08A / PR #147 — artifact-owned launcher.
 
-## Acceptance
+## Later slice acceptance
 
 | Slice | Minimum acceptance |
 | --- | --- |
-| VALUE-01 | one real target/model/device; Test a model -> Run/Sample Evidence; canonical store + `.plab.zip`; VALUE-01 verifier PASS. |
 | VALUE-02 | 2+ real candidates, same use case/device; compatibility and explicit policy precede backend-owned recommendation/no-rank; differentiating evidence remains drillable. |
 | VALUE-03 | 2+ supported real configurations using runtime-declared mutable ranges; quantization stays candidate identity; unsupported parameters are not fake controls. |
 | VALUE-04 | real latency/throughput/resource measurements retain scope/unit/provenance; unavailable sensors stay unavailable; only comparable policy-relevant evidence affects decisions. |
