@@ -467,9 +467,7 @@ def _compatibility(
             CampaignDimensionReadModel(
                 dimension=dimension,
                 comparable=not reasons,
-                evidence_available=all(
-                    _has_dimension_evidence(run, dimension) for run in runs
-                ),
+                evidence_available=all(_has_dimension_evidence(run, dimension) for run in runs),
                 evidence_note=_dimension_evidence_note(runs, dimension),
                 reasons=tuple(reasons),
             )
