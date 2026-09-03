@@ -41,6 +41,7 @@ from .ui_models import (
     DatasetSummaryReadModel,
     DiscoveredModelReadModel,
     EndpointConnectionInput,
+    GenerationParameterDomainReadModel,
     SuiteSummaryReadModel,
     TargetSummaryReadModel,
 )
@@ -166,6 +167,7 @@ class UIQueryService(EvidenceUIQueryService):
                         target.target_id,
                         model.model_id,
                         source="discovered",
+                        generation_parameter_domains=model.generation_parameter_domains,
                     )
                 )
             candidates = list({item.candidate_id: item for item in candidates}.values())
@@ -521,6 +523,7 @@ def _candidate(
     model_id: str,
     *,
     source: Literal["configured", "discovered"],
+    generation_parameter_domains: tuple[GenerationParameterDomainReadModel, ...] = (),
 ) -> CandidateModelReadModel:
     payload = json.dumps(
         {"target_id": target_id, "model_id": model_id},
@@ -532,6 +535,7 @@ def _candidate(
         candidate_id=candidate_id,
         target_id=target_id,
         model_id=model_id,
+        generation_parameter_domains=generation_parameter_domains,
         source=source,
     )
 
