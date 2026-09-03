@@ -35,6 +35,7 @@ from .campaign_policy import (
     decision_policy_read_model,
     recommend_strict_quality_dominance,
 )
+from .device_evidence import resource_measurement_is_decision_eligible
 from .evidence_models import SampleEvidenceDetailReadModel
 from .ui_models import RunDetailReadModel
 from .ui_queries import CompletedRunReader
@@ -428,14 +429,15 @@ def _matching_samples(
 def _compatibility(
     candidates: tuple[tuple[str, Run], ...],
 ) -> tuple[CampaignDimensionReadModel, ...]:
+    runs = tuple(run for _, run in candidates)
     if len(candidates) < 2:
         return tuple(
             CampaignDimensionReadModel(
                 dimension=dimension,
                 comparable=False,
-                evidence_available=all(
-                    _has_dimension_evidence(run, dimension) for _, run in candidates
-                ),
+                evidence_available=bool(runs)
+                and all(_has_dimension_evidence(run, dimension) for run in runs),
+                evidence_note=_dimension_evidence_note(runs, dimension),
                 reasons=(),
             )
             for dimension in ComparisonDimension
@@ -466,12 +468,38 @@ def _compatibility(
                 dimension=dimension,
                 comparable=not reasons,
                 evidence_available=all(
-                    _has_dimension_evidence(run, dimension) for _, run in candidates
+                    _has_dimension_evidence(run, dimension) for run in runs
                 ),
+                evidence_note=_dimension_evidence_note(runs, dimension),
                 reasons=tuple(reasons),
             )
         )
     return tuple(dimensions)
+
+
+def _dimension_evidence_note(
+    runs: tuple[Run, ...],
+    dimension: ComparisonDimension,
+) -> str | None:
+    if runs and all(_has_dimension_evidence(run, dimension) for run in runs):
+        return None
+    if not runs:
+        return "No completed candidate Run evidence is available for this dimension."
+    if dimension == ComparisonDimension.CAPABILITY:
+        return "Comparable aggregate quality evidence is unavailable for one or more candidates."
+    if dimension == ComparisonDimension.RUNTIME:
+        return "Black-box request performance evidence is unavailable for one or more candidates."
+    contextual_resource_telemetry = any(
+        item.provenance in {MeasurementProvenance.HOST, MeasurementProvenance.RUNTIME}
+        for run in runs
+        for item in run.aggregate_measurements
+    )
+    if contextual_resource_telemetry:
+        return (
+            "Contextual host/runtime telemetry is retained, but no explicitly attributable "
+            "model-resource metric is decision-eligible for every candidate."
+        )
+    return "No explicitly attributable model-resource evidence is retained for every candidate."
 
 
 def _has_dimension_evidence(run: Run, dimension: ComparisonDimension) -> bool:
@@ -482,6 +510,5 @@ def _has_dimension_evidence(run: Run, dimension: ComparisonDimension) -> bool:
             item.provenance == MeasurementProvenance.CLIENT for item in run.aggregate_measurements
         )
     return any(
-        item.provenance in {MeasurementProvenance.HOST, MeasurementProvenance.RUNTIME}
-        for item in run.aggregate_measurements
+        resource_measurement_is_decision_eligible(item) for item in run.aggregate_measurements
     )
