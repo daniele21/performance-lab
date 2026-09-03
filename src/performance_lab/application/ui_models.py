@@ -159,6 +159,51 @@ class CapabilitySupportReadModel(UIModel):
     detail: str | None = None
 
 
+class GenerationParameterDomainReadModel(UIModel):
+    """Validated projection of a backend-declared request-generation domain."""
+
+    name: str = Field(min_length=1)
+    kind: Literal["float", "integer", "boolean"]
+    scope: Literal["request_generation"] = "request_generation"
+    source: Literal["local_llm_server"] = "local_llm_server"
+    provenance: Literal["registry_declared"] = "registry_declared"
+    minimum: int | float | None = None
+    maximum: int | float | None = None
+    step: int | float | None = None
+    values: tuple[bool, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_domain_shape(self) -> GenerationParameterDomainReadModel:
+        if self.kind == "boolean":
+            if self.minimum is not None or self.maximum is not None or self.step is not None:
+                raise ValueError("boolean generation domains cannot declare numeric bounds")
+            if len(self.values) != 2 or set(self.values) != {False, True}:
+                raise ValueError("boolean generation domains must contain false and true")
+            return self
+
+        if self.values:
+            raise ValueError("numeric generation domains cannot declare boolean values")
+        if self.minimum is None or self.maximum is None:
+            raise ValueError("numeric generation domains require minimum and maximum")
+        if isinstance(self.minimum, bool) or isinstance(self.maximum, bool):
+            raise ValueError("numeric generation domains require numeric bounds")
+        if self.minimum >= self.maximum:
+            raise ValueError("numeric generation domains require minimum < maximum")
+        if self.kind == "integer" and (
+            not isinstance(self.minimum, int)
+            or not isinstance(self.maximum, int)
+            or isinstance(self.minimum, bool)
+            or isinstance(self.maximum, bool)
+        ):
+            raise ValueError("integer generation domains require integer bounds")
+        if self.step is not None:
+            if isinstance(self.step, bool) or self.step <= 0 or self.step > self.maximum - self.minimum:
+                raise ValueError("generation domain step must be positive and within the span")
+            if self.kind == "integer" and not isinstance(self.step, int):
+                raise ValueError("integer generation domains require an integer step")
+        return self
+
+
 class RuntimeParameterReadModel(UIModel):
     name: str = Field(min_length=1)
     scope: Literal["runtime_load"] = "runtime_load"
@@ -170,6 +215,7 @@ class RuntimeParameterReadModel(UIModel):
 class DiscoveredModelReadModel(UIModel):
     model_id: str = Field(min_length=1)
     runtime_parameters: tuple[RuntimeParameterReadModel, ...] = ()
+    generation_parameter_domains: tuple[GenerationParameterDomainReadModel, ...] = ()
 
 
 class EndpointProbeReadModel(UIModel):
