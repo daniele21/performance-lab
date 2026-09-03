@@ -12,7 +12,11 @@ from performance_lab.application import (
 )
 from performance_lab.datasets import build_general_starter_suite, build_workload_pack
 from performance_lab.domain import EndpointProfile, EvidenceMode, HardwareIdentity, Target
-from performance_lab.run_config import StarterRunConfig
+from performance_lab.run_config import (
+    LocalLLMServerIdentityConfig,
+    LocalLLMServerTelemetryConfig,
+    StarterRunConfig,
+)
 from performance_lab.storage import SQLiteRunStore
 
 
@@ -38,6 +42,18 @@ def _queries(tmp_path: Path) -> UIQueryService:
         model_id="configured-model",
         store_path=tmp_path / "runs.sqlite3",
         hardware=HardwareIdentity(device_id="device-a", device_class="laptop"),
+        local_llm_server_identity=LocalLLMServerIdentityConfig(
+            base_url="http://127.0.0.1:1234",
+            model_id="configured-model",
+            timeout_seconds=7,
+            required=True,
+        ),
+        local_llm_server_telemetry=LocalLLMServerTelemetryConfig(
+            base_url="http://127.0.0.1:1234",
+            model_id="configured-model",
+            sample_interval_seconds=0.1,
+            timeout_seconds=8,
+        ),
     )
     return UIQueryService(
         SQLiteRunStore(config.store_path),
@@ -203,3 +219,58 @@ def test_session_discovery_becomes_candidate_inventory_without_invented_ranges(
     )
     assert not quick.available
     assert quick.blocked_reason is not None
+
+
+def test_configured_target_discovery_plans_multiple_models_with_candidate_bound_evidence(
+    tmp_path: Path,
+) -> None:
+    queries = _queries(tmp_path)
+    queries.register_target_probe_result(
+        "local-target",
+        discovered_models=(
+            DiscoveredModelReadModel(model_id="model-a"),
+            DiscoveredModelReadModel(model_id="model-b"),
+            DiscoveredModelReadModel(model_id="model-a"),
+        ),
+        supported_generation_parameters=("top_p", "temperature", "top_p"),
+    )
+
+    target = queries.campaign_planning_context().targets[0]
+    assert [candidate.model_id for candidate in target.candidates] == [
+        "configured-model",
+        "model-a",
+        "model-b",
+    ]
+    assert target.supported_generation_parameters == ("temperature", "top_p")
+
+    selected = tuple(
+        candidate.candidate_id
+        for candidate in target.candidates
+        if candidate.model_id in {"model-a", "model-b"}
+    )
+    request = CampaignPlanPreviewRequest(
+        use_case_id="general-capability",
+        target_id="local-target",
+        candidate_ids=selected,
+    )
+    preview = queries.preview_campaign_plan(request)
+
+    assert preview.can_plan
+    assert preview.estimate is not None
+    assert preview.estimate.planned_run_count == 2
+    assert preview.plan_digest is not None
+
+    launch = queries.prepare_campaign_launch(request, expected_plan_digest=preview.plan_digest)
+    assert [run.model_id for run in launch.runs] == ["model-a", "model-b"]
+    for run in launch.runs:
+        config = run.config
+        assert config.model_id == run.model_id
+        assert config.local_llm_server_identity is not None
+        assert config.local_llm_server_identity.model_id == run.model_id
+        assert config.local_llm_server_identity.required is True
+        assert config.local_llm_server_identity.timeout_seconds == 7
+        assert config.local_llm_server_telemetry is not None
+        assert config.local_llm_server_telemetry.model_id == run.model_id
+        assert config.local_llm_server_telemetry.sample_interval_seconds == 0.1
+        assert config.local_llm_server_telemetry.timeout_seconds == 8
+        assert config.hardware.device_id == "device-a"
