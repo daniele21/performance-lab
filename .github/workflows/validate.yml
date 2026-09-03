@@ -259,7 +259,7 @@ jobs:
   evidence:
     name: Publish reusable validation evidence
     needs: [scope, reuse, validation]
-    if: needs.scope.outputs.stage != 'iteration' && needs.validation.result == 'success' && needs.reuse.outputs.reused != 'true'
+    if: always() && needs.scope.outputs.stage != 'iteration' && needs.validation.result == 'success' && needs.reuse.outputs.reused != 'true'
     runs-on: ubuntu-latest
     steps:
       - id: identity
