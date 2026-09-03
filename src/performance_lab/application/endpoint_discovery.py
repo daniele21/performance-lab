@@ -74,8 +74,8 @@ async def probe_endpoint_profile(
         and local_connection is not None
         and local_connection.server_type == "local_llm_server"
     ):
-        runtime_parameters, generation_domains, warning = await _probe_local_llm_server_registry(
-            local_connection
+        runtime_parameters, generation_domains, warning = (
+            await _probe_local_llm_server_registry(local_connection)
         )
 
     models = tuple(
@@ -198,7 +198,9 @@ async def _probe_local_llm_server_registry(
                 invalid_domain_metadata = True
                 continue
             try:
-                domains.append(GenerationParameterDomainReadModel.model_validate(dict(raw_domain)))
+                domains.append(
+                    GenerationParameterDomainReadModel.model_validate(dict(raw_domain))
+                )
             except ValidationError:
                 invalid_domain_metadata = True
         domain_result[model_id] = tuple(sorted(domains, key=lambda item: item.name))
