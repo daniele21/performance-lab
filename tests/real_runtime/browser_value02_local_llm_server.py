@@ -359,9 +359,7 @@ def main() -> int:
         environment["PERFORMANCE_LAB_REAL_E2E_BASE_URL"] = base_ui_url
         environment["PERFORMANCE_LAB_VALUE02_MODELS"] = ",".join(models)
         environment["PERFORMANCE_LAB_VALUE02_BROWSER_RESULT"] = str(browser_result_path)
-        environment["PERFORMANCE_LAB_REAL_E2E_OUTPUT_DIR"] = str(
-            output_dir / "browser-artifacts"
-        )
+        environment["PERFORMANCE_LAB_REAL_E2E_OUTPUT_DIR"] = str(output_dir / "browser-artifacts")
         environment["PERFORMANCE_LAB_REAL_E2E_REPORT"] = str(browser_report_path)
         completed = subprocess.run(
             [
@@ -396,9 +394,7 @@ def main() -> int:
             raise RuntimeError("VALUE-02 browser result did not retain a campaign id")
         campaign_id = browser_result["campaign_id"]
         campaign = _request_json("GET", f"{base_ui_url}/api/v1/campaigns/{campaign_id}")
-        if not isinstance(campaign, dict) or campaign.get(
-            "status"
-        ) not in TERMINAL_CAMPAIGN_STATES:
+        if not isinstance(campaign, dict) or campaign.get("status") not in TERMINAL_CAMPAIGN_STATES:
             raise RuntimeError("campaign did not reach a terminal state")
         if campaign.get("status") != "succeeded":
             raise RuntimeError(f"real multi-model campaign ended with {campaign.get('status')!r}")
