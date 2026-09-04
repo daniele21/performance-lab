@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError
 
-from performance_lab.domain import EndpointProfile, EvidenceMode, HardwareIdentity
+from performance_lab.domain import EndpointProfile, EvidenceMode, GenerationConfig, HardwareIdentity
 
 RUN_CONFIG_VERSION: Literal[1] = 1
 
@@ -50,6 +50,7 @@ class StarterRunConfig(BaseModel):
     local_llm_server_telemetry: LocalLLMServerTelemetryConfig | None = None
     local_llm_server_identity: LocalLLMServerIdentityConfig | None = None
     hardware: HardwareIdentity = Field(default_factory=HardwareIdentity)
+    generation: GenerationConfig | None = None
     suite_id: str = Field(default="general-diagnostic-starter", min_length=1)
     suite_version: str | None = Field(default=None, min_length=1)
 
