@@ -551,10 +551,7 @@ def _sample_resource_evidence(
     return CampaignResourceEvidenceReadModel(
         state="available",
         measurements=eligible,
-        note=(
-            "Attributable resource evidence is retained and resource-compatible with the "
-            "reference."
-        ),
+        note="Attributable resource evidence is retained and comparable with the reference.",
     )
 
 
