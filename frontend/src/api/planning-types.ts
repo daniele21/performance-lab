@@ -69,11 +69,18 @@ export interface CampaignPlanIssueReadModel extends UIModelIdentity {
   field: string | null;
 }
 
+export interface FrozenGenerationConfigurationReadModel extends UIModelIdentity {
+  configuration_id: string;
+  generation_digest: string;
+  generation: Record<string, unknown>;
+}
+
 export interface ConfigurationSearchPlanReadModel extends UIModelIdentity {
   strategy: CampaignSearchStrategy;
   title: string;
   configuration_count_per_candidate: number;
   base_generation: Record<string, unknown>;
+  configurations: FrozenGenerationConfigurationReadModel[];
   bounded_parameter_ranges: string[];
   note: string;
 }
