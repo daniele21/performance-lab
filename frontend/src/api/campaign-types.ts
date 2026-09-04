@@ -27,6 +27,7 @@ export interface CampaignDimensionReadModel extends UIModelIdentity {
   dimension: CampaignComparisonDimension;
   comparable: boolean;
   evidence_available: boolean;
+  evidence_note?: string | null;
   reasons: CampaignCompatibilityReasonReadModel[];
 }
 
