@@ -176,7 +176,10 @@ def test_workload_use_case_maps_to_its_own_versioned_executable_plan(tmp_path: P
 
     launch = queries.prepare_campaign_launch(request, expected_plan_digest=preview.plan_digest)
     assert launch.runs[0].configuration_id == "fixed-1"
-    assert launch.runs[0].config.generation == preview.configuration_search.configurations[0].generation
+    assert (
+        launch.runs[0].config.generation
+        == preview.configuration_search.configurations[0].generation
+    )
     assert launch.runs[0].config.suite_id == "workload-structured-document-extraction"
     assert launch.runs[0].config.suite_version == preview.benchmark_plan.suite.suite_version
     assert launch.runs[0].config.evidence_mode == EvidenceMode.AGGREGATE_SAFE
