@@ -139,7 +139,7 @@ export function SettingsView({ section, targets }: SettingsViewProps) {
           ) : (
             <EmptyState
               title="No model connections configured"
-              description="Use Test a model to connect and discover a local server, or configure an evaluation target in the backend. Session connections are not presented as persisted settings."
+              description="Use Test a model to connect and discover a local server, or configure an evaluation target in the backend. Successful loopback connection details may be remembered in this browser; live session targets remain backend-owned."
             />
           ))}
 
