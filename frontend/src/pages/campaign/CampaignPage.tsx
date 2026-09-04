@@ -432,7 +432,9 @@ function CampaignResults({
                 <>
                   <Status
                     tone={
-                      entry.resources.state === "not_comparable" ? "warning" : "neutral"
+                      entry.resources.state === "not_comparable"
+                        ? "warning"
+                        : "neutral"
                     }
                   >
                     {entry.resources.state === "not_comparable"
