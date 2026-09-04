@@ -148,7 +148,9 @@ function CandidateCard({ candidate }: { candidate: CampaignCaseCandidateReadMode
             {candidate.resources.measurements.length ? (
               <dl>
                 {candidate.resources.measurements.map((measurement) => (
-                  <div key={`${measurement.name}:${measurement.protocol_version}:${measurement.unit}`}>
+                  <div
+                    key={`${measurement.name}:${measurement.protocol_version}:${measurement.unit}`}
+                  >
                     <dt>{measurement.name}</dt>
                     <dd>
                       {measurement.value} {measurement.unit} · {measurement.provenance}
