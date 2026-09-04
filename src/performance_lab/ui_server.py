@@ -28,6 +28,7 @@ from performance_lab.ui_api import create_ui_app
 
 UI_SERVER_HOST = "127.0.0.1"
 UI_SERVER_PORT = 8765
+DEFAULT_STORE_PATH = Path(".performance-lab/runs.sqlite3")
 
 
 def _validated_assets_dir(assets_dir: Path | None) -> Path | None:
@@ -53,30 +54,44 @@ def _ensure_port_available(port: int) -> None:
 
 
 def build_local_ui_app(
-    config: StarterRunConfig,
+    config: StarterRunConfig | None = None,
     *,
     assets_dir: Path | None = None,
 ) -> FastAPI:
-    """Build the real local UI graph from one versioned starter execution config."""
+    """Build the real local UI graph with an optional preconfigured execution target.
+
+    A missing config is a supported first-run state: Performance Lab starts with its canonical
+    local evidence store and no inference target. The browser may then register a bounded
+    process-lifetime loopback connection through the existing endpoint-probe API.
+    """
 
     bundle = build_general_starter_suite()
     workload_bundles = tuple(
         build_workload_pack(definition.pack_id, version=definition.version)
         for definition in available_workload_packs()
     )
-    store = SQLiteRunStore(config.store_path)
-    campaign_store = SQLiteCampaignStore(config.store_path)
-    target = Target(
-        target_id=config.target_id,
-        display_name=config.target_id,
-        adapter_type="openai-compatible",
-        endpoint_profile_id=config.endpoint.profile_id,
-        endpoint_identity=config.endpoint_identity,
-    )
+    store_path = config.store_path if config is not None else DEFAULT_STORE_PATH
+    store = SQLiteRunStore(store_path)
+    campaign_store = SQLiteCampaignStore(store_path)
+
+    targets: tuple[Target, ...] = ()
+    endpoint_profiles = ()
+    if config is not None:
+        targets = (
+            Target(
+                target_id=config.target_id,
+                display_name=config.target_id,
+                adapter_type="openai-compatible",
+                endpoint_profile_id=config.endpoint.profile_id,
+                endpoint_identity=config.endpoint_identity,
+            ),
+        )
+        endpoint_profiles = (config.endpoint,)
+
     queries = UIQueryService(
         store,
-        targets=(target,),
-        endpoint_profiles=(config.endpoint,),
+        targets=targets,
+        endpoint_profiles=endpoint_profiles,
         suites=(bundle.suite,),
         dataset_snapshots=tuple(dataset.snapshot for dataset in bundle.datasets.values()),
         inspectable_datasets=tuple(bundle.datasets.values()),
@@ -110,7 +125,7 @@ def build_local_ui_app(
 
 
 def serve_local_ui(
-    config: StarterRunConfig,
+    config: StarterRunConfig | None = None,
     *,
     port: int = UI_SERVER_PORT,
     assets_dir: Path | None = None,
@@ -137,9 +152,13 @@ def build_ui_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="performance-lab-ui")
     parser.add_argument(
         "--config",
-        required=True,
+        required=False,
         type=str,
-        help="Versioned StarterRunConfig JSON defining the local endpoint and evidence store.",
+        default=None,
+        help=(
+            "Optional versioned StarterRunConfig JSON defining a preconfigured endpoint and "
+            "evidence store. Omit it to connect a loopback target from the UI."
+        ),
     )
     parser.add_argument(
         "--assets",
@@ -165,7 +184,7 @@ def main(
     args = build_ui_parser().parse_args(list(argv) if argv is not None else None)
 
     try:
-        config = load_starter_run_config(Path(args.config))
+        config = load_starter_run_config(Path(args.config)) if args.config else None
         if not 1 <= args.port <= 65535:
             raise ValueError("port must be between 1 and 65535")
         assets_dir = _validated_assets_dir(Path(args.assets)) if args.assets else None
@@ -174,7 +193,8 @@ def main(
         return 2
 
     mode = "built product" if assets_dir is not None else "UI API"
-    output.write(f"Performance Lab {mode}: http://{UI_SERVER_HOST}:{args.port}\n")
+    first_run = " · connect a local target in the UI" if config is None else ""
+    output.write(f"Performance Lab {mode}: http://{UI_SERVER_HOST}:{args.port}{first_run}\n")
     try:
         serve_local_ui(config, port=args.port, assets_dir=assets_dir)
     except (RuntimeError, OSError, ValueError) as exc:
