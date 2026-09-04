@@ -377,6 +377,8 @@ function CampaignResults({
             </Status>
             {dimension.reasons.length ? (
               <small>{dimension.reasons.map((reason) => reason.message).join(" · ")}</small>
+            ) : dimension.evidence_note ? (
+              <small>{dimension.evidence_note}</small>
             ) : null}
           </article>
         ))}
@@ -384,7 +386,7 @@ function CampaignResults({
 
       <SectionHeader
         title="Comparison"
-        description="Retained metrics from each immutable Run. Quality, performance and resources remain separate rather than collapsing into an overall score."
+        description="Retained metrics from each immutable Run. Quality, performance and decision-grade resources remain separate rather than collapsing into an overall score."
       />
       <div className="campaign-evidence-grid">
         {campaign.entries.map((entry) => (
@@ -393,7 +395,7 @@ function CampaignResults({
               <strong>{entry.model_id}</strong>
               <span>Quantization: {entry.identity?.quantization ?? "Unknown"}</span>
             </div>
-            {(["quality", "performance", "resources"] as MetricDimension[]).map((dimension) => {
+            {(["quality", "performance"] as MetricDimension[]).map((dimension) => {
               const metrics = entry.metrics.filter((metric) => metric.dimension === dimension);
               return (
                 <div className="campaign-metric-group" data-dimension={dimension} key={dimension}>
@@ -413,6 +415,28 @@ function CampaignResults({
                 </div>
               );
             })}
+            <div className="campaign-metric-group" data-dimension="resources">
+              <strong>Resources</strong>
+              {entry.resources.state === "available" ? (
+                <dl>
+                  {entry.resources.measurements.map((measurement) => (
+                    <div key={`${measurement.name}:${measurement.protocol_version}:${measurement.unit}`}>
+                      <dt>{measurement.name}</dt>
+                      <dd>{metricValue(measurement.value, measurement.unit)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <>
+                  <Status tone={entry.resources.state === "not_comparable" ? "warning" : "neutral"}>
+                    {entry.resources.state === "not_comparable"
+                      ? "Not comparable"
+                      : "Evidence unavailable"}
+                  </Status>
+                  <span>{entry.resources.note}</span>
+                </>
+              )}
+            </div>
           </article>
         ))}
       </div>
