@@ -132,6 +132,7 @@ def test_campaign_results_show_policy_before_a_strict_dominance_recommendation(
     assert capability.evidence_note is None
     assert result.results.recommendation is not None
     assert result.results.recommendation.model_id == "model-a"
+    assert all(entry.resources.state == "unavailable" for entry in result.entries)
 
 
 def test_campaign_does_not_promote_context_telemetry_to_resource_evidence(
@@ -171,3 +172,6 @@ def test_campaign_does_not_promote_context_telemetry_to_resource_evidence(
     assert not resource.evidence_available
     assert resource.evidence_note is not None
     assert "Contextual host/runtime telemetry is retained" in resource.evidence_note
+    assert all(entry.resources.state == "unavailable" for entry in result.entries)
+    assert all(not entry.resources.measurements for entry in result.entries)
+    assert all("not policy-eligible" in entry.resources.note for entry in result.entries)
