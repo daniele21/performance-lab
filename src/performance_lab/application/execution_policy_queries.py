@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from performance_lab.domain import EndpointProfile, EvidenceMode
+from performance_lab.domain import EndpointProfile, EvidenceMode, GenerationConfig
 from performance_lab.run_config import StarterRunConfig
 
 from .evidence_models import (
@@ -87,6 +87,7 @@ class UIQueryService(TargetUIQueryService):
         target: TargetSummaryReadModel,
         endpoint: EndpointProfile,
         model_id: str,
+        generation: GenerationConfig,
         suite_id: str,
         suite_version: str,
     ) -> StarterRunConfig:
@@ -94,6 +95,7 @@ class UIQueryService(TargetUIQueryService):
             target=target,
             endpoint=endpoint,
             model_id=model_id,
+            generation=generation,
             suite_id=suite_id,
             suite_version=suite_version,
         )
