@@ -23,6 +23,13 @@ def _artifact(tmp_path: Path) -> Path:
     return root
 
 
+def test_artifact_launcher_config_is_optional_for_first_run() -> None:
+    args = artifact_launcher.build_parser().parse_args([])
+
+    assert args.config is None
+    assert args.port == 8765
+
+
 def test_runtime_identity_is_bound_to_artifact_inputs(tmp_path: Path) -> None:
     root = _artifact(tmp_path)
 
