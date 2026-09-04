@@ -112,9 +112,7 @@ class Campaign(VersionedModel):
         if not value:
             raise ValueError("campaign requires at least one entry")
         entry_ids = [entry.entry_id for entry in value]
-        candidate_configurations = [
-            (entry.candidate_id, entry.configuration_id) for entry in value
-        ]
+        candidate_configurations = [(entry.candidate_id, entry.configuration_id) for entry in value]
         if len(entry_ids) != len(set(entry_ids)):
             raise ValueError("campaign entry ids must be unique")
         if len(candidate_configurations) != len(set(candidate_configurations)):
