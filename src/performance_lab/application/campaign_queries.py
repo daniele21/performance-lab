@@ -483,7 +483,9 @@ def _unavailable_resources(note: str) -> CampaignResourceEvidenceReadModel:
 
 def _aggregate_resource_evidence(run: Run | None) -> CampaignResourceEvidenceReadModel:
     if run is None:
-        return _unavailable_resources("No completed immutable Run is available for resource evidence.")
+        return _unavailable_resources(
+            "No completed immutable Run is available for resource evidence."
+        )
     eligible = tuple(
         _resource_measurement(item)
         for item in run.aggregate_measurements
@@ -503,7 +505,9 @@ def _aggregate_resource_evidence(run: Run | None) -> CampaignResourceEvidenceRea
         return _unavailable_resources(
             "Host/runtime telemetry is retained as context but is not policy-eligible model-resource evidence."
         )
-    return _unavailable_resources("No policy-eligible model-resource evidence is retained for this Run.")
+    return _unavailable_resources(
+        "No policy-eligible model-resource evidence is retained for this Run."
+    )
 
 
 def _sample_resource_evidence(
