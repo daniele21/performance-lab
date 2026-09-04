@@ -7,7 +7,13 @@ from typing import Literal
 
 from pydantic import Field
 
-from performance_lab.domain import CampaignEntryStatus, CampaignStatus, ComparisonDimension
+from performance_lab.domain import (
+    CampaignEntryStatus,
+    CampaignStatus,
+    ComparisonDimension,
+    MeasurementProvenance,
+    MeasurementScope,
+)
 
 from .evidence_models import SampleEvidenceDetailReadModel
 from .planning_models import DecisionPolicyReadModel
@@ -28,6 +34,21 @@ class CampaignDimensionReadModel(UIModel):
     evidence_available: bool
     evidence_note: str | None = None
     reasons: tuple[CampaignCompatibilityReasonReadModel, ...] = ()
+
+
+class CampaignResourceMeasurementReadModel(UIModel):
+    name: str = Field(min_length=1)
+    value: float
+    unit: str = Field(min_length=1)
+    scope: MeasurementScope
+    provenance: MeasurementProvenance
+    protocol_version: str = Field(min_length=1)
+
+
+class CampaignResourceEvidenceReadModel(UIModel):
+    state: Literal["available", "unavailable", "not_comparable"]
+    measurements: tuple[CampaignResourceMeasurementReadModel, ...] = ()
+    note: str = Field(min_length=1)
 
 
 class CampaignRecommendationReadModel(UIModel):
@@ -58,6 +79,7 @@ class CampaignEntryReadModel(UIModel):
     error_message: str | None = None
     identity: IdentitySummary | None = None
     metrics: tuple[MetricReadModel, ...] = ()
+    resources: CampaignResourceEvidenceReadModel
 
 
 class CampaignReadModel(UIModel):
@@ -98,6 +120,7 @@ class CampaignCaseCandidateReadModel(UIModel):
     comparable_to_reference: bool = False
     compatibility_reasons: tuple[CampaignCompatibilityReasonReadModel, ...] = ()
     evidence: SampleEvidenceDetailReadModel | None = None
+    resources: CampaignResourceEvidenceReadModel
     unavailable_reason: str | None = None
 
 
