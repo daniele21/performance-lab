@@ -33,6 +33,27 @@ class DecisionEvidenceClassification:
 _RESOURCE_DECISION_KEYS: frozenset[tuple[str, str, str, str]] = frozenset()
 
 
+def resource_metric_is_decision_eligible(
+    *,
+    provenance: MeasurementProvenance,
+    protocol_version: str,
+    name: str,
+    unit: str,
+) -> bool:
+    """Check the owning resource contract from a stable metric identity.
+
+    Aggregate and sample projections use the same owner. This avoids reclassifying browser-facing
+    sample read models by convention or by metric name alone.
+    """
+
+    if provenance not in {
+        MeasurementProvenance.HOST,
+        MeasurementProvenance.RUNTIME,
+    }:
+        return False
+    return (provenance.value, protocol_version, name, unit) in _RESOURCE_DECISION_KEYS
+
+
 def classify_measurement(measurement: Measurement) -> DecisionEvidenceClassification:
     """Classify retained measurement truth without inferring missing ownership semantics."""
 
@@ -45,13 +66,12 @@ def classify_measurement(measurement: Measurement) -> DecisionEvidenceClassifica
             ),
         )
 
-    key = (
-        measurement.provenance.value,
-        measurement.protocol_version,
-        measurement.name,
-        measurement.unit,
-    )
-    if key in _RESOURCE_DECISION_KEYS:
+    if resource_metric_is_decision_eligible(
+        provenance=measurement.provenance,
+        protocol_version=measurement.protocol_version,
+        name=measurement.name,
+        unit=measurement.unit,
+    ):
         return DecisionEvidenceClassification(
             role=DecisionEvidenceRole.DECISION_ELIGIBLE,
             reason="The owning resource telemetry contract explicitly marks this metric eligible.",
@@ -77,9 +97,9 @@ def classify_measurement(measurement: Measurement) -> DecisionEvidenceClassifica
 def resource_measurement_is_decision_eligible(measurement: Measurement) -> bool:
     """Return true only for explicitly contracted HOST/RUNTIME model-resource evidence."""
 
-    if measurement.provenance not in {
-        MeasurementProvenance.HOST,
-        MeasurementProvenance.RUNTIME,
-    }:
-        return False
-    return classify_measurement(measurement).role == DecisionEvidenceRole.DECISION_ELIGIBLE
+    return resource_metric_is_decision_eligible(
+        provenance=measurement.provenance,
+        protocol_version=measurement.protocol_version,
+        name=measurement.name,
+        unit=measurement.unit,
+    )
