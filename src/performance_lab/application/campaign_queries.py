@@ -503,7 +503,8 @@ def _aggregate_resource_evidence(run: Run | None) -> CampaignResourceEvidenceRea
     )
     if contextual:
         return _unavailable_resources(
-            "Host/runtime telemetry is retained as context but is not policy-eligible model-resource evidence."
+            "Host/runtime telemetry is retained as context but is not policy-eligible "
+            "model-resource evidence."
         )
     return _unavailable_resources(
         "No policy-eligible model-resource evidence is retained for this Run."
@@ -532,7 +533,8 @@ def _sample_resource_evidence(
         )
         if contextual:
             return _unavailable_resources(
-                "Sample host/runtime telemetry is retained as context but is not policy-eligible resource evidence."
+                "Sample host/runtime telemetry is retained as context but is not "
+                "policy-eligible resource evidence."
             )
         return _unavailable_resources(
             "No policy-eligible model-resource evidence is retained for this sample."
@@ -549,7 +551,10 @@ def _sample_resource_evidence(
     return CampaignResourceEvidenceReadModel(
         state="available",
         measurements=eligible,
-        note="Attributable resource evidence is retained and resource-compatible with the reference.",
+        note=(
+            "Attributable resource evidence is retained and resource-compatible with the "
+            "reference."
+        ),
     )
 
 
