@@ -273,9 +273,7 @@ class UIQueryService(EvidenceUIQueryService):
                 else snapshot.sample_count
             )
 
-        frozen_configurations = (
-            _frozen_generation_configuration("fixed-1", suite.generation),
-        )
+        frozen_configurations = (_frozen_generation_configuration("fixed-1", suite.generation),)
         configuration = ConfigurationSearchPlanReadModel(
             strategy=CampaignSearchStrategy.FIXED,
             title="Fixed benchmark configuration",
