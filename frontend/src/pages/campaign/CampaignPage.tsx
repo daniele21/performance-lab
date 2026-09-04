@@ -420,7 +420,9 @@ function CampaignResults({
               {entry.resources.state === "available" ? (
                 <dl>
                   {entry.resources.measurements.map((measurement) => (
-                    <div key={`${measurement.name}:${measurement.protocol_version}:${measurement.unit}`}>
+                    <div
+                      key={`${measurement.name}:${measurement.protocol_version}:${measurement.unit}`}
+                    >
                       <dt>{measurement.name}</dt>
                       <dd>{metricValue(measurement.value, measurement.unit)}</dd>
                     </div>
@@ -428,7 +430,9 @@ function CampaignResults({
                 </dl>
               ) : (
                 <>
-                  <Status tone={entry.resources.state === "not_comparable" ? "warning" : "neutral"}>
+                  <Status
+                    tone={entry.resources.state === "not_comparable" ? "warning" : "neutral"}
+                  >
                     {entry.resources.state === "not_comparable"
                       ? "Not comparable"
                       : "Evidence unavailable"}
