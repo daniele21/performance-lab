@@ -48,6 +48,7 @@ export interface CampaignResultsReadModel extends UIModelIdentity {
 export interface CampaignEntryReadModel extends UIModelIdentity {
   entry_id: string;
   candidate_id: string;
+  configuration_id: string;
   model_id: string;
   config_digest: string;
   status: CampaignEntryStatus;
@@ -90,6 +91,7 @@ export interface CampaignCaseSummaryReadModel extends UIModelIdentity {
 export interface CampaignCaseCandidateReadModel extends UIModelIdentity {
   entry_id: string;
   candidate_id: string;
+  configuration_id: string;
   model_id: string;
   config_digest: string;
   entry_status: CampaignEntryStatus;
