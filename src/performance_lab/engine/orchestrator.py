@@ -151,7 +151,7 @@ class EvaluationOrchestrator:
                         task_id=task.task_id,
                         sample_id=record.sample_id,
                         model_id=fingerprint.model.model_id,
-                        generation=suite.generation,
+                        generation=fingerprint.generation,
                         input_value=record.input,
                         expected=record.expected,
                         evaluator=evaluator,
