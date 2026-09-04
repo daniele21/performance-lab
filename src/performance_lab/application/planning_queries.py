@@ -12,6 +12,7 @@ from performance_lab.domain import (
     DecisionPolicyRef,
     EndpointProfile,
     EvaluationSuite,
+    GenerationConfig,
     HardwareIdentity,
     Target,
 )
@@ -35,6 +36,7 @@ from .planning_models import (
     ConfigurationSearchOptionReadModel,
     ConfigurationSearchPlanReadModel,
     DecisionPolicyReadModel,
+    FrozenGenerationConfigurationReadModel,
     UseCaseReadModel,
 )
 from .ui_models import (
@@ -271,11 +273,15 @@ class UIQueryService(EvidenceUIQueryService):
                 else snapshot.sample_count
             )
 
+        frozen_configurations = (
+            _frozen_generation_configuration("fixed-1", suite.generation),
+        )
         configuration = ConfigurationSearchPlanReadModel(
             strategy=CampaignSearchStrategy.FIXED,
             title="Fixed benchmark configuration",
-            configuration_count_per_candidate=1,
+            configuration_count_per_candidate=len(frozen_configurations),
             base_generation=suite.generation,
+            configurations=frozen_configurations,
             bounded_parameter_ranges=(),
             note=(
                 "Uses the benchmark suite generation configuration exactly as authored. "
@@ -290,10 +296,10 @@ class UIQueryService(EvidenceUIQueryService):
             evaluator_ids=tuple(evaluator_ids),
             case_count_per_run=case_count,
         )
-        planned_run_count = len(candidates)
+        planned_run_count = len(candidates) * len(frozen_configurations)
         estimate = CampaignEstimateReadModel(
             candidate_count=len(candidates),
-            configuration_count_per_candidate=1,
+            configuration_count_per_candidate=len(frozen_configurations),
             planned_run_count=planned_run_count,
             benchmark_case_count_per_run=case_count,
             estimated_request_count=planned_run_count * case_count,
@@ -350,6 +356,7 @@ class UIQueryService(EvidenceUIQueryService):
         if (
             preview.use_case is None
             or preview.target is None
+            or preview.configuration_search is None
             or preview.benchmark_plan is None
             or preview.decision_policy is None
         ):
@@ -360,15 +367,18 @@ class UIQueryService(EvidenceUIQueryService):
             CampaignRunSpec(
                 candidate_id=candidate.candidate_id,
                 model_id=candidate.model_id,
+                configuration_id=configuration.configuration_id,
                 config=self._campaign_run_config(
                     target=preview.target,
                     endpoint=endpoint,
                     model_id=candidate.model_id,
+                    generation=configuration.generation,
                     suite_id=preview.benchmark_plan.suite.suite_id,
                     suite_version=preview.benchmark_plan.suite.suite_version,
                 ),
             )
             for candidate in preview.candidates
+            for configuration in preview.configuration_search.configurations
         )
         return CampaignLaunchPlan(
             plan_digest=expected_plan_digest,
@@ -402,6 +412,7 @@ class UIQueryService(EvidenceUIQueryService):
         target: TargetSummaryReadModel,
         endpoint: EndpointProfile,
         model_id: str,
+        generation: GenerationConfig,
         suite_id: str,
         suite_version: str,
     ) -> StarterRunConfig:
@@ -420,6 +431,7 @@ class UIQueryService(EvidenceUIQueryService):
             "endpoint": endpoint,
             "model_id": model_id,
             "run_id": None,
+            "generation": generation,
             "suite_id": suite_id,
             "suite_version": suite_version,
         }
@@ -566,6 +578,27 @@ def _search_options() -> tuple[ConfigurationSearchOptionReadModel, ...]:
     )
 
 
+def _frozen_generation_configuration(
+    configuration_id: str,
+    generation: GenerationConfig,
+) -> FrozenGenerationConfigurationReadModel:
+    return FrozenGenerationConfigurationReadModel(
+        configuration_id=configuration_id,
+        generation_digest=_generation_digest(generation),
+        generation=generation,
+    )
+
+
+def _generation_digest(generation: GenerationConfig) -> str:
+    canonical = json.dumps(
+        generation.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    return sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def _suite_summary(suite: EvaluationSuite) -> SuiteSummaryReadModel:
     return SuiteSummaryReadModel(
         suite_id=suite.suite_id,
@@ -608,7 +641,7 @@ def _plan_digest(
     decision_policy: DecisionPolicyReadModel,
 ) -> str:
     payload = {
-        "contract": "campaign-plan-v2",
+        "contract": "campaign-plan-v3",
         "use_case": use_case.model_dump(mode="json"),
         "target": target.model_dump(mode="json"),
         "candidates": [item.model_dump(mode="json") for item in candidates],
