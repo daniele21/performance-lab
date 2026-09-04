@@ -109,13 +109,34 @@ class CampaignPlanIssueReadModel(UIModel):
     field: str | None = None
 
 
+class FrozenGenerationConfigurationReadModel(UIModel):
+    """One exact request-generation configuration reviewed before campaign launch."""
+
+    configuration_id: str = Field(min_length=1)
+    generation_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    generation: GenerationConfig
+
+
 class ConfigurationSearchPlanReadModel(UIModel):
     strategy: CampaignSearchStrategy
     title: str = Field(min_length=1)
     configuration_count_per_candidate: int = Field(gt=0)
     base_generation: GenerationConfig
+    configurations: tuple[FrozenGenerationConfigurationReadModel, ...]
     bounded_parameter_ranges: tuple[str, ...] = ()
     note: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def require_exact_configuration_matrix(self) -> ConfigurationSearchPlanReadModel:
+        if len(self.configurations) != self.configuration_count_per_candidate:
+            raise ValueError("configuration count must match the frozen configuration matrix")
+        configuration_ids = [item.configuration_id for item in self.configurations]
+        if len(configuration_ids) != len(set(configuration_ids)):
+            raise ValueError("configuration ids must be unique")
+        generation_digests = [item.generation_digest for item in self.configurations]
+        if len(generation_digests) != len(set(generation_digests)):
+            raise ValueError("frozen generation configurations must be unique")
+        return self
 
 
 class BenchmarkPlanReadModel(UIModel):
