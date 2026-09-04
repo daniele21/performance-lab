@@ -1,5 +1,7 @@
 import { expect, test, type Route } from "@playwright/test";
 
+import { CONNECTION_PREFERENCE_STORAGE_KEY } from "../src/connection-preference";
+
 const API_IDENTITY = { api_version: "v1", read_model_version: 1 } as const;
 const NOW = "2026-08-28T08:00:00Z";
 const DIGEST = "c".repeat(64);
@@ -211,10 +213,22 @@ test("J1 discovery: connect local server, discover model, freeze, run and inspec
   await page.goto("/#test-a-model");
   await expect(page.getByRole("heading", { name: "Test a model" })).toBeVisible();
   await expect(page.getByLabel("Model source")).toHaveValue("local");
+  await page.getByLabel("Connection name").fill("Remembered local server");
 
   await page.getByRole("button", { name: "Connect & discover" }).click();
   await expect(page.getByText("Connection discovered")).toBeVisible();
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("model-discovered");
+
+  const storedPreference = await page.evaluate((key) => window.localStorage.getItem(key), CONNECTION_PREFERENCE_STORAGE_KEY);
+  expect(storedPreference).not.toBeNull();
+  expect(JSON.parse(storedPreference!)).toEqual({
+    displayName: "Remembered local server",
+    host: "127.0.0.1",
+    port: "1235",
+    basePath: "/v1/",
+    serverType: "local_llm_server",
+    timeoutSeconds: "5",
+  });
 
   const runtimeConfig = page.locator("details.disclosure").filter({
     has: page
@@ -241,4 +255,9 @@ test("J1 discovery: connect local server, discover model, freeze, run and inspec
   await expect(page).toHaveURL(/#runs\/run-discovered$/);
   await expect(page.getByRole("heading", { name: "model-discovered" })).toBeVisible();
   await expect(page.getByText("fp-discovered", { exact: true })).toBeVisible();
+
+  await page.goto("/#test-a-model");
+  await page.reload();
+  await expect(page.getByLabel("Model source")).toHaveValue("local");
+  await expect(page.getByLabel("Connection name")).toHaveValue("Remembered local server");
 });
