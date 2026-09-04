@@ -11,6 +11,7 @@ from performance_lab.domain import (
     CampaignEntryStatus,
     CampaignStatus,
     ComparisonDimension,
+    Measurement,
     MeasurementProvenance,
     Run,
     RunStatus,
@@ -27,6 +28,8 @@ from .campaign_models import (
     CampaignEntryReadModel,
     CampaignReadModel,
     CampaignRecommendationReadModel,
+    CampaignResourceEvidenceReadModel,
+    CampaignResourceMeasurementReadModel,
     CampaignResultsReadModel,
 )
 from .campaign_policy import (
@@ -35,8 +38,11 @@ from .campaign_policy import (
     decision_policy_read_model,
     recommend_strict_quality_dominance,
 )
-from .device_evidence import resource_measurement_is_decision_eligible
-from .evidence_models import SampleEvidenceDetailReadModel
+from .device_evidence import (
+    resource_measurement_is_decision_eligible,
+    resource_metric_is_decision_eligible,
+)
+from .evidence_models import SampleEvidenceDetailReadModel, SampleMeasurementReadModel
 from .ui_models import RunDetailReadModel
 from .ui_queries import CompletedRunReader
 
@@ -187,6 +193,12 @@ class CampaignQueryService:
                         entry_status=entry.status,
                         run_id=entry.run_id,
                         identity=identity,
+                        resources=_unavailable_resources(
+                            unavailable.get(
+                                entry.entry_id,
+                                "Comparable sample evidence is unavailable.",
+                            )
+                        ),
                         unavailable_reason=unavailable.get(
                             entry.entry_id,
                             "Comparable sample evidence is unavailable.",
@@ -197,6 +209,7 @@ class CampaignQueryService:
 
             _, candidate_run, evidence = candidate
             reasons: list[CampaignCompatibilityReasonReadModel] = []
+            resource_comparable = True
             if entry.entry_id != reference_entry.entry_id:
                 compatibility = compare_fingerprints(
                     reference_run.fingerprint,
@@ -213,6 +226,12 @@ class CampaignQueryService:
                     )
                     for reason in compatibility.reasons
                 )
+                resource_compatibility = compare_fingerprints(
+                    reference_run.fingerprint,
+                    candidate_run.fingerprint,
+                    ComparisonDimension.RESOURCE,
+                )
+                resource_comparable = resource_compatibility.comparable
                 if (
                     reference_evidence.benchmark_case is not None
                     and evidence.benchmark_case is not None
@@ -241,6 +260,10 @@ class CampaignQueryService:
                     comparable_to_reference=not reasons,
                     compatibility_reasons=tuple(reasons),
                     evidence=evidence,
+                    resources=_sample_resource_evidence(
+                        evidence.measurements,
+                        comparable=resource_comparable,
+                    ),
                 )
             )
 
@@ -314,6 +337,7 @@ class CampaignQueryService:
                     error_message=entry.error_message,
                     identity=detail.summary.identity if detail is not None else None,
                     metrics=detail.summary.metrics if detail is not None else (),
+                    resources=_aggregate_resource_evidence(raw_run),
                 )
             )
 
@@ -423,6 +447,105 @@ def _matching_samples(
         sample
         for sample in run.samples
         if sample.task_id == task_id and sample.sample_id == sample_id
+    )
+
+
+def _resource_measurement(measurement: Measurement) -> CampaignResourceMeasurementReadModel:
+    return CampaignResourceMeasurementReadModel(
+        name=measurement.name,
+        value=measurement.value,
+        unit=measurement.unit,
+        scope=measurement.scope,
+        provenance=measurement.provenance,
+        protocol_version=measurement.protocol_version,
+    )
+
+
+def _sample_resource_measurement(
+    measurement: SampleMeasurementReadModel,
+) -> CampaignResourceMeasurementReadModel:
+    return CampaignResourceMeasurementReadModel(
+        name=measurement.name,
+        value=measurement.value,
+        unit=measurement.unit,
+        scope=measurement.scope,
+        provenance=measurement.provenance,
+        protocol_version=measurement.protocol_version,
+    )
+
+
+def _unavailable_resources(note: str) -> CampaignResourceEvidenceReadModel:
+    return CampaignResourceEvidenceReadModel(
+        state="unavailable",
+        note=note,
+    )
+
+
+def _aggregate_resource_evidence(run: Run | None) -> CampaignResourceEvidenceReadModel:
+    if run is None:
+        return _unavailable_resources("No completed immutable Run is available for resource evidence.")
+    eligible = tuple(
+        _resource_measurement(item)
+        for item in run.aggregate_measurements
+        if resource_measurement_is_decision_eligible(item)
+    )
+    if eligible:
+        return CampaignResourceEvidenceReadModel(
+            state="available",
+            measurements=eligible,
+            note="Explicitly attributable model-resource evidence is retained for this Run.",
+        )
+    contextual = any(
+        item.provenance in {MeasurementProvenance.HOST, MeasurementProvenance.RUNTIME}
+        for item in run.aggregate_measurements
+    )
+    if contextual:
+        return _unavailable_resources(
+            "Host/runtime telemetry is retained as context but is not policy-eligible model-resource evidence."
+        )
+    return _unavailable_resources("No policy-eligible model-resource evidence is retained for this Run.")
+
+
+def _sample_resource_evidence(
+    measurements: tuple[SampleMeasurementReadModel, ...],
+    *,
+    comparable: bool,
+) -> CampaignResourceEvidenceReadModel:
+    eligible = tuple(
+        _sample_resource_measurement(item)
+        for item in measurements
+        if resource_metric_is_decision_eligible(
+            provenance=item.provenance,
+            protocol_version=item.protocol_version,
+            name=item.name,
+            unit=item.unit,
+        )
+    )
+    if not eligible:
+        contextual = any(
+            item.provenance in {MeasurementProvenance.HOST, MeasurementProvenance.RUNTIME}
+            for item in measurements
+        )
+        if contextual:
+            return _unavailable_resources(
+                "Sample host/runtime telemetry is retained as context but is not policy-eligible resource evidence."
+            )
+        return _unavailable_resources(
+            "No policy-eligible model-resource evidence is retained for this sample."
+        )
+    if not comparable:
+        return CampaignResourceEvidenceReadModel(
+            state="not_comparable",
+            measurements=eligible,
+            note=(
+                "Attributable resource evidence is retained, but the frozen resource identities "
+                "are not comparable to the reference Run."
+            ),
+        )
+    return CampaignResourceEvidenceReadModel(
+        state="available",
+        measurements=eligible,
+        note="Attributable resource evidence is retained and resource-compatible with the reference.",
     )
 
 
