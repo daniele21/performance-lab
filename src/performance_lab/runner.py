@@ -81,6 +81,7 @@ async def execute_starter_run(
     """
 
     bundle = _resolve_execution_bundle(config)
+    generation = config.generation or bundle.suite.generation
     run_id = config.run_id or f"run-{uuid4()}"
     store = SQLiteRunStore(config.store_path)
     base_adapter = OpenAICompatibleAdapter(config.endpoint, model=config.model_id)
@@ -113,7 +114,7 @@ async def execute_starter_run(
             model=identity.model,
             runtime=identity.runtime,
             hardware=identity.hardware,
-            generation=bundle.suite.generation,
+            generation=generation,
             prompt_template_version="direct-user-v1",
             dataset_snapshots=snapshots,
             evaluator_versions=evaluator_versions,
