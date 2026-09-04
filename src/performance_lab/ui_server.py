@@ -21,7 +21,7 @@ from performance_lab.datasets import (
     build_general_starter_suite,
     build_workload_pack,
 )
-from performance_lab.domain import Target
+from performance_lab.domain import EndpointProfile, Target
 from performance_lab.run_config import RunConfigError, StarterRunConfig, load_starter_run_config
 from performance_lab.storage import SQLiteCampaignStore, SQLiteRunStore
 from performance_lab.ui_api import create_ui_app
@@ -75,7 +75,7 @@ def build_local_ui_app(
     campaign_store = SQLiteCampaignStore(store_path)
 
     targets: tuple[Target, ...] = ()
-    endpoint_profiles = ()
+    endpoint_profiles: tuple[EndpointProfile, ...] = ()
     if config is not None:
         targets = (
             Target(
