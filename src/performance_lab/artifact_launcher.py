@@ -179,9 +179,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="performance-lab-artifact")
     parser.add_argument(
         "--config",
-        required=True,
+        required=False,
+        default=None,
         type=Path,
-        help="Versioned StarterRunConfig JSON for the external inference target.",
+        help=(
+            "Optional versioned StarterRunConfig JSON. Omit it on first run and connect a "
+            "loopback inference target from the Performance Lab UI."
+        ),
     )
     parser.add_argument(
         "--runtime-dir",
@@ -205,8 +209,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = build_parser().parse_args(list(argv) if argv is not None else None)
     root = Path(__file__).resolve().parent
-    config = args.config.expanduser().resolve()
-    if not config.is_file():
+    config = args.config.expanduser().resolve() if args.config is not None else None
+    if config is not None and not config.is_file():
         print(f"error: config does not exist: {config}", file=sys.stderr)
         return 2
     if not (root / "web" / "index.html").is_file():
@@ -232,13 +236,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         str(python),
         "-m",
         "performance_lab.ui_server",
-        "--config",
-        str(config),
         "--assets",
         str(root / "web"),
         "--port",
         str(args.port),
     ]
+    if config is not None:
+        command.extend(("--config", str(config)))
     os.execv(str(python), command)
     raise AssertionError("os.execv returned unexpectedly")
 
