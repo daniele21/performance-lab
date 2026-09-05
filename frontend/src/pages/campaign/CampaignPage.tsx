@@ -245,8 +245,8 @@ export function CampaignPage({
                   <div>
                     <strong>{entry.model_id}</strong>
                     <span>
-                      Quantization: {entry.identity?.quantization ?? "Unknown"} · Configuration:{" "}
-                      {entry.configuration_id} · Config {entry.config_digest.slice(0, 12)}…
+                      Quantization: {entry.identity?.quantization ?? "Unknown"} · Config{" "}
+                      {entry.config_digest.slice(0, 12)}…
                     </span>
                   </div>
                   <Status tone={stateTone(entry.status)}>{label(entry.status)}</Status>
@@ -331,8 +331,8 @@ function CampaignResults({
             <div className="campaign-recommendation__identity">
               <strong>{results.recommendation.model_id}</strong>
               <small>
-                Quantization: {recommendedEntry?.identity?.quantization ?? "Unknown"} ·
-                Configuration: {results.recommendation.configuration_id}
+                Quantization: {recommendedEntry?.identity?.quantization ?? "Unknown"} · frozen
+                configuration
               </small>
             </div>
             <div className="campaign-recommendation__reason">
