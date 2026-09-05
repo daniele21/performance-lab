@@ -328,6 +328,7 @@ const campaign = {
       ...API,
       entry_id: "entry-a",
       candidate_id: "candidate-a",
+      configuration_id: "fixed-1",
       model_id: identity.model_id,
       config_digest: "d".repeat(64),
       status: "succeeded",
@@ -343,6 +344,7 @@ const campaign = {
       ...API,
       entry_id: "entry-b",
       candidate_id: "candidate-b",
+      configuration_id: "fixed-1",
       model_id: "qwen2.5-3b-instruct-q4",
       config_digest: "e".repeat(64),
       status: "succeeded",
@@ -371,6 +373,7 @@ const campaign = {
     recommendation: {
       ...API,
       candidate_id: "candidate-a",
+      configuration_id: "fixed-1",
       run_id: "run-a",
       model_id: identity.model_id,
       rationale: "Best comparable quality evidence under the explicit strict-dominance policy.",
