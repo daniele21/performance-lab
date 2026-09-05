@@ -20,7 +20,7 @@ from performance_lab.plugins import Evaluator
 from performance_lab.regression import BaselineBinding, RegressionPolicy
 from performance_lab.run_config import LocalLLMServerIdentityConfig, StarterRunConfig
 
-from .campaign_jobs import CampaignLaunchPlan, CampaignRunSpec
+from .campaign_jobs import MAX_CAMPAIGN_RUNS, CampaignLaunchPlan, CampaignRunSpec
 from .endpoint_discovery import local_server_root
 from .evidence_queries import UIQueryService as EvidenceUIQueryService
 from .planning_models import (
@@ -317,8 +317,10 @@ class UIQueryService(EvidenceUIQueryService):
             estimate=estimate,
             decision_policy=decision_policy,
         )
+        capacity_issue = _campaign_capacity_issue(planned_run_count)
         return CampaignPlanPreviewReadModel(
-            can_plan=True,
+            can_plan=capacity_issue is None,
+            issues=(capacity_issue,) if capacity_issue is not None else (),
             plan_digest=digest,
             use_case=use_case,
             target=target_context.target,
@@ -327,8 +329,8 @@ class UIQueryService(EvidenceUIQueryService):
             benchmark_plan=benchmark_plan,
             estimate=estimate,
             decision_policy=decision_policy,
-            execution_available=True,
-            execution_blocked_reason=None,
+            execution_available=capacity_issue is None,
+            execution_blocked_reason=(capacity_issue.message if capacity_issue is not None else None),
         )
 
     def prepare_campaign_launch(
@@ -615,6 +617,19 @@ def _decision_policy() -> DecisionPolicyReadModel:
             "Recommend a candidate only when comparable quality evidence shows it is no worse "
             "on every reported quality metric and strictly better on at least one metric against "
             "every alternative. Otherwise report the trade-off without inventing a weighted score."
+        ),
+    )
+
+
+def _campaign_capacity_issue(planned_run_count: int) -> CampaignPlanIssueReadModel | None:
+    if planned_run_count <= MAX_CAMPAIGN_RUNS:
+        return None
+    return CampaignPlanIssueReadModel(
+        code="campaign_run_capacity_exceeded",
+        field="candidate_ids",
+        message=(
+            f"This plan expands to {planned_run_count} immutable runs; a campaign can execute at "
+            f"most {MAX_CAMPAIGN_RUNS}. Reduce candidates or configurations before launch."
         ),
     )
 
