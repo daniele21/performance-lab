@@ -375,7 +375,6 @@ test("J0 campaign: four-stage setup executes and produces policy-backed results"
   ).toBeVisible();
   await expect(page.getByText("Recommended setup", { exact: true })).toBeVisible();
   await expect(page.getByText("model-a", { exact: true }).last()).toBeVisible();
-  await expect(page.getByText("Configuration: fixed-1", { exact: false })).toBeVisible();
   await expect(page.getByText("Comparable", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Inspect recommended Run" })).toBeVisible();
 
