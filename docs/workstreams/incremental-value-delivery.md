@@ -44,7 +44,7 @@ A real-device gate therefore does **not** block an independent deterministic sof
 | VALUE-03 | **Configuration decision** — choose supported configuration, not only model | ACTIVE | VALUE-03D after software convergence |
 | VALUE-04 | **Device-aware decision** — comparable performance/resource evidence may affect the trade-off | ACTIVE | VALUE-04D / EVID-003 after software convergence |
 | VALUE-05 | **Confidence / repeatability** — controlled variability supports or weakens a recommendation | SOFTWARE DECOMPOSITION NEXT | EVID-002 in final real phase |
-| VALUE-06 | **Regression workflow** — baseline vs candidate produces explicit policy outcome | SOFTWARE DECOMPOSITION NEXT | EVID-004 in final real phase |
+| VALUE-06 | **Regression workflow** — baseline vs candidate produces explicit policy outcome | SOFTWARE DONE | VALUE-06D / EVID-004 in final real phase |
 | VALUE-07 | **LLS evaluation cutover** — PL owns new evaluation; LLS stays serving/runtime owner | PRE-CUTOVER IMPLEMENTATION DONE | destructive cutover blocked by migration real evidence |
 | VALUE-08 | **Low-friction distribution** — launch/connect/evaluate without repo-development setup | A/B/C SOFTWARE DONE | VALUE-08D in final real phase |
 
@@ -92,6 +92,18 @@ VALUE-04A/B are integrated through PR #153:
 
 Remaining software: VALUE-04C policy extension. It must remain compatibility-first and quality-first with no hidden universal score. The exact resource influence/tie-break semantics must be explicit and versioned before implementation.
 
+### VALUE-06
+
+VALUE-06A/B/C are integrated through PR #164:
+
+- explicit immutable baseline + candidate regression evaluation reuses the canonical regression engine;
+- only user-supplied versioned policies are exposed; no default threshold policy is invented;
+- Compare renders compatibility first, then policy identity, typed PASS/FAIL/NOT_COMPARABLE/NOT_EVALUATED outcome, rule rationale and only valid deltas;
+- raw comparison remains available when no policy is configured;
+- deterministic browser and packaged-product acceptance prove PASS, FAIL and NOT_COMPARABLE software states.
+
+VALUE-06D / EVID-004 is representative acceptance only.
+
 ### VALUE-08
 
 VALUE-08A/B/C are software-complete:
@@ -109,14 +121,14 @@ VALUE-08D is representative acceptance only.
 current dev
 -> finish VALUE-03B/C software after its sampling contract is explicit
 -> finish VALUE-04C after its policy contract is explicit
--> decompose VALUE-05/06 into the smallest missing software projections/orchestration around existing engines
+-> decompose VALUE-05 into the smallest missing software projections/orchestration around the existing performance/statistics engine
 -> keep VALUE-07 destructive migration gated by its cross-repository real evidence
 -> converge docs/contracts/tests on final dev
 -> fresh exact-head PRE_REAL/Built Product PASS
 -> consolidated REAL_ENVIRONMENT phase
 ```
 
-The final real phase then supplies the evidence needed by VALUE-01D, VALUE-02D, VALUE-03D, VALUE-04D/EVID-003, EVID-002, EVID-004 and VALUE-08D. VALUE-07 removal/cutover happens only after its own LLS/PL evidence gates agree.
+The final real phase then supplies the evidence needed by VALUE-01D, VALUE-02D, VALUE-03D, VALUE-04D/EVID-003, EVID-002, VALUE-06D/EVID-004 and VALUE-08D. VALUE-07 removal/cutover happens only after its own LLS/PL evidence gates agree.
 
 ## Later slice acceptance
 
