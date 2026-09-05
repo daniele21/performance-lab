@@ -4,6 +4,7 @@ import asyncio
 
 from performance_lab.application import (
     CampaignSearchStrategy,
+    CandidateModelReadModel,
     DiscoveredModelReadModel,
     EndpointConnectionInput,
     GenerationParameterDomainReadModel,
@@ -208,3 +209,24 @@ def test_planning_canonicalizes_searchable_domains_without_enabling_sweeps(tmp_p
     )
     assert not quick.available
     assert quick.blocked_reason is not None
+
+
+def test_planning_drops_ambiguous_generation_domain_aliases() -> None:
+    wire_domain = GenerationParameterDomainReadModel(
+        name="max_tokens",
+        kind="integer",
+        minimum=64,
+        maximum=512,
+        step=64,
+    )
+    canonical_domain = wire_domain.model_copy(update={"name": "max_output_tokens"})
+
+    candidate = CandidateModelReadModel(
+        candidate_id="candidate-a",
+        target_id="target-a",
+        model_id="org/demo",
+        generation_parameter_domains=(wire_domain, canonical_domain),
+        source="discovered",
+    )
+
+    assert candidate.generation_parameter_domains == ()
