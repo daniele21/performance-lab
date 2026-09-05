@@ -22,7 +22,11 @@ from performance_lab.datasets import (
     build_workload_pack,
 )
 from performance_lab.domain import EndpointProfile, Target
-from performance_lab.regression import RegressionPolicy, RegressionPolicyError, load_regression_policy
+from performance_lab.regression import (
+    RegressionPolicy,
+    RegressionPolicyError,
+    load_regression_policy,
+)
 from performance_lab.regression_api import attach_regression_api
 from performance_lab.run_config import RunConfigError, StarterRunConfig, load_starter_run_config
 from performance_lab.storage import SQLiteCampaignStore, SQLiteRunStore
