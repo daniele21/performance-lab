@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import {
-  compareRuns,
-  evaluateRegression,
-  listRegressionPolicies,
-  listRuns,
-} from "../../api";
+import { compareRuns, evaluateRegression, listRegressionPolicies, listRuns } from "../../api";
 import type {
   ComparisonReadModel,
   DimensionComparisonReadModel,
@@ -173,11 +168,7 @@ function MissingEvidence({ dimension }: { dimension: DimensionComparisonReadMode
   );
 }
 
-function RegressionOutcome({
-  regression,
-}: {
-  regression: RegressionEvaluationReadModel;
-}) {
+function RegressionOutcome({ regression }: { regression: RegressionEvaluationReadModel }) {
   const columns = [
     {
       id: "rule",
@@ -256,9 +247,7 @@ export function CompareView({
   const baseline = runs.find((run) => run.run_id === baselineRunId);
   const candidate = runs.find((run) => run.run_id === candidateRunId);
   const activePolicy = selectedPolicy(policies, selectedPolicyKey);
-  const canCompare = Boolean(
-    baseline && candidate && baselineRunId !== candidateRunId && !loading,
-  );
+  const canCompare = Boolean(baseline && candidate && baselineRunId !== candidateRunId && !loading);
 
   return (
     <AppShell activePrimary="Compare">
@@ -324,11 +313,7 @@ export function CompareView({
           </div>
           <div className="compare-selection-actions">
             <Button variant="primary" disabled={!canCompare} onClick={onCompare}>
-              {loading
-                ? "Evaluating…"
-                : activePolicy
-                  ? "Evaluate regression"
-                  : "Compare evidence"}
+              {loading ? "Evaluating…" : activePolicy ? "Evaluate regression" : "Compare evidence"}
             </Button>
             {baselineRunId && baselineRunId === candidateRunId ? (
               <span role="alert">Choose two different runs.</span>
@@ -374,10 +359,7 @@ export function CompareView({
 
             {regression ? <RegressionOutcome regression={regression} /> : null}
 
-            <section
-              className="compare-evidence-changes"
-              aria-label="Comparable evidence changes"
-            >
+            <section className="compare-evidence-changes" aria-label="Comparable evidence changes">
               <SectionHeader
                 title="Comparable evidence changes"
                 description="Only compatible dimensions expose deltas. Missing shared metrics remain explicit."
@@ -401,11 +383,7 @@ export function CompareView({
 
 type LoadState =
   | { status: "loading" }
-  | {
-      status: "ready";
-      runs: RunSummaryReadModel[];
-      policies: PolicySummaryReadModel[];
-    }
+  | { status: "ready"; runs: RunSummaryReadModel[]; policies: PolicySummaryReadModel[] }
   | { status: "error"; message: string };
 
 interface ComparePageProps {
@@ -419,8 +397,7 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
   const [candidateRunId, setCandidateRunId] = useState(initialCandidateRunId ?? "");
   const [selectedPolicyKey, setSelectedPolicyKey] = useState("");
   const [comparison, setComparison] = useState<ComparisonReadModel | null>(null);
-  const [regression, setRegression] =
-    useState<RegressionEvaluationReadModel | null>(null);
+  const [regression, setRegression] = useState<RegressionEvaluationReadModel | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [comparisonError, setComparisonError] = useState<string | null>(null);
 
@@ -452,10 +429,7 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
     return () => controller.abort();
   }, [attempt, initialCandidateRunId]);
 
-  const runs = useMemo(
-    () => (loadState.status === "ready" ? loadState.runs : []),
-    [loadState],
-  );
+  const runs = useMemo(() => (loadState.status === "ready" ? loadState.runs : []), [loadState]);
   const policies = useMemo(
     () => (loadState.status === "ready" ? loadState.policies : []),
     [loadState],
