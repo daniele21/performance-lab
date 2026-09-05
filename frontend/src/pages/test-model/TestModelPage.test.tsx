@@ -120,6 +120,7 @@ const probe: EndpointProbeReadModel = {
           provenance: "local_llm_server",
         },
       ],
+      generation_parameter_domains: [],
     },
   ],
   capabilities: [
