@@ -5,7 +5,7 @@ Document type: operational-guide
 Owner: developer experience
 Canonical scope: operations.getting-started
 Read when: installing Performance Lab or running the local browser product
-Last reviewed: 2026-09-01
+Last reviewed: 2026-09-05
 
 This is the shortest supported path from a clean checkout to the current local browser product. `dev` is the canonical integration branch; `main` is release-oriented and is promoted deliberately after FULL validation.
 
@@ -81,9 +81,9 @@ uv run --extra dev --locked performance-lab probe \
 
 A healthy probe confirms the minimum inference path, not optional streaming, token-usage or runtime-identity capabilities.
 
-## 5. Create a local run config
+## 5. Optional: create a local run config
 
-Save this as `local-run.json` and replace the endpoint/model values with the service you are testing:
+The browser product can start without a pre-authored config and connect a loopback target from the UI. For a repeatable preconfigured startup, save this as `local-run.json` and replace the endpoint/model values with the service you are testing:
 
 ```json
 {
@@ -118,6 +118,16 @@ uv run --extra dev --locked performance-lab-ui \
   --assets frontend/dist
 ```
 
+Omit `--config local-run.json` to start from the configless first-run flow and connect the loopback inference target in the UI.
+
+To make an explicit versioned regression policy available in Compare, add:
+
+```bash
+--regression-policy regression-policy.json
+```
+
+Repeat `--regression-policy` to expose multiple policies. When no policy is configured, Compare remains a raw evidence comparison: Performance Lab does not invent regression thresholds.
+
 Open:
 
 ```text
@@ -139,6 +149,8 @@ uv run --extra dev --locked performance-lab-ui \
   --config local-run.json \
   --port 8765
 ```
+
+The same optional `--regression-policy regression-policy.json` flag is supported here.
 
 Terminal 2 — Vite:
 
