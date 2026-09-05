@@ -214,6 +214,7 @@ const campaign = {
       ...API_IDENTITY,
       entry_id: "entry-1",
       candidate_id: "candidate-a",
+      configuration_id: "fixed-1",
       model_id: "model-a",
       config_digest: "c".repeat(64),
       status: "succeeded",
@@ -230,6 +231,7 @@ const campaign = {
       ...API_IDENTITY,
       entry_id: "entry-2",
       candidate_id: "candidate-b",
+      configuration_id: "fixed-1",
       model_id: "model-b",
       config_digest: "d".repeat(64),
       status: "succeeded",
@@ -273,6 +275,7 @@ const campaign = {
     recommendation: {
       ...API_IDENTITY,
       candidate_id: "candidate-a",
+      configuration_id: "fixed-1",
       run_id: "run-a",
       model_id: "model-a",
       rationale:
@@ -372,6 +375,7 @@ test("J0 campaign: four-stage setup executes and produces policy-backed results"
   ).toBeVisible();
   await expect(page.getByText("Recommended setup", { exact: true })).toBeVisible();
   await expect(page.getByText("model-a", { exact: true }).last()).toBeVisible();
+  await expect(page.getByText("Configuration: fixed-1", { exact: false })).toBeVisible();
   await expect(page.getByText("Comparable", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Inspect recommended Run" })).toBeVisible();
 
