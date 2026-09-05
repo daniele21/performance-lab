@@ -135,8 +135,17 @@ test("J9: Run Detail exposes exact-fingerprint variability and failure denominat
   await expect(section.getByRole("heading", { name: "Repeatability" })).toBeVisible();
   await expect(section.getByText("Evidence available", { exact: true })).toBeVisible();
   await expect(section.getByText("3 exact-fingerprint runs", { exact: true })).toBeVisible();
-  await expect(section.getByText("2 succeeded · 1 failed · 0 cancelled", { exact: true })).toBeVisible();
-  await expect(section.getByText("8 succeeded · 2 failed · 0 cancelled", { exact: true })).toBeVisible();
+  await expect(
+    section.getByText("Concurrency 1 · 4 measured requests · 0 warmups · non-streaming", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    section.getByText("2 succeeded · 1 failed · 0 cancelled", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    section.getByText("8 succeeded · 2 failed · 0 cancelled", { exact: true }),
+  ).toBeVisible();
 
   await section.getByText("Show run-to-run variability", { exact: true }).click();
   await expect(section.getByRole("heading", { name: "total_latency_ms" })).toBeVisible();
@@ -165,7 +174,7 @@ test("J9: Run Detail keeps one exact-fingerprint Run explicitly insufficient", a
 
   const section = page.getByLabel("Repeatability evidence");
   await expect(section.getByText("Insufficient repeats", { exact: true })).toBeVisible();
-  await expect(section.getByText("1 exact-fingerprint runs", { exact: true })).toBeVisible();
+  await expect(section.getByText("1 exact-fingerprint run", { exact: true })).toBeVisible();
   await expect(section.getByText("Repeat this exact frozen test.", { exact: false })).toBeVisible();
   await expect(section.getByText("Show run-to-run variability", { exact: true })).toHaveCount(0);
 });
