@@ -1,6 +1,12 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 const API = { api_version: "v1", read_model_version: 1 } as const;
+const unavailableResources = {
+  ...API,
+  state: "unavailable",
+  measurements: [],
+  note: "No policy-eligible model-resource evidence is retained for this fixture.",
+} as const;
 const NOW = "2026-08-31T08:00:00Z";
 const LONG_MODEL_ID = `model-${"x".repeat(180)}`;
 const LONG_RUN_ID = `run-${"r".repeat(180)}`;
@@ -157,6 +163,7 @@ function candidate(index: number, modelId: string, runId: string) {
     comparable_to_reference: true,
     compatibility_reasons: [],
     evidence: sampleEvidence(runId, modelId, index),
+    resources: unavailableResources,
     unavailable_reason: null,
   };
 }

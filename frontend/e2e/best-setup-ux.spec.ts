@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 const API_IDENTITY = { api_version: "v1", read_model_version: 1 } as const;
+const unavailableResources = {
+  ...API_IDENTITY,
+  state: "unavailable",
+  measurements: [],
+  note: "No policy-eligible model-resource evidence is retained for this fixture.",
+} as const;
 const PLAN_DIGEST = "a".repeat(64);
 const POLICY = {
   ...API_IDENTITY,
@@ -218,6 +224,7 @@ const campaign = {
       error_message: null,
       identity: identity("model-a"),
       metrics: [qualityMetric(1)],
+      resources: unavailableResources,
     },
     {
       ...API_IDENTITY,
@@ -233,6 +240,7 @@ const campaign = {
       error_message: null,
       identity: identity("model-b"),
       metrics: [qualityMetric(0.5)],
+      resources: unavailableResources,
     },
   ],
   results: {
