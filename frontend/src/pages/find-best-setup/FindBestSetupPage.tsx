@@ -63,10 +63,12 @@ function formatDuration(seconds: number | null, reason: string) {
 
 function formatDeclaredDomain(domain: GenerationParameterDomainReadModel) {
   if (domain.kind === "boolean") {
-    return domain.values.length ? domain.values.map(String).join(" / ") : "Values unavailable";
+    if (!domain.values.length) return "Values unavailable";
+    return domain.values.map(String).join(" / ");
   }
   if (domain.minimum === null || domain.maximum === null) return "Bounds unavailable";
-  return `${domain.minimum} → ${domain.maximum}${domain.step === null ? "" : ` · step ${domain.step}`}`;
+  const step = domain.step === null ? "" : ` · step ${domain.step}`;
+  return `${domain.minimum} → ${domain.maximum}${step}`;
 }
 
 export function FindBestSetupView({
@@ -217,7 +219,9 @@ export function FindBestSetupView({
     (option) => option.strategy === "custom",
   );
   const selectedCandidates =
-    target?.candidates.filter((candidate) => candidateIds.includes(candidate.candidate_id)) ?? [];
+    target?.candidates.filter((candidate) =>
+      candidateIds.includes(candidate.candidate_id),
+    ) ?? [];
   const showFixedFallback = Boolean(
     fixedOption?.available && primaryOptions.every((option) => !option.available),
   );
@@ -500,7 +504,12 @@ export function FindBestSetupView({
                                 <div key={domain.name}>
                                   <dt>{domain.name}</dt>
                                   <dd>
-                                    {formatDeclaredDomain(domain)} · {domain.scope} · {domain.source} /{" "}
+                                    {formatDeclaredDomain(domain)}
+                                    {" · "}
+                                    {domain.scope}
+                                    {" · "}
+                                    {domain.source}
+                                    {" / "}
                                     {domain.provenance}
                                   </dd>
                                 </div>
