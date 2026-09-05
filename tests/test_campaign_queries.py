@@ -30,12 +30,13 @@ def _run(
     value: float,
     *,
     measurements: tuple[Measurement, ...] = (),
+    run_id: str | None = None,
 ) -> Run:
     bundle = build_general_starter_suite()
     evaluator = EvaluatorRef(evaluator_id="quality", version="1")
     now = datetime.now(UTC)
     return Run(
-        run_id=f"run-{model_id}",
+        run_id=run_id or f"run-{model_id}",
         status=RunStatus.SUCCEEDED,
         fingerprint=ExecutionFingerprint(
             target_id="target-a",
@@ -132,7 +133,67 @@ def test_campaign_results_show_policy_before_a_strict_dominance_recommendation(
     assert capability.evidence_note is None
     assert result.results.recommendation is not None
     assert result.results.recommendation.model_id == "model-a"
+    assert result.results.recommendation.configuration_id == "fixed-1"
+    assert all(entry.configuration_id == "fixed-1" for entry in result.entries)
     assert all(entry.resources.state == "unavailable" for entry in result.entries)
+
+
+def test_campaign_recommends_exact_configuration_for_same_candidate(tmp_path: Path) -> None:
+    run_store = SQLiteRunStore(tmp_path / "runs.sqlite3")
+    first = _run("model-a", 1.0, run_id="run-config-a")
+    second = _run("model-a", 0.5, run_id="run-config-b")
+    run_store.publish(first)
+    run_store.publish(second)
+
+    now = datetime.now(UTC)
+    campaign_store = SQLiteCampaignStore(run_store.path)
+    campaign_store.save(
+        Campaign(
+            campaign_id="campaign-configs",
+            plan_digest="d" * 64,
+            use_case_id="general-capability",
+            use_case_version="1",
+            target_id="target-a",
+            suite_id="general-diagnostic-starter",
+            suite_version="2026-08-15-v1",
+            decision_policy=DecisionPolicyRef(
+                policy_id="strict-quality-dominance",
+                policy_version="1.0.0",
+            ),
+            status=CampaignStatus.SUCCEEDED,
+            created_at=now,
+            updated_at=now,
+            completed_at=now,
+            entries=(
+                CampaignEntry(
+                    entry_id="entry-config-a",
+                    candidate_id="candidate-a",
+                    configuration_id="config-a",
+                    model_id="model-a",
+                    config_digest="e" * 64,
+                    status=CampaignEntryStatus.SUCCEEDED,
+                    run_id=first.run_id,
+                ),
+                CampaignEntry(
+                    entry_id="entry-config-b",
+                    candidate_id="candidate-a",
+                    configuration_id="config-b",
+                    model_id="model-a",
+                    config_digest="f" * 64,
+                    status=CampaignEntryStatus.SUCCEEDED,
+                    run_id=second.run_id,
+                ),
+            ),
+        )
+    )
+
+    result = CampaignQueryService(campaign_store, UIQueryService(run_store)).get("campaign-configs")
+
+    assert [entry.configuration_id for entry in result.entries] == ["config-a", "config-b"]
+    assert result.results.recommendation is not None
+    assert result.results.recommendation.candidate_id == "candidate-a"
+    assert result.results.recommendation.configuration_id == "config-a"
+    assert result.results.recommendation.run_id == "run-config-a"
 
 
 def test_campaign_does_not_promote_context_telemetry_to_resource_evidence(

@@ -290,7 +290,9 @@ function CampaignResults({
     availableCompatibility.length > 0 && availableCompatibility.every((item) => item.comparable);
   const recommendedEntry = results.recommendation
     ? (campaign.entries.find(
-        (entry) => entry.candidate_id === results.recommendation?.candidate_id,
+        (entry) =>
+          entry.candidate_id === results.recommendation?.candidate_id &&
+          entry.configuration_id === results.recommendation?.configuration_id,
       ) ?? null)
     : null;
 

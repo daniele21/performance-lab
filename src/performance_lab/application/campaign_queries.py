@@ -188,6 +188,7 @@ class CampaignQueryService:
                     CampaignCaseCandidateReadModel(
                         entry_id=entry.entry_id,
                         candidate_id=entry.candidate_id,
+                        configuration_id=entry.configuration_id,
                         model_id=entry.model_id,
                         config_digest=entry.config_digest,
                         entry_status=entry.status,
@@ -252,6 +253,7 @@ class CampaignQueryService:
                 CampaignCaseCandidateReadModel(
                     entry_id=entry.entry_id,
                     candidate_id=entry.candidate_id,
+                    configuration_id=entry.configuration_id,
                     model_id=entry.model_id,
                     config_digest=entry.config_digest,
                     entry_status=entry.status,
@@ -327,6 +329,7 @@ class CampaignQueryService:
                 CampaignEntryReadModel(
                     entry_id=entry.entry_id,
                     candidate_id=entry.candidate_id,
+                    configuration_id=entry.configuration_id,
                     model_id=entry.model_id,
                     config_digest=entry.config_digest,
                     status=entry.status,
@@ -368,7 +371,7 @@ class CampaignQueryService:
     ) -> CampaignResultsReadModel:
         policy = decision_policy_read_model()
         successful = tuple(
-            (entry.candidate_id, runs_by_entry[entry.entry_id])
+            (entry.candidate_id, entry.configuration_id, runs_by_entry[entry.entry_id])
             for entry in campaign.entries
             if entry.status == CampaignEntryStatus.SUCCEEDED
             and entry.entry_id in runs_by_entry
@@ -419,12 +422,21 @@ class CampaignQueryService:
 
         decision = recommend_strict_quality_dominance(successful)
         recommendation = None
-        if decision.candidate_id is not None and decision.run_id is not None:
+        if (
+            decision.candidate_id is not None
+            and decision.configuration_id is not None
+            and decision.run_id is not None
+        ):
             entry = next(
-                item for item in campaign.entries if item.candidate_id == decision.candidate_id
+                item
+                for item in campaign.entries
+                if item.candidate_id == decision.candidate_id
+                and item.configuration_id == decision.configuration_id
+                and item.run_id == decision.run_id
             )
             recommendation = CampaignRecommendationReadModel(
                 candidate_id=decision.candidate_id,
+                configuration_id=decision.configuration_id,
                 run_id=decision.run_id,
                 model_id=entry.model_id,
                 rationale=decision.reason,
@@ -556,9 +568,9 @@ def _sample_resource_evidence(
 
 
 def _compatibility(
-    candidates: tuple[tuple[str, Run], ...],
+    candidates: tuple[tuple[str, str, Run], ...],
 ) -> tuple[CampaignDimensionReadModel, ...]:
-    runs = tuple(run for _, run in candidates)
+    runs = tuple(run for _, _, run in candidates)
     if len(candidates) < 2:
         return tuple(
             CampaignDimensionReadModel(
@@ -572,11 +584,11 @@ def _compatibility(
             for dimension in ComparisonDimension
         )
 
-    baseline_run = candidates[0][1]
+    baseline_run = candidates[0][2]
     dimensions: list[CampaignDimensionReadModel] = []
     for dimension in ComparisonDimension:
         reasons: list[CampaignCompatibilityReasonReadModel] = []
-        for _, candidate_run in candidates[1:]:
+        for _, _, candidate_run in candidates[1:]:
             result = compare_fingerprints(
                 baseline_run.fingerprint,
                 candidate_run.fingerprint,

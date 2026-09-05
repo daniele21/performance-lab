@@ -15,6 +15,7 @@ STRICT_QUALITY_DOMINANCE_POLICY_VERSION = "1.0.0"
 @dataclass(frozen=True, slots=True)
 class RecommendationDecision:
     candidate_id: str | None
+    configuration_id: str | None
     run_id: str | None
     reason: str
 
@@ -33,25 +34,25 @@ def decision_policy_read_model() -> DecisionPolicyReadModel:
 
 
 def recommend_strict_quality_dominance(
-    candidates: tuple[tuple[str, Run], ...],
+    candidates: tuple[tuple[str, str, Run], ...],
 ) -> RecommendationDecision:
-    """Return a recommendation only for a unique strict quality-dominating candidate.
+    """Return a recommendation only for a unique strict quality-dominating setup.
 
-    No metric weights, normalization or tie-break rules are hidden inside this policy. Runtime and
-    resource evidence remain separate result dimensions and do not become an opaque combined score.
+    Candidate plus configuration is the decision identity. No metric weights, normalization or
+    tie-break rules are hidden inside this policy. Runtime and resource evidence remain separate
+    result dimensions and do not become an opaque combined score.
     """
 
     if len(candidates) < 2:
         return RecommendationDecision(
             candidate_id=None,
+            configuration_id=None,
             run_id=None,
-            reason=(
-                "At least two completed candidates are required for a comparative recommendation."
-            ),
+            reason=("At least two completed setups are required for a comparative recommendation."),
         )
 
-    baseline = candidates[0][1]
-    for _, run in candidates[1:]:
+    baseline = candidates[0][2]
+    for _, _, run in candidates[1:]:
         compatibility = compare_fingerprints(
             baseline.fingerprint,
             run.fingerprint,
@@ -60,27 +61,30 @@ def recommend_strict_quality_dominance(
         if not compatibility.comparable:
             return RecommendationDecision(
                 candidate_id=None,
+                configuration_id=None,
                 run_id=None,
                 reason=(
-                    "Quality evidence is not comparable across every candidate, so the decision "
+                    "Quality evidence is not comparable across every setup, so the decision "
                     "policy does not rank them."
                 ),
             )
 
-    metrics = tuple(_quality_metrics(run) for _, run in candidates)
+    metrics = tuple(_quality_metrics(run) for _, _, run in candidates)
     metric_keys = set(metrics[0])
     if not metric_keys:
         return RecommendationDecision(
             candidate_id=None,
+            configuration_id=None,
             run_id=None,
             reason="No aggregate quality metrics are available for recommendation.",
         )
     if any(set(item) != metric_keys for item in metrics[1:]):
         return RecommendationDecision(
             candidate_id=None,
+            configuration_id=None,
             run_id=None,
             reason=(
-                "Candidates do not expose the same aggregate quality metrics, so no weighted or "
+                "Setups do not expose the same aggregate quality metrics, so no weighted or "
                 "partial ranking is inferred."
             ),
         )
@@ -89,8 +93,9 @@ def recommend_strict_quality_dominance(
         if len(directions) != 1:
             return RecommendationDecision(
                 candidate_id=None,
+                configuration_id=None,
                 run_id=None,
-                reason=f"Quality metric direction is inconsistent across candidates: {key}",
+                reason=f"Quality metric direction is inconsistent across setups: {key}",
             )
 
     dominant: list[int] = []
@@ -105,20 +110,22 @@ def recommend_strict_quality_dominance(
     if len(dominant) != 1:
         return RecommendationDecision(
             candidate_id=None,
+            configuration_id=None,
             run_id=None,
             reason=(
-                "No single candidate strictly dominates every alternative across the comparable "
+                "No single setup strictly dominates every alternative across the comparable "
                 "quality metrics. Inspect the separate trade-offs instead."
             ),
         )
 
     index = dominant[0]
-    candidate_id, run = candidates[index]
+    candidate_id, configuration_id, run = candidates[index]
     return RecommendationDecision(
         candidate_id=candidate_id,
+        configuration_id=configuration_id,
         run_id=run.run_id,
         reason=(
-            "This candidate is no worse on every comparable quality metric and strictly better "
+            "This setup is no worse on every comparable quality metric and strictly better "
             "on at least one metric against every alternative."
         ),
     )

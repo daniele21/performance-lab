@@ -15,7 +15,12 @@ from performance_lab.domain import (
 )
 
 
-def _run(model_id: str, values: tuple[float, float]) -> Run:
+def _run(
+    model_id: str,
+    values: tuple[float, float],
+    *,
+    run_id: str | None = None,
+) -> Run:
     bundle = build_general_starter_suite()
     fingerprint = ExecutionFingerprint(
         target_id="target-a",
@@ -50,7 +55,7 @@ def _run(model_id: str, values: tuple[float, float]) -> Run:
     )
     now = datetime.now(UTC)
     return Run(
-        run_id=f"run-{model_id}",
+        run_id=run_id or f"run-{model_id}",
         status=RunStatus.SUCCEEDED,
         fingerprint=fingerprint,
         suite=bundle.suite,
@@ -63,22 +68,45 @@ def _run(model_id: str, values: tuple[float, float]) -> Run:
 def test_policy_recommends_only_a_strict_quality_dominator() -> None:
     decision = recommend_strict_quality_dominance(
         (
-            ("candidate-a", _run("model-a", (1.0, 0.9))),
-            ("candidate-b", _run("model-b", (0.8, 0.9))),
+            ("candidate-a", "fixed-1", _run("model-a", (1.0, 0.9))),
+            ("candidate-b", "fixed-1", _run("model-b", (0.8, 0.9))),
         )
     )
 
     assert decision.candidate_id == "candidate-a"
+    assert decision.configuration_id == "fixed-1"
     assert decision.run_id == "run-model-a"
+
+
+def test_policy_keeps_configuration_identity_for_same_candidate() -> None:
+    decision = recommend_strict_quality_dominance(
+        (
+            (
+                "candidate-a",
+                "config-a",
+                _run("model-a", (1.0, 0.9), run_id="run-config-a"),
+            ),
+            (
+                "candidate-a",
+                "config-b",
+                _run("model-a", (0.8, 0.9), run_id="run-config-b"),
+            ),
+        )
+    )
+
+    assert decision.candidate_id == "candidate-a"
+    assert decision.configuration_id == "config-a"
+    assert decision.run_id == "run-config-a"
 
 
 def test_policy_does_not_hide_tradeoffs_in_a_weighted_score() -> None:
     decision = recommend_strict_quality_dominance(
         (
-            ("candidate-a", _run("model-a", (1.0, 0.7))),
-            ("candidate-b", _run("model-b", (0.8, 0.9))),
+            ("candidate-a", "fixed-1", _run("model-a", (1.0, 0.7))),
+            ("candidate-b", "fixed-1", _run("model-b", (0.8, 0.9))),
         )
     )
 
     assert decision.candidate_id is None
-    assert "No single candidate strictly dominates" in decision.reason
+    assert decision.configuration_id is None
+    assert "No single setup strictly dominates" in decision.reason
