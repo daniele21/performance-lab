@@ -219,7 +219,10 @@ test("J1 discovery: connect local server, discover model, freeze, run and inspec
   await expect(page.getByText("Connection discovered")).toBeVisible();
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("model-discovered");
 
-  const storedPreference = await page.evaluate((key) => window.localStorage.getItem(key), CONNECTION_PREFERENCE_STORAGE_KEY);
+  const storedPreference = await page.evaluate(
+    (key) => window.localStorage.getItem(key),
+    CONNECTION_PREFERENCE_STORAGE_KEY,
+  );
   expect(storedPreference).not.toBeNull();
   expect(JSON.parse(storedPreference!)).toEqual({
     displayName: "Remembered local server",
