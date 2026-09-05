@@ -78,9 +78,13 @@ class UIQueryService(RegressionUIQueryService):
             failed_run_count=sum(run.status == RunStatus.FAILED for run in cohort),
             cancelled_run_count=sum(run.status == RunStatus.CANCELLED for run in cohort),
             sample_attempt_count=len(samples),
-            succeeded_sample_count=sum(sample.status == SampleStatus.SUCCEEDED for sample in samples),
+            succeeded_sample_count=sum(
+                sample.status == SampleStatus.SUCCEEDED for sample in samples
+            ),
             failed_sample_count=sum(sample.status == SampleStatus.FAILED for sample in samples),
-            cancelled_sample_count=sum(sample.status == SampleStatus.CANCELLED for sample in samples),
+            cancelled_sample_count=sum(
+                sample.status == SampleStatus.CANCELLED for sample in samples
+            ),
             metrics=metrics,
             note=note,
         )
@@ -141,9 +145,9 @@ def _performance_metrics(runs: tuple[Run, ...]) -> tuple[RepeatabilityMetricRead
                     continue
                 if measurement.unit == "tokens":
                     continue
-                per_run[
-                    (measurement.name, measurement.protocol_version, measurement.unit)
-                ].append(measurement.value)
+                per_run[(measurement.name, measurement.protocol_version, measurement.unit)].append(
+                    measurement.value
+                )
         for identity, values in per_run.items():
             grouped[identity].append(
                 RepeatabilityRunValueReadModel(
