@@ -112,6 +112,13 @@ def test_fixed_general_plan_is_frozen_deterministic_and_executable(tmp_path: Pat
     assert first.configuration_search is not None
     assert first.configuration_search.configuration_count_per_candidate == 1
     assert first.configuration_search.bounded_parameter_ranges == ()
+    assert len(first.configuration_search.configurations) == 1
+    frozen = first.configuration_search.configurations[0]
+    assert frozen.configuration_id == "fixed-1"
+    assert len(frozen.generation_digest) == 64
+    assert frozen.generation == first.configuration_search.base_generation
+    assert second.configuration_search is not None
+    assert second.configuration_search.configurations == first.configuration_search.configurations
     assert first.benchmark_plan is not None
     assert first.benchmark_plan.suite.suite_id == "general-diagnostic-starter"
     assert first.benchmark_plan.case_count_per_run == 23
@@ -124,6 +131,8 @@ def test_fixed_general_plan_is_frozen_deterministic_and_executable(tmp_path: Pat
     assert launch.plan_digest == first.plan_digest
     assert launch.decision_policy.policy_id == "strict-quality-dominance"
     assert len(launch.runs) == 1
+    assert launch.runs[0].configuration_id == frozen.configuration_id
+    assert launch.runs[0].config.generation == frozen.generation
     assert launch.runs[0].config.suite_id == "general-diagnostic-starter"
     assert launch.runs[0].config.suite_version == first.benchmark_plan.suite.suite_version
     assert launch.runs[0].config.evidence_mode == EvidenceMode.AGGREGATE_SAFE
@@ -156,6 +165,8 @@ def test_workload_use_case_maps_to_its_own_versioned_executable_plan(tmp_path: P
     assert preview.can_plan
     assert preview.use_case is not None
     assert preview.use_case.source == "workload_pack"
+    assert preview.configuration_search is not None
+    assert len(preview.configuration_search.configurations) == 1
     assert preview.benchmark_plan is not None
     assert preview.benchmark_plan.suite.suite_id == "workload-structured-document-extraction"
     assert preview.benchmark_plan.case_count_per_run == 12
@@ -164,6 +175,11 @@ def test_workload_use_case_maps_to_its_own_versioned_executable_plan(tmp_path: P
     assert preview.plan_digest is not None
 
     launch = queries.prepare_campaign_launch(request, expected_plan_digest=preview.plan_digest)
+    assert launch.runs[0].configuration_id == "fixed-1"
+    assert (
+        launch.runs[0].config.generation
+        == preview.configuration_search.configurations[0].generation
+    )
     assert launch.runs[0].config.suite_id == "workload-structured-document-extraction"
     assert launch.runs[0].config.suite_version == preview.benchmark_plan.suite.suite_version
     assert launch.runs[0].config.evidence_mode == EvidenceMode.AGGREGATE_SAFE
@@ -256,15 +272,19 @@ def test_configured_target_discovery_plans_multiple_models_with_candidate_bound_
     preview = queries.preview_campaign_plan(request)
 
     assert preview.can_plan
+    assert preview.configuration_search is not None
+    assert len(preview.configuration_search.configurations) == 1
     assert preview.estimate is not None
     assert preview.estimate.planned_run_count == 2
     assert preview.plan_digest is not None
 
     launch = queries.prepare_campaign_launch(request, expected_plan_digest=preview.plan_digest)
     assert [run.model_id for run in launch.runs] == ["model-a", "model-b"]
+    assert all(run.configuration_id == "fixed-1" for run in launch.runs)
     for run in launch.runs:
         config = run.config
         assert config.model_id == run.model_id
+        assert config.generation == preview.configuration_search.configurations[0].generation
         assert config.local_llm_server_identity is not None
         assert config.local_llm_server_identity.model_id == run.model_id
         assert config.local_llm_server_identity.required is True

@@ -47,6 +47,7 @@ class CampaignRunSpec:
     candidate_id: str
     model_id: str
     config: StarterRunConfig
+    configuration_id: str = "fixed-1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,12 +140,14 @@ class CampaignJobManager:
                         candidate_id=spec.candidate_id,
                         model_id=spec.model_id,
                         config=config,
+                        configuration_id=spec.configuration_id,
                     )
                 )
                 entries.append(
                     CampaignEntry(
                         entry_id=f"entry-{index + 1}",
                         candidate_id=spec.candidate_id,
+                        configuration_id=spec.configuration_id,
                         model_id=spec.model_id,
                         config_digest=starter_run_config_digest(config),
                     )

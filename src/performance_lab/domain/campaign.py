@@ -61,6 +61,7 @@ class DecisionPolicyRef(FrozenModel):
 class CampaignEntry(VersionedModel):
     entry_id: NonEmptyStr
     candidate_id: NonEmptyStr
+    configuration_id: NonEmptyStr = "fixed-1"
     model_id: NonEmptyStr
     config_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     status: CampaignEntryStatus = CampaignEntryStatus.QUEUED
@@ -111,11 +112,11 @@ class Campaign(VersionedModel):
         if not value:
             raise ValueError("campaign requires at least one entry")
         entry_ids = [entry.entry_id for entry in value]
-        candidate_ids = [entry.candidate_id for entry in value]
+        candidate_configurations = [(entry.candidate_id, entry.configuration_id) for entry in value]
         if len(entry_ids) != len(set(entry_ids)):
             raise ValueError("campaign entry ids must be unique")
-        if len(candidate_ids) != len(set(candidate_ids)):
-            raise ValueError("campaign candidate ids must be unique")
+        if len(candidate_configurations) != len(set(candidate_configurations)):
+            raise ValueError("campaign candidate/configuration pairs must be unique")
         return value
 
     @model_validator(mode="after")

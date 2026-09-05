@@ -58,6 +58,7 @@ const context: CampaignPlanningContextReadModel = {
           runtime_name: null,
           runtime_version: null,
           runtime_config_digest: null,
+          generation_parameter_domains: [],
           source: "configured",
         },
       ],
