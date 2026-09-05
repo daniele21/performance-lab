@@ -143,7 +143,9 @@ def verify_launcher_identity(extracted: Path) -> tuple[dict[str, Any], dict[str,
         "artifact_stem": artifact_stem,
         "state": "ready",
     }
-    mismatched = {key: (value, marker.get(key)) for key, value in expected.items() if marker.get(key) != value}
+    mismatched = {
+        key: (value, marker.get(key)) for key, value in expected.items() if marker.get(key) != value
+    }
     if mismatched:
         raise RuntimeError(f"launcher runtime identity does not match artifact: {mismatched}")
     return manifest, marker
