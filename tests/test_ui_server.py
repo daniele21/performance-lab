@@ -57,6 +57,23 @@ def test_local_ui_composition_preserves_execution_template_in_frozen_preflight(t
         assert frozen["hardware"]["device_class"] == "laptop"
 
 
+def test_local_ui_can_start_without_preconfigured_target(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+
+    with TestClient(build_local_ui_app()) as client:
+        targets = client.get("/api/v1/targets")
+        assert targets.status_code == 200
+        assert targets.json() == []
+
+        scenarios = client.get("/api/v1/scenarios")
+        assert scenarios.status_code == 200
+        assert any(item["supported"] for item in scenarios.json())
+
+        jobs = client.get("/api/v1/run-jobs")
+        assert jobs.status_code == 200
+        assert jobs.json() == []
+
+
 def test_local_ui_can_serve_built_frontend_without_shadowing_api(tmp_path) -> None:
     config = _config(tmp_path)
     assets = tmp_path / "web"
@@ -81,7 +98,7 @@ def test_ui_entrypoint_loads_config_and_keeps_listener_on_loopback(tmp_path, mon
     config_path.write_text(config.model_dump_json(indent=2), encoding="utf-8")
     called: dict[str, object] = {}
 
-    def fake_serve(value: StarterRunConfig, *, port: int, assets_dir: Path | None) -> None:
+    def fake_serve(value: StarterRunConfig | None, *, port: int, assets_dir: Path | None) -> None:
         called["config"] = value
         called["port"] = port
         called["assets_dir"] = assets_dir
@@ -102,6 +119,26 @@ def test_ui_entrypoint_loads_config_and_keeps_listener_on_loopback(tmp_path, mon
     assert stderr.getvalue() == ""
 
 
+def test_ui_entrypoint_starts_first_run_without_config(monkeypatch) -> None:
+    called: dict[str, object] = {}
+
+    def fake_serve(value: StarterRunConfig | None, *, port: int, assets_dir: Path | None) -> None:
+        called["config"] = value
+        called["port"] = port
+        called["assets_dir"] = assets_dir
+
+    monkeypatch.setattr("performance_lab.ui_server.serve_local_ui", fake_serve)
+    stdout = StringIO()
+    stderr = StringIO()
+
+    result = main(["--port", "9876"], stdout=stdout, stderr=stderr)
+
+    assert result == 0
+    assert called == {"config": None, "port": 9876, "assets_dir": None}
+    assert "connect a local target in the UI" in stdout.getvalue()
+    assert stderr.getvalue() == ""
+
+
 def test_ui_entrypoint_accepts_built_assets(tmp_path, monkeypatch) -> None:
     config = _config(tmp_path)
     config_path = tmp_path / "ui-config.json"
@@ -111,7 +148,7 @@ def test_ui_entrypoint_accepts_built_assets(tmp_path, monkeypatch) -> None:
     (assets / "index.html").write_text("<html></html>", encoding="utf-8")
     called: dict[str, object] = {}
 
-    def fake_serve(value: StarterRunConfig, *, port: int, assets_dir: Path | None) -> None:
+    def fake_serve(value: StarterRunConfig | None, *, port: int, assets_dir: Path | None) -> None:
         called["config"] = value
         called["port"] = port
         called["assets_dir"] = assets_dir

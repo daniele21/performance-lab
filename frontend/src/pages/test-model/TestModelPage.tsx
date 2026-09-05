@@ -30,10 +30,17 @@ import {
   Status,
   Toggle,
 } from "../../components";
+import {
+  DEFAULT_CONNECTION_PREFERENCE,
+  getConnectionPreference,
+  setConnectionPreference,
+  type ConnectionPreference,
+} from "../../connection-preference";
 import "./test-model.css";
 
 type WizardStep = "model" | "scenario" | "test" | "review";
 type ModelSource = "configured" | "local";
+type ConnectionDraft = ConnectionPreference;
 
 const STEPS: readonly { id: WizardStep; label: string }[] = [
   { id: "model", label: "Model" },
@@ -47,15 +54,6 @@ interface WizardSelection {
   modelId: string;
   scenario: ScenarioKind;
   useHostTelemetry: boolean;
-}
-
-interface ConnectionDraft {
-  displayName: string;
-  host: string;
-  port: string;
-  basePath: string;
-  serverType: EndpointConnectionInput["server_type"];
-  timeoutSeconds: string;
 }
 
 interface TestModelViewProps {
@@ -82,15 +80,6 @@ interface TestModelViewProps {
   onLaunch?: () => void;
 }
 
-const DEFAULT_CONNECTION: ConnectionDraft = {
-  displayName: "Local model server",
-  host: "127.0.0.1",
-  port: "1235",
-  basePath: "/v1/",
-  serverType: "local_llm_server",
-  timeoutSeconds: "5",
-};
-
 function stepIndex(step: WizardStep) {
   return STEPS.findIndex((item) => item.id === step);
 }
@@ -116,7 +105,7 @@ export function TestModelView({
   step,
   preflight,
   modelSource = "configured",
-  connection = DEFAULT_CONNECTION,
+  connection = DEFAULT_CONNECTION_PREFERENCE,
   probe = null,
   probeLoading = false,
   probeError = null,
@@ -293,7 +282,7 @@ export function TestModelView({
                     </Select>
                     <Field
                       label="Host"
-                      description="This first UI slice intentionally accepts localhost/loopback only."
+                      description="Local connections remain restricted to localhost/loopback."
                       value={connection.host}
                       onChange={(event) => updateConnection({ host: event.currentTarget.value })}
                       placeholder="127.0.0.1"
@@ -337,7 +326,10 @@ export function TestModelView({
                     <Button variant="primary" disabled={probeLoading} onClick={onProbe}>
                       {probeLoading ? "Connecting…" : "Connect & discover"}
                     </Button>
-                    <p>Session connection · it is not persisted when Performance Lab stops.</p>
+                    <p>
+                      Successful loopback connection details are saved in this browser. Credentials
+                      are never stored.
+                    </p>
                   </div>
 
                   {probeError ? (
@@ -682,7 +674,9 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
   const [attempt, setAttempt] = useState(0);
   const [step, setStep] = useState<WizardStep>("model");
   const [modelSource, setModelSource] = useState<ModelSource>("configured");
-  const [connection, setConnection] = useState<ConnectionDraft>(DEFAULT_CONNECTION);
+  const [connection, setConnection] = useState<ConnectionDraft>(
+    () => getConnectionPreference() ?? DEFAULT_CONNECTION_PREFERENCE,
+  );
   const [probe, setProbe] = useState<EndpointProbeReadModel | null>(null);
   const [probeLoading, setProbeLoading] = useState(false);
   const [probeError, setProbeError] = useState<string | null>(null);
@@ -788,6 +782,7 @@ export function TestModelPage({ onLaunched }: TestModelPageProps) {
       .then((result) => {
         setProbe(result);
         if (result.healthy && result.target) {
+          setConnectionPreference(connection);
           setSelection((current) => ({
             ...current,
             targetId: result.target?.target_id ?? "",
