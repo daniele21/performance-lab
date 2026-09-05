@@ -16,6 +16,7 @@ import {
   Status,
 } from "../../components";
 import "../evidence-drilldown.css";
+import { RunRepeatabilitySection } from "./RepeatabilitySection";
 import "./run-detail.css";
 
 interface RunDetailViewProps {
@@ -249,6 +250,8 @@ export function RunDetailView({ run, onCompare }: RunDetailViewProps) {
             />
           </div>
         </section>
+
+        <RunRepeatabilitySection runId={summary.run_id} />
 
         <RunSamplesSection runId={summary.run_id} />
 
