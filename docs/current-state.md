@@ -10,119 +10,71 @@ Short operational ledger only. Durable behavior belongs in architecture/ADR/desi
 
 ## Current phase
 
-Performance Lab is converging the remaining **software** needed for the current local text-generation product before entering one consolidated `REAL_ENVIRONMENT` phase.
+Performance Lab is converging the remaining **software** for the local text-generation product before one consolidated `REAL_ENVIRONMENT` phase.
 
 Primary product question:
 
 > For this use case on this device, which available model + quantization + supported configuration gives me the best evidence-backed trade-off, and why?
 
-The delivery rule is now explicit: deterministic software slices may integrate incrementally on `dev`; representative real-device/model acceptance is refreshed and executed only after the planned software modifications have converged on the final candidate `dev` head.
+Deterministic software slices may integrate incrementally on `dev`; representative device/model acceptance happens only after planned software convergence and a fresh exact-head PRE_REAL on the final candidate.
 
 ## Integrated baseline
 
 Current integration head: `dev@01613d0fdc36f230e192ca8586ed360e65619b3a`.
 
-`dev` contains the decision-first desktop product: Overview; Find best setup `Goal -> Models -> Optimization -> Review -> Campaign -> Results`; Test a model; Live Run recovery; Runs/Run Detail; Compare; Library/Settings; Benchmark Detail; Run -> Samples -> Sample Evidence; same-case comparison; Light/Dark/System appearance; immutable package lifecycle and configless distributed launch.
+`dev` contains the decision-first desktop product: Overview; Find best setup; Test a model; Live Run; Runs/Run Detail/Sample Evidence; Compare; Library/Settings; Light/Dark/System appearance; immutable package lifecycle and configless distributed launch.
 
-Campaigns revalidate frozen plan digests, persist reconnectable lifecycle separately from immutable Runs and apply compatibility before explicit decision policy. Quality, Performance and Resources remain separate; missing, incompatible, unavailable and not-retained evidence remain explicit.
+Quality, Performance and Resources remain separate. Compatibility precedes recommendation/deltas; unavailable, incompatible and not-retained evidence remain explicit.
 
 ## Software convergence status
 
-### VALUE-01 / VALUE-02
+- **VALUE-01 SOFTWARE DONE** — #117/#118/#119 integrated; #120 representative execution deferred.
+- **VALUE-02 SOFTWARE DONE** — #129/#130/#131 integrated; #132 representative multi-model decision deferred.
+- **VALUE-03 ACTIVE** — declared generation domains and frozen `configuration_id` are integrated. Remaining: deterministic non-Fixed configuration expansion + Optimization/Review UX. Quick/Standard/Thorough/Custom sampling/cardinality semantics remain a material contract and must not be invented.
+- **VALUE-04 ACTIVE** — A/B integrated through PR #153 / `4c66541e2057f21afafc9e99828c6d7ed8518ce8`. Resources now distinguish policy-eligible evidence from contextual telemetry. Remaining: VALUE-04C versioned decision-policy extension; exact resource influence/tie-break semantics remain a material policy decision.
+- **VALUE-08 A/B/C SOFTWARE DONE** — artifact-owned launcher, configless first run, safe loopback preferences and distributed ZIP acceptance are integrated. VALUE-08D representative install/use smoke is deferred.
+- **VALUE-07** — pre-cutover implementation/redirect is done; destructive migration remains blocked by its real cross-repository evidence gates.
 
-Software/readiness lanes are integrated:
+VALUE-05/06 are next for software decomposition around the already implemented performance/statistics and regression engines rather than new parallel implementations.
 
-- **VALUE-01A / #117 DONE** — built-browser real-runtime journey;
-- **VALUE-01B / #118 DONE** — evidence completeness/portability verifier;
-- **VALUE-01C / #119 DONE** — PRE_REAL-gated real-run operator entry point;
-- **VALUE-02A / #129 SOFTWARE DONE** — configured-target multi-model discovery and evidence attribution;
-- **VALUE-02B / #130 SOFTWARE DONE** — multi-model Campaign/browser real-runtime harness;
-- **VALUE-02C / #131 SOFTWARE DONE** — multi-model decision evidence verifier.
-
-VALUE-01D / #120 and VALUE-02D / #132 remain representative acceptance only. They are intentionally deferred until software convergence finishes and a fresh exact-head PRE_REAL is generated for the final `dev` candidate.
-
-### VALUE-03 — configuration decision
-
-Integrated:
-
-- runtime/model-declared generation parameter domains;
-- frozen `configuration_id` and exact generation configuration identity through Campaign planning/execution/read models.
-
-Remaining software:
-
-- deterministic expansion of non-Fixed search strategies into reviewed configuration matrices;
-- Optimization UX for declared domains/exact planned configurations.
-
-The exact Quick/Standard/Thorough/Custom sampling/cardinality semantics are a material product contract and must not be invented implicitly by implementation.
-
-### VALUE-04 — device-aware decision
-
-**VALUE-04A/B SOFTWARE DONE** through PR #153 / `4c66541e2057f21afafc9e99828c6d7ed8518ce8`:
-
-- decision-eligible resource evidence is classified separately from contextual telemetry;
-- Campaign Results and same-case comparison expose Resources as `available`, `unavailable` or `not_comparable`;
-- contextual host/runtime telemetry remains inspectable without being promoted into policy evidence.
-
-Remaining software: VALUE-04C backend decision-policy extension. The exact quality-first/resource tie-break semantics remain a material policy decision and are not guessed.
-
-### VALUE-08 — low-friction distribution
-
-**VALUE-08A/B/C SOFTWARE DONE**:
-
-- artifact-owned `launch.py` owns the bounded local Performance Lab runtime;
-- first run can start without a pre-authored config and connect a loopback inference target from the UI;
-- only safe non-sensitive loopback preferences are browser-local;
-- packaged acceptance proves `ZIP -> launch.py configless -> UI connect -> Find best setup -> bounded evaluation`;
-- `distributed-artifact-evidence.json` retains artifact/runtime/source/cleanup identity.
-
-VALUE-08D representative install/use smoke remains part of the final REAL_ENVIRONMENT phase.
-
-## Current value frontier
-
-The active frontier is **software convergence**, not representative execution:
+## Current frontier
 
 ```text
 current dev
 -> finish remaining VALUE-03 software
 -> finish VALUE-04C policy software
--> decompose/close any remaining VALUE-05/06 software gaps using existing performance/regression engines
--> keep VALUE-07 destructive cutover blocked by its real cross-repo evidence gates
+-> close only missing VALUE-05/06 product orchestration/projection
+-> keep VALUE-07 destructive cutover evidence-gated
 -> converge docs/contracts/tests on final dev
 -> fresh exact-head PRE_REAL/Built Product
--> consolidated REAL_ENVIRONMENT acceptance phase
+-> consolidated REAL_ENVIRONMENT acceptance
 ```
 
-Older PRE_REAL artifacts remain useful historical diagnostics but are not readiness evidence for the final real phase after subsequent `dev` movement.
+Older PRE_REAL artifacts are historical diagnostics after later `dev` movement, not readiness evidence for the final real phase.
 
 ## Active work
 
 | Workstream | State | Next gate |
 | --- | --- | --- |
-| [Incremental value delivery](workstreams/incremental-value-delivery.md) | software convergence ACTIVE | finish remaining software slices, then refresh exact-head PRE_REAL |
-| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | automated product/visual acceptance PASS | representative human accessibility/usability acceptance |
-| [Representative device evidence](workstreams/representative-device-evidence.md) | real phase DEFERRED until software convergence | final-dev PRE_REAL, then retained REAL_ENVIRONMENT runs |
-| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-001 DONE / MIG-002 evidence-blocked / MIG-003 blocked | EV-3 + real PL replacement + post-disable cross-repo smoke |
+| [Incremental value delivery](workstreams/incremental-value-delivery.md) | software convergence ACTIVE | finish deterministic software, then final-dev PRE_REAL |
+| [Product UX/UI convergence](workstreams/product-ux-ui-convergence.md) | automated acceptance PASS | representative human accessibility/usability acceptance |
+| [Representative device evidence](workstreams/representative-device-evidence.md) | real phase DEFERRED | final-dev PRE_REAL, then retained real runs |
+| [Local LLM Server migration](workstreams/local-llm-migration.md) | MIG-002 evidence-blocked / MIG-003 blocked | EV-3 + real PL replacement + post-disable smoke |
 
 ## Delivery model
 
-- `dev` is the software integration line; ordinary feature branches start from current green `dev` and target `dev`.
-- `main` is stable/release-oriented and is promoted deliberately with `FULL` validation.
-- Repository-owned deterministic gates prove software semantics; they do not establish representative hardware/model claims.
-- `REAL_ENVIRONMENT` is one final phase after planned software convergence, not an integration prerequisite for each intermediate software slice.
-- Parallel work uses explicit non-conflicting owners and one convergence gate; it must not create competing implementations of the same contract.
-- Do not build broad subsystems or invent product/policy choices in anticipation of later slices.
+- `dev` is the software integration line; `main` remains stable/release-oriented.
+- Repository-owned deterministic gates prove software semantics, not representative hardware/model claims.
+- `REAL_ENVIRONMENT` is a final phase after planned software convergence, not a prerequisite for each intermediate merge.
+- Parallel work needs non-conflicting ownership and one convergence gate.
+- Do not invent product/policy semantics or broad subsystems for later slices.
 
-## Evidence still required
+## Evidence still required after software convergence
 
-After software convergence:
-
-- fresh exact-head PRE_REAL/Built Product readiness on the final candidate `dev`;
-- VALUE-01D retained real target/model/device execution with verifier PASS;
-- VALUE-02D retained 2+ real-model decision with verifier PASS;
-- VALUE-03D representative 2+ supported-configuration decision;
-- VALUE-04D / EVID-003 representative resource/telemetry validation;
-- VALUE-05 repeatability/variability evidence and VALUE-06 real regression-policy evidence;
-- VALUE-08D representative clean install/use smoke;
-- representative human accessibility/usability acceptance before a reference-grade human UX claim;
-- LLS EV-3 + real PL replacement run + post-disable cross-repository smoke before destructive VALUE-07 cutover;
-- branch protection/admin work remains tracked separately in GitHub issue #61.
+- fresh exact-head PRE_REAL/Built Product on final candidate `dev`;
+- VALUE-01D, VALUE-02D, VALUE-03D and VALUE-04D/EVID-003 representative runs;
+- VALUE-05 repeatability/variability and VALUE-06 real regression-policy evidence;
+- VALUE-08D clean install/use smoke;
+- representative human accessibility/usability acceptance;
+- LLS EV-3 + real PL replacement + post-disable cross-repository smoke before VALUE-07 cutover;
+- branch protection/admin work in #61.
