@@ -44,7 +44,15 @@ from .planning_queries import (
     CampaignPlanLaunchError,
 )
 from .regression_models import RegressionEvaluationReadModel, RegressionRuleReadModel
-from .regression_queries import UIQueryService
+from .repeatability_models import (
+    RepeatabilityDistributionReadModel,
+    RepeatabilityMetricReadModel,
+    RepeatabilityPercentileReadModel,
+    RepeatabilityReadModel,
+    RepeatabilityRunValueReadModel,
+    RepeatabilityState,
+)
+from .repeatability_queries import UIQueryService
 from .ui_models import (
     UI_READ_MODEL_VERSION,
     BaselineSummaryReadModel,
@@ -133,6 +141,12 @@ __all__ = [
     "PreflightIssueReadModel",
     "RegressionEvaluationReadModel",
     "RegressionRuleReadModel",
+    "RepeatabilityDistributionReadModel",
+    "RepeatabilityMetricReadModel",
+    "RepeatabilityPercentileReadModel",
+    "RepeatabilityReadModel",
+    "RepeatabilityRunValueReadModel",
+    "RepeatabilityState",
     "RunDetailReadModel",
     "RunEvidenceReadModel",
     "RunPreflightReadModel",
