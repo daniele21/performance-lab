@@ -86,6 +86,32 @@ function runDetail(runId: string) {
   };
 }
 
+function repeatability(runId: string) {
+  return {
+    ...API_IDENTITY,
+    anchor_run_id: runId,
+    fingerprint_id: `fp-${runId}`,
+    state: "insufficient_repeats",
+    load_profile: {
+      concurrency: 1,
+      request_count: 4,
+      warmup_requests: 0,
+      streaming: false,
+    },
+    run_ids: [runId],
+    run_count: 1,
+    succeeded_run_count: 1,
+    failed_run_count: 0,
+    cancelled_run_count: 0,
+    sample_attempt_count: 4,
+    succeeded_sample_count: 4,
+    failed_sample_count: 0,
+    cancelled_sample_count: 0,
+    metrics: [],
+    note: "Only one exact-fingerprint Run is retained. Repeat this exact frozen test.",
+  };
+}
+
 function jobSnapshot(jobId: string, state: "running" | "succeeded" | "failed" | "cancelled") {
   const terminal = state !== "running";
   return {
@@ -309,6 +335,12 @@ async function installFixture(page: Page, options: FixtureOptions = {}): Promise
     }
     if (path === "/api/v1/runs" && request.method() === "GET") {
       await fulfillJson(route, runs);
+      return;
+    }
+    const repeatabilityMatch = path.match(/^\/api\/v1\/runs\/([^/]+)\/repeatability$/);
+    if (repeatabilityMatch && request.method() === "GET") {
+      const runId = decodeURIComponent(repeatabilityMatch[1] ?? "");
+      await fulfillJson(route, repeatability(runId));
       return;
     }
     if (path.startsWith("/api/v1/runs/") && request.method() === "GET") {
