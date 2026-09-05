@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { compareRuns, listRuns } from "../../api";
+import { compareRuns, evaluateRegression, listRegressionPolicies, listRuns } from "../../api";
 import type {
   ComparisonReadModel,
   DimensionComparisonReadModel,
   MetricDelta,
+  PolicySummaryReadModel,
+  RegressionDecision,
+  RegressionEvaluationReadModel,
+  RegressionRuleReadModel,
+  RegressionRuleState,
   RunSummaryReadModel,
 } from "../../api";
 import {
@@ -29,10 +34,14 @@ interface CompareViewProps {
   baselineRunId: string;
   candidateRunId: string;
   comparison: ComparisonReadModel | null;
+  policies?: PolicySummaryReadModel[];
+  selectedPolicyKey?: string;
+  regression?: RegressionEvaluationReadModel | null;
   loading?: boolean;
   error?: string | null;
   onBaselineChange?: (runId: string) => void;
   onCandidateChange?: (runId: string) => void;
+  onPolicyChange?: (policyKey: string) => void;
   onCompare?: () => void;
 }
 
@@ -56,6 +65,25 @@ function formatNumber(value: number, unit: string | null) {
 
 function metricName(metric: string) {
   return metric.split("|")[0] || metric;
+}
+
+function policyKey(policy: PolicySummaryReadModel) {
+  return `${encodeURIComponent(policy.policy_id)}@${encodeURIComponent(policy.policy_version)}`;
+}
+
+function selectedPolicy(policies: PolicySummaryReadModel[], key: string) {
+  return policies.find((policy) => policyKey(policy) === key) ?? null;
+}
+
+function regressionTone(state: RegressionDecision | RegressionRuleState) {
+  if (state === "pass") return "success" as const;
+  if (state === "fail") return "error" as const;
+  if (state === "not_comparable") return "warning" as const;
+  return "neutral" as const;
+}
+
+function regressionLabel(state: RegressionDecision | RegressionRuleState) {
+  return state.replaceAll("_", " ").toUpperCase();
 }
 
 function DeltaTable({ dimension }: { dimension: DimensionComparisonReadModel }) {
@@ -140,19 +168,85 @@ function MissingEvidence({ dimension }: { dimension: DimensionComparisonReadMode
   );
 }
 
+function RegressionOutcome({ regression }: { regression: RegressionEvaluationReadModel }) {
+  const columns = [
+    {
+      id: "rule",
+      header: "Rule",
+      render: (rule: RegressionRuleReadModel) => <code>{rule.rule_id}</code>,
+    },
+    {
+      id: "dimension",
+      header: "Dimension",
+      render: (rule: RegressionRuleReadModel) => DIMENSION_LABELS[rule.dimension],
+    },
+    {
+      id: "metric",
+      header: "Metric",
+      render: (rule: RegressionRuleReadModel) => <code>{metricName(rule.metric)}</code>,
+    },
+    {
+      id: "state",
+      header: "State",
+      render: (rule: RegressionRuleReadModel) => (
+        <Status tone={regressionTone(rule.state)}>{regressionLabel(rule.state)}</Status>
+      ),
+    },
+    {
+      id: "reason",
+      header: "Reason",
+      render: (rule: RegressionRuleReadModel) => rule.reason,
+    },
+  ];
+
+  return (
+    <section className="compare-regression" aria-label="Regression policy outcome">
+      <SectionHeader
+        title="Regression policy outcome"
+        description="The backend applies this explicit versioned policy only after compatibility is established."
+      />
+      <div className="compare-regression-summary">
+        <div>
+          <span>Policy</span>
+          <strong>
+            {regression.policy_id}@{regression.policy_version}
+          </strong>
+        </div>
+        <div>
+          <span>Decision</span>
+          <Status tone={regressionTone(regression.decision)}>
+            {regressionLabel(regression.decision)}
+          </Status>
+        </div>
+      </div>
+      <DataTable
+        caption="Regression policy rules"
+        columns={columns}
+        rows={regression.rule_results}
+        rowKey={(rule) => rule.rule_id}
+      />
+    </section>
+  );
+}
+
 export function CompareView({
   runs,
   baselineRunId,
   candidateRunId,
   comparison,
+  policies = [],
+  selectedPolicyKey = "",
+  regression = null,
   loading = false,
   error = null,
   onBaselineChange,
   onCandidateChange,
+  onPolicyChange,
   onCompare,
 }: CompareViewProps) {
   const baseline = runs.find((run) => run.run_id === baselineRunId);
   const candidate = runs.find((run) => run.run_id === candidateRunId);
+  const activePolicy = selectedPolicy(policies, selectedPolicyKey);
   const canCompare = Boolean(baseline && candidate && baselineRunId !== candidateRunId && !loading);
 
   return (
@@ -161,13 +255,13 @@ export function CompareView({
         <PageHeader
           eyebrow="Evidence comparison"
           title="Compare runs"
-          description="Choose a baseline and candidate. Compatibility is established from frozen execution evidence before metric deltas appear."
+          description="Choose a baseline and candidate. Compatibility is established from frozen execution evidence before metric deltas or regression verdicts appear."
         />
 
         <section className="compare-selection" aria-label="Evidence selection">
           <SectionHeader
             title="Choose evidence"
-            description="Baseline and candidate must be two different immutable completed runs."
+            description="Baseline and candidate must be two different immutable completed runs. Regression policy is optional and always explicit."
           />
           <div className="compare-selectors">
             <Select
@@ -194,10 +288,30 @@ export function CompareView({
                 </option>
               ))}
             </Select>
+            {policies.length ? (
+              <Select
+                label="Regression policy"
+                value={selectedPolicyKey}
+                onChange={(event) => onPolicyChange?.(event.currentTarget.value)}
+              >
+                <option value="">No policy · raw comparison</option>
+                {policies.map((policy) => (
+                  <option key={policyKey(policy)} value={policyKey(policy)}>
+                    {policy.policy_id}@{policy.policy_version} · {policy.rule_count} rules
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <div className="compare-policy-unavailable">
+                <span>Regression policy</span>
+                <strong>Not configured</strong>
+                <small>Raw compatibility and deltas remain available without invented thresholds.</small>
+              </div>
+            )}
           </div>
           <div className="compare-selection-actions">
             <Button variant="primary" disabled={!canCompare} onClick={onCompare}>
-              {loading ? "Comparing…" : "Compare evidence"}
+              {loading ? "Evaluating…" : activePolicy ? "Evaluate regression" : "Compare evidence"}
             </Button>
             {baselineRunId && baselineRunId === candidateRunId ? (
               <span role="alert">Choose two different runs.</span>
@@ -223,19 +337,41 @@ export function CompareView({
               <IdentityDiff differences={comparison.identity_differences} />
             </section>
 
-            <div className="compare-dimensions">
-              {comparison.dimensions.map((dimension) => (
-                <section className="compare-dimension" key={dimension.dimension}>
-                  <SectionHeader title={DIMENSION_LABELS[dimension.dimension]} />
-                  <CompatibilitySummary
-                    comparable={dimension.comparable}
-                    reasons={dimension.reasons}
-                  />
-                  <DeltaTable dimension={dimension} />
-                  <MissingEvidence dimension={dimension} />
-                </section>
-              ))}
-            </div>
+            <section className="compare-compatibility" aria-label="Compatibility by dimension">
+              <SectionHeader
+                title="Compatibility first"
+                description="Regression policy and metric deltas are interpreted only inside dimensions whose evidence identity is compatible."
+              />
+              <div className="compare-compatibility-grid">
+                {comparison.dimensions.map((dimension) => (
+                  <article key={dimension.dimension}>
+                    <strong>{DIMENSION_LABELS[dimension.dimension]}</strong>
+                    <CompatibilitySummary
+                      comparable={dimension.comparable}
+                      reasons={dimension.reasons}
+                    />
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            {regression ? <RegressionOutcome regression={regression} /> : null}
+
+            <section className="compare-evidence-changes" aria-label="Comparable evidence changes">
+              <SectionHeader
+                title="Comparable evidence changes"
+                description="Only compatible dimensions expose deltas. Missing shared metrics remain explicit."
+              />
+              <div className="compare-dimensions">
+                {comparison.dimensions.map((dimension) => (
+                  <section className="compare-dimension" key={dimension.dimension}>
+                    <SectionHeader title={DIMENSION_LABELS[dimension.dimension]} />
+                    <DeltaTable dimension={dimension} />
+                    <MissingEvidence dimension={dimension} />
+                  </section>
+                ))}
+              </div>
+            </section>
           </div>
         ) : null}
       </div>
@@ -245,7 +381,7 @@ export function CompareView({
 
 type LoadState =
   | { status: "loading" }
-  | { status: "ready"; runs: RunSummaryReadModel[] }
+  | { status: "ready"; runs: RunSummaryReadModel[]; policies: PolicySummaryReadModel[] }
   | { status: "error"; message: string };
 
 interface ComparePageProps {
@@ -257,15 +393,20 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
   const [attempt, setAttempt] = useState(0);
   const [baselineRunId, setBaselineRunId] = useState("");
   const [candidateRunId, setCandidateRunId] = useState(initialCandidateRunId ?? "");
+  const [selectedPolicyKey, setSelectedPolicyKey] = useState("");
   const [comparison, setComparison] = useState<ComparisonReadModel | null>(null);
+  const [regression, setRegression] = useState<RegressionEvaluationReadModel | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [comparisonError, setComparisonError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    listRuns({ limit: 200 }, { signal: controller.signal })
-      .then((runs) => {
-        setLoadState({ status: "ready", runs });
+    Promise.all([
+      listRuns({ limit: 200 }, { signal: controller.signal }),
+      listRegressionPolicies({ signal: controller.signal }),
+    ])
+      .then(([runs, policies]) => {
+        setLoadState({ status: "ready", runs, policies });
         const candidate =
           (initialCandidateRunId &&
             runs.find((run) => run.run_id === initialCandidateRunId)?.run_id) ||
@@ -274,6 +415,7 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
         const baseline = runs.find((run) => run.run_id !== candidate)?.run_id || "";
         setCandidateRunId(candidate);
         setBaselineRunId(baseline);
+        setSelectedPolicyKey(policies[0] ? policyKey(policies[0]) : "");
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -286,9 +428,14 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
   }, [attempt, initialCandidateRunId]);
 
   const runs = useMemo(() => (loadState.status === "ready" ? loadState.runs : []), [loadState]);
+  const policies = useMemo(
+    () => (loadState.status === "ready" ? loadState.policies : []),
+    [loadState],
+  );
 
   const resetComparison = () => {
     setComparison(null);
+    setRegression(null);
     setComparisonError(null);
   };
 
@@ -296,8 +443,22 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
     if (!baselineRunId || !candidateRunId || baselineRunId === candidateRunId) return;
     setComparisonLoading(true);
     setComparisonError(null);
-    compareRuns(baselineRunId, candidateRunId)
-      .then(setComparison)
+    const policy = selectedPolicy(policies, selectedPolicyKey);
+    const request = policy
+      ? evaluateRegression(
+          baselineRunId,
+          candidateRunId,
+          policy.policy_id,
+          policy.policy_version,
+        ).then((result) => {
+          setRegression(result);
+          setComparison(result.comparison);
+        })
+      : compareRuns(baselineRunId, candidateRunId).then((result) => {
+          setRegression(null);
+          setComparison(result);
+        });
+    request
       .catch((error: unknown) =>
         setComparisonError(
           error instanceof Error ? error.message : "Comparison could not be loaded.",
@@ -311,7 +472,7 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
       <AppShell activePrimary="Compare">
         <LoadingState
           title="Loading completed runs"
-          description="Reading immutable evidence available for comparison."
+          description="Reading immutable evidence and configured regression policies."
         />
       </AppShell>
     );
@@ -346,6 +507,9 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
       baselineRunId={baselineRunId}
       candidateRunId={candidateRunId}
       comparison={comparison}
+      policies={policies}
+      selectedPolicyKey={selectedPolicyKey}
+      regression={regression}
       loading={comparisonLoading}
       error={comparisonError}
       onBaselineChange={(runId) => {
@@ -354,6 +518,10 @@ export function ComparePage({ initialCandidateRunId }: ComparePageProps) {
       }}
       onCandidateChange={(runId) => {
         setCandidateRunId(runId);
+        resetComparison();
+      }}
+      onPolicyChange={(key) => {
+        setSelectedPolicyKey(key);
         resetComparison();
       }}
       onCompare={compare}
