@@ -29,6 +29,8 @@ from performance_lab.storage import CampaignNotFoundError, SQLiteCampaignStore
 from .evaluation_capacity import EvaluationCapacity, EvaluationCapacityError
 from .run_jobs import starter_run_config_digest
 
+MAX_CAMPAIGN_RUNS = 32
+
 
 class CampaignJobError(RuntimeError):
     pass
@@ -113,8 +115,8 @@ class CampaignJobManager:
     async def launch(self, plan: CampaignLaunchPlan) -> Campaign:
         if not plan.runs:
             raise ValueError("campaign launch plan requires at least one run")
-        if len(plan.runs) > 32:
-            raise ValueError("campaign launch plan cannot exceed 32 runs")
+        if len(plan.runs) > MAX_CAMPAIGN_RUNS:
+            raise ValueError(f"campaign launch plan cannot exceed {MAX_CAMPAIGN_RUNS} runs")
 
         campaign_id = f"campaign-{uuid4()}"
         owner_id = _capacity_owner(campaign_id)
