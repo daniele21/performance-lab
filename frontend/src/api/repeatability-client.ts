@@ -8,7 +8,8 @@ interface RequestOptions {
 async function readError(response: Response): Promise<string> {
   try {
     const payload = (await response.json()) as { detail?: unknown };
-    if (typeof payload.detail === "string" && payload.detail.trim()) return payload.detail;
+    if (typeof payload.detail === "string" && payload.detail.trim())
+      return payload.detail;
   } catch {
     // Fall through to the stable status-based message.
   }
