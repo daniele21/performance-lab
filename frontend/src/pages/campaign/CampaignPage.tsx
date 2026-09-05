@@ -430,13 +430,7 @@ function CampaignResults({
                 </dl>
               ) : (
                 <>
-                  <Status
-                    tone={
-                      entry.resources.state === "not_comparable"
-                        ? "warning"
-                        : "neutral"
-                    }
-                  >
+                  <Status tone={entry.resources.state === "not_comparable" ? "warning" : "neutral"}>
                     {entry.resources.state === "not_comparable"
                       ? "Not comparable"
                       : "Evidence unavailable"}
