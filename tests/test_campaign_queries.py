@@ -187,9 +187,7 @@ def test_campaign_recommends_exact_configuration_for_same_candidate(tmp_path: Pa
         )
     )
 
-    result = CampaignQueryService(campaign_store, UIQueryService(run_store)).get(
-        "campaign-configs"
-    )
+    result = CampaignQueryService(campaign_store, UIQueryService(run_store)).get("campaign-configs")
 
     assert [entry.configuration_id for entry in result.entries] == ["config-a", "config-b"]
     assert result.results.recommendation is not None
