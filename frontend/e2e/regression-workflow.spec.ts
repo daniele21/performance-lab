@@ -126,11 +126,7 @@ function evaluation(decision: Decision) {
 }
 
 async function fulfillJson(route: Route, payload: unknown, status = 200) {
-  await route.fulfill({
-    status,
-    contentType: "application/json",
-    body: JSON.stringify(payload),
-  });
+  await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(payload) });
 }
 
 async function installFixture(page: Page, decision: Decision) {
@@ -162,11 +158,7 @@ async function installFixture(page: Page, decision: Decision) {
       await fulfillJson(route, evaluation(decision));
       return;
     }
-    await fulfillJson(
-      route,
-      { detail: `Unhandled regression fixture route: ${path}` },
-      500,
-    );
+    await fulfillJson(route, { detail: `Unhandled regression fixture route: ${path}` }, 500);
   });
 }
 
