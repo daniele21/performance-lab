@@ -17,12 +17,12 @@ M1-M9 in `docs/roadmap.md` remain the capability/maturity map. This workstream o
 
 ## Delivery policy
 
-Development has two explicit layers:
+Development has two explicit layers under repo-template-sw 0.9.2:
 
-1. **Software convergence** — deterministic slices may integrate incrementally into `dev` once repository-owned gates pass.
-2. **REAL_ENVIRONMENT acceptance** — after the planned software modifications have converged, refresh exact-head PRE_REAL on the final candidate `dev` and execute the representative device/model evidence campaign.
+1. **Software convergence** — deterministic slices integrate incrementally into `dev` after affected automated E2E and UX/UI evidence pass.
+2. **REAL_ENVIRONMENT acceptance** — after planned software convergence, refresh exact-head PRE_REAL on final `dev` and execute representative runtime/device/model evidence as a release gate.
 
-A real-device gate therefore does **not** block an independent deterministic software slice from integrating. Conversely, hosted CI or fixture evidence never upgrades a representative claim to PASS.
+A real-device gate therefore does **not** block an independent deterministic software slice from integrating. Hosted CI or fixture evidence never upgrades a representative claim to PASS.
 
 ## Invariants
 
@@ -30,7 +30,7 @@ A real-device gate therefore does **not** block an independent deterministic sof
 - Quality, Performance and Resources stay separate; compatibility precedes rankings/deltas; unknown stays unknown.
 - Frozen candidate/configuration and endpoint/device/runtime identity stay explicit when known.
 - Search ranges/capabilities come from canonical backend/runtime contracts; the browser never invents them.
-- Evidence fidelity follows the claim; real-device claims require `REAL_ENVIRONMENT` evidence.
+- Evidence fidelity follows the claim; real-device claims require `REAL_ENVIRONMENT` evidence at release.
 - Quantization is candidate identity, never a configuration sweep knob.
 - Parallel lanes need non-conflicting ownership and one convergence gate.
 - A VALUE slice is `DONE` only when its software and required acceptance evidence agree; `SOFTWARE DONE` is not equivalent to final DONE when representative evidence remains.
@@ -39,14 +39,14 @@ A real-device gate therefore does **not** block an independent deterministic sof
 
 | ID | User value unlocked | Software state | Final acceptance |
 | --- | --- | --- | --- |
-| VALUE-01 | **Real single-model evidence loop** — discover, test, inspect and export one real target/model | SOFTWARE DONE | #120 / EVID-001 deferred to final real phase |
-| VALUE-02 | **Real model decision** — compare 2+ candidates and return recommendation/no-rank | SOFTWARE DONE | #132 after #120 in final real phase |
+| VALUE-01 | **Real single-model evidence loop** — discover, test, inspect and export one real target/model | SOFTWARE DONE | #120 / EVID-001 release-deferred |
+| VALUE-02 | **Real model decision** — compare 2+ candidates and return recommendation/no-rank | SOFTWARE DONE | #132 after #120 at release |
 | VALUE-03 | **Configuration decision** — choose supported configuration, not only model | ACTIVE | VALUE-03D after software convergence |
 | VALUE-04 | **Device-aware decision** — comparable performance/resource evidence may affect the trade-off | ACTIVE | VALUE-04D / EVID-003 after software convergence |
-| VALUE-05 | **Confidence / repeatability** — controlled variability supports or weakens a recommendation | SOFTWARE DECOMPOSITION NEXT | EVID-002 in final real phase |
-| VALUE-06 | **Regression workflow** — baseline vs candidate produces explicit policy outcome | SOFTWARE DONE | VALUE-06D / EVID-004 in final real phase |
+| VALUE-05 | **Repeatability evidence** — controlled repeats expose variability and failure denominators without an invented confidence score | SOFTWARE DONE | VALUE-05D / EVID-002 release-deferred |
+| VALUE-06 | **Regression workflow** — baseline vs candidate produces explicit policy outcome | SOFTWARE DONE | VALUE-06D / EVID-004 release-deferred |
 | VALUE-07 | **LLS evaluation cutover** — PL owns new evaluation; LLS stays serving/runtime owner | PRE-CUTOVER IMPLEMENTATION DONE | destructive cutover blocked by migration real evidence |
-| VALUE-08 | **Low-friction distribution** — launch/connect/evaluate without repo-development setup | A/B/C SOFTWARE DONE | VALUE-08D in final real phase |
+| VALUE-08 | **Low-friction distribution** — launch/connect/evaluate without repo-development setup | A/B/C SOFTWARE DONE | VALUE-08D release-deferred |
 
 ## Integrated software
 
@@ -57,7 +57,7 @@ A real-device gate therefore does **not** block an independent deterministic sof
 | VALUE-01A / #117 | built-browser real-runtime journey | DONE |
 | VALUE-01B / #118 | evidence completeness + portability verifier | DONE |
 | VALUE-01C / #119 | exact-head PRE_REAL-gated operator entry point | DONE |
-| VALUE-01D / #120 | retained representative execution | REAL_ENVIRONMENT DEFERRED |
+| VALUE-01D / #120 | retained representative execution | REAL_ENVIRONMENT RELEASE-DEFERRED |
 
 ### VALUE-02
 
@@ -66,7 +66,7 @@ A real-device gate therefore does **not** block an independent deterministic sof
 | VALUE-02A / #129 | configured-target multi-model discovery + attribution | SOFTWARE DONE |
 | VALUE-02B / #130 | multi-model Campaign/browser real-runtime harness | SOFTWARE DONE |
 | VALUE-02C / #131 | retained multi-model decision verifier | SOFTWARE DONE |
-| VALUE-02D / #132 | representative 2+ real-model decision | REAL_ENVIRONMENT DEFERRED |
+| VALUE-02D / #132 | representative 2+ real-model decision | REAL_ENVIRONMENT RELEASE-DEFERRED |
 
 ### VALUE-03
 
@@ -91,6 +91,19 @@ VALUE-04A/B are integrated through PR #153:
 - Campaign Results and same-case views expose Resources as `available`, `unavailable` or `not_comparable`.
 
 Remaining software: VALUE-04C policy extension. It must remain compatibility-first and quality-first with no hidden universal score. The exact resource influence/tie-break semantics must be explicit and versioned before implementation.
+
+### VALUE-05
+
+VALUE-05A/B/C are software-complete through PR #167:
+
+- normal evaluation retains client-boundary request measurements from the same inference call; no second inference is introduced for measurement;
+- repeatability cohorts use exact `ExecutionFingerprint.fingerprint_id` equality only;
+- the canonical statistics owner supplies mean/median/stddev/CV and qualified p90/p95 across per-Run values;
+- failed/cancelled Runs and sample attempts stay explicit denominators and are never converted into zero-valued metrics;
+- Run Detail shows exact-fingerprint cohort size, frozen load profile, denominators and variability with progressive disclosure;
+- no universal confidence score, stability threshold, winner or PASS/FAIL verdict is invented.
+
+VALUE-05D / EVID-002 remains representative repeated-load acceptance and is release-deferred.
 
 ### VALUE-06
 
@@ -121,14 +134,13 @@ VALUE-08D is representative acceptance only.
 current dev
 -> finish VALUE-03B/C software after its sampling contract is explicit
 -> finish VALUE-04C after its policy contract is explicit
--> decompose VALUE-05 into the smallest missing software projections/orchestration around the existing performance/statistics engine
 -> keep VALUE-07 destructive migration gated by its cross-repository real evidence
 -> converge docs/contracts/tests on final dev
 -> fresh exact-head PRE_REAL/Built Product PASS
--> consolidated REAL_ENVIRONMENT phase
+-> release-time REAL_ENVIRONMENT phase
 ```
 
-The final real phase then supplies the evidence needed by VALUE-01D, VALUE-02D, VALUE-03D, VALUE-04D/EVID-003, EVID-002, VALUE-06D/EVID-004 and VALUE-08D. VALUE-07 removal/cutover happens only after its own LLS/PL evidence gates agree.
+The final real phase supplies the evidence needed by VALUE-01D, VALUE-02D, VALUE-03D, VALUE-04D/EVID-003, VALUE-05D/EVID-002, VALUE-06D/EVID-004 and VALUE-08D. VALUE-07 removal/cutover happens only after its own LLS/PL evidence gates agree.
 
 ## Later slice acceptance
 
@@ -138,7 +150,7 @@ The final real phase then supplies the evidence needed by VALUE-01D, VALUE-02D, 
 | VALUE-02 | 2+ real candidates, same use case/device; compatibility and explicit policy precede recommendation/no-rank. |
 | VALUE-03 | 2+ supported real configurations using runtime-declared mutable domains; exact configuration identity is retained. |
 | VALUE-04 | real latency/throughput/resource measurements retain scope/unit/provenance; unavailable sensors stay unavailable; only comparable policy-relevant evidence may affect a decision. |
-| VALUE-05 | controlled repeats retain warmup/load assumptions, denominators, failures and variability sufficient to bound recommendation confidence. |
+| VALUE-05 | controlled repeats retain warmup/load assumptions, denominators, failures and variability sufficient to bound how repeatable the evidence is, without a fabricated confidence verdict. |
 | VALUE-06 | compatible real baseline/candidate retain at least one versioned policy outcome; incompatible dimensions never produce false deltas/verdicts. |
 | VALUE-07 | `local-llm-migration.md` gates pass; legacy evaluation creation is frozen/removed while LLS serving/identity/status and PL evaluation remain healthy. |
 | VALUE-08 | normal usage avoids repo build/edit steps; distributed artifact launches/connects/evaluates; representative desktop smoke passes. |
