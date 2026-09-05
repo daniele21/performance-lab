@@ -203,7 +203,7 @@ test("policy-backed Compare foregrounds NOT_COMPARABLE and hides invalid deltas"
   await expect(
     page.locator(".compare-regression-summary").getByText("NOT COMPARABLE", { exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("table", { name: "Capability / quality metric deltas" }),
-  ).toHaveCount(0);
+  await expect(page.getByRole("table", { name: "Capability / quality metric deltas" })).toHaveCount(
+    0,
+  );
 });
