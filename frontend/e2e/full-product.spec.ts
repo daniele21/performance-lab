@@ -63,7 +63,7 @@ test("J0/J9 distributed campaign: launch, connect, evaluate and compare one exac
   await expect(page.getByText("No single recommended setup")).toBeVisible();
   await expect(
     page.getByText(
-      "Candidates do not expose the same aggregate quality metrics, so no weighted or partial ranking is inferred.",
+      "Setups do not expose the same aggregate quality metrics, so no weighted or partial ranking is inferred.",
     ),
   ).toBeVisible();
 
