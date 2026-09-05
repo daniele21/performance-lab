@@ -28,6 +28,7 @@ from performance_lab.regression import (
     load_regression_policy,
 )
 from performance_lab.regression_api import attach_regression_api
+from performance_lab.repeatability_api import attach_repeatability_api
 from performance_lab.run_config import RunConfigError, StarterRunConfig, load_starter_run_config
 from performance_lab.storage import SQLiteCampaignStore, SQLiteRunStore
 from performance_lab.ui_api import create_ui_app
@@ -126,6 +127,7 @@ def build_local_ui_app(
         campaign_queries=campaign_queries,
     )
     attach_regression_api(app, queries)
+    attach_repeatability_api(app, queries)
 
     built_assets = _validated_assets_dir(assets_dir)
     if built_assets is not None:
