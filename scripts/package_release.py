@@ -127,17 +127,42 @@ def build_payload(staging: Path) -> Path:
     wheels = tuple(python_dir.glob("*.whl"))
     if len(wheels) != 1:
         raise RuntimeError(f"expected exactly one wheel, found {len(wheels)}")
+
+    run(
+        [
+            "uv",
+            "export",
+            "--locked",
+            "--extra",
+            "ui",
+            "--no-dev",
+            "--no-emit-project",
+            "--format",
+            "requirements-txt",
+            "--output-file",
+            str(staging / "runtime-requirements.txt"),
+        ]
+    )
+    shutil.copy2(ROOT / "src" / "performance_lab" / "artifact_launcher.py", staging / "launch.py")
     return wheels[0]
 
 
 def write_run_instructions(staging: Path, wheel_name: str) -> None:
     (staging / "RUN.md").write_text(
         "# Run this artifact\n\n"
-        "1. Extract the ZIP.\n"
-        f"2. Install `python/{wheel_name}[ui]` into an isolated Python 3.12+ environment.\n"
-        "3. Create a versioned `StarterRunConfig` JSON for the target endpoint.\n"
-        "4. Run `performance-lab-ui --config <config.json> --assets web`.\n\n"
-        "The product binds to loopback by default. Model serving remains external.\n",
+        "1. Extract the ZIP into a writable directory.\n"
+        "2. Ensure Python 3.12 or newer is available. No repository checkout, uv, Node or pnpm "
+        "is required.\n"
+        "3. Create a versioned `StarterRunConfig` JSON for the external inference target.\n"
+        "4. Run `python launch.py --config <config.json>`.\n"
+        "5. Open `http://127.0.0.1:8765`. Stop the foreground process with Ctrl-C.\n\n"
+        "On first launch, `launch.py` creates an artifact-owned `.runtime` virtual environment "
+        "and installs the exact locked runtime requirements plus "
+        f"`python/{wheel_name}`. Dependency download therefore requires package-index access on "
+        "the first launch; subsequent launches reuse the matching runtime. Use `--runtime-dir` "
+        "when the extracted artifact directory is not writable.\n\n"
+        "The product binds to loopback by default. Model serving and model lifecycle remain "
+        "external to Performance Lab.\n",
         encoding="utf-8",
     )
 

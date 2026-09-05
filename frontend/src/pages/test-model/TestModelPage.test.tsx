@@ -208,7 +208,8 @@ describe("TestModelView", () => {
     expect(markup).toContain("model-a");
     expect(markup).toContain("temperature");
     expect(markup).toContain("n_batch");
-    expect(markup).toContain("not persisted");
+    expect(markup).toContain("saved in this browser");
+    expect(markup).toContain("Credentials are never stored");
     expect(markup).toContain("do not imply server-specific min/max ranges");
   });
 
