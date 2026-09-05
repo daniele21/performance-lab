@@ -44,17 +44,26 @@ function percentileLabel(
   return formatValue(estimate.value, metric.unit);
 }
 
-export function RepeatabilityEvidenceView({ evidence }: { evidence: RepeatabilityReadModel }) {
+export function RepeatabilityEvidenceView({
+  evidence,
+}: {
+  evidence: RepeatabilityReadModel;
+}) {
   const profile = evidence.load_profile;
   return (
-    <section className="run-detail__repeatability" aria-label="Repeatability evidence">
+    <section
+      className="run-detail__repeatability"
+      aria-label="Repeatability evidence"
+    >
       <SectionHeader
         title="Repeatability"
         description="Run-to-run variability across retained executions with this exact fingerprint."
       />
 
       <div className="run-detail__repeatability-header">
-        <Status tone={stateTone(evidence.state)}>{stateLabel(evidence.state)}</Status>
+        <Status tone={stateTone(evidence.state)}>
+          {stateLabel(evidence.state)}
+        </Status>
         <span>{repeatCountLabel(evidence.run_count)}</span>
       </div>
 
@@ -63,7 +72,10 @@ export function RepeatabilityEvidenceView({ evidence }: { evidence: Repeatabilit
         {profile.warmup_requests} warmups · {profile.streaming ? "streaming" : "non-streaming"}
       </p>
 
-      <div className="run-detail__repeatability-counts" aria-label="Repeatability denominators">
+      <div
+        className="run-detail__repeatability-counts"
+        aria-label="Repeatability denominators"
+      >
         <div>
           <span>Runs</span>
           <strong>{evidence.run_count}</strong>
@@ -88,7 +100,10 @@ export function RepeatabilityEvidenceView({ evidence }: { evidence: Repeatabilit
         <Disclosure summary="Show run-to-run variability">
           <div className="run-detail__repeatability-metrics">
             {evidence.metrics.map((metric) => (
-              <article key={metric.metric_id} className="run-detail__repeatability-metric">
+              <article
+                key={metric.metric_id}
+                className="run-detail__repeatability-metric"
+              >
                 <header>
                   <div>
                     <h3>{metric.label}</h3>
@@ -99,7 +114,9 @@ export function RepeatabilityEvidenceView({ evidence }: { evidence: Repeatabilit
                 <dl>
                   <div>
                     <dt>Median</dt>
-                    <dd>{formatValue(metric.distribution.median, metric.unit)}</dd>
+                    <dd>
+                      {formatValue(metric.distribution.median, metric.unit)}
+                    </dd>
                   </div>
                   <div>
                     <dt>Range</dt>
@@ -110,7 +127,9 @@ export function RepeatabilityEvidenceView({ evidence }: { evidence: Repeatabilit
                   </div>
                   <div>
                     <dt>Std. deviation</dt>
-                    <dd>{formatValue(metric.distribution.stddev, metric.unit)}</dd>
+                    <dd>
+                      {formatValue(metric.distribution.stddev, metric.unit)}
+                    </dd>
                   </div>
                   <div>
                     <dt>Coefficient of variation</dt>
@@ -141,7 +160,9 @@ type RepeatabilityLoadState =
 
 export function RunRepeatabilitySection({ runId }: { runId: string }) {
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<RepeatabilityLoadState>({ status: "loading" });
+  const [state, setState] = useState<RepeatabilityLoadState>({
+    status: "loading",
+  });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -153,7 +174,9 @@ export function RunRepeatabilitySection({ runId }: { runId: string }) {
         setState({
           status: "error",
           message:
-            error instanceof Error ? error.message : "Repeatability evidence could not be loaded.",
+            error instanceof Error
+              ? error.message
+              : "Repeatability evidence could not be loaded.",
         });
       });
     return () => controller.abort();
@@ -161,7 +184,10 @@ export function RunRepeatabilitySection({ runId }: { runId: string }) {
 
   if (state.status === "loading") {
     return (
-      <section className="run-detail__repeatability" aria-label="Repeatability evidence">
+      <section
+        className="run-detail__repeatability"
+        aria-label="Repeatability evidence"
+      >
         <SectionHeader
           title="Repeatability"
           description="Run-to-run variability across retained executions with this exact fingerprint."
@@ -175,14 +201,20 @@ export function RunRepeatabilitySection({ runId }: { runId: string }) {
 
   if (state.status === "error") {
     return (
-      <section className="run-detail__repeatability" aria-label="Repeatability evidence">
+      <section
+        className="run-detail__repeatability"
+        aria-label="Repeatability evidence"
+      >
         <SectionHeader
           title="Repeatability"
           description="Run-to-run variability across retained executions with this exact fingerprint."
         />
         <div className="run-detail__repeatability-error" role="alert">
           <p>{state.message}</p>
-          <Button variant="secondary" onClick={() => setAttempt((value) => value + 1)}>
+          <Button
+            variant="secondary"
+            onClick={() => setAttempt((value) => value + 1)}
+          >
             Try again
           </Button>
         </div>
