@@ -18,11 +18,11 @@ Domain/comparability -> `src/performance_lab/domain/`; inference adapters -> `ad
 
 ## Delivery model
 
-Performance Lab follows repo-template-sw **0.9.1**.
+Performance Lab follows repo-template-sw **0.9.2**.
 
 - `ITERATION`: focused owner-local Python/frontend checks while implementation changes. No exact-head/full-diff/doc ceremony and no browser/product/built-product gate merely because it exists.
-- `INTEGRATION`: a coherent observable outcome is ready to converge. Exact head, full diff, affected durable docs and selected risk gates are required.
-- `RELEASE`: FULL validation plus release-critical artifact/E2E and residual real-environment evidence.
+- `INTEGRATION` (`PR -> dev`): prove the affected observable outcome automatically. Exact head, full diff, affected durable docs, selected risk gates and affected critical E2E are required. Required `REAL_ENVIRONMENT` evidence is explicit but non-blocking and deferred to release.
+- `RELEASE` (`dev -> main`): FULL validation plus release-critical artifact/E2E and every applicable required residual real-environment confirmation.
 
 The selector maps **risk dimensions -> required gates -> profile shorthand**. `LEAN | SCOPED | STRONG | FULL` summarize the decision; concrete gates are authoritative.
 
@@ -34,7 +34,9 @@ Parallel technical subtasks should converge early around vertical outcomes. Stac
 
 Successful integration evidence is reusable. Before merge it is exact-head evidence. After a content-preserving merge to `dev`, reuse is allowed only when Git tree, prior target/base, required gates and profile are equivalent. Direct pushes without trusted evidence validate normally. Release remains FULL.
 
-E2E UI evidence modes are `ASSERTIONS`, `SCREENSHOTS`, `FULL_MEDIA`. Use FULL_MEDIA for progression/navigation/retry/cancel/lifecycle claims; screenshots for stable visible inspection/comparison claims. `RUNTIME-1` keeps real model/runtime/device/telemetry/thermal/repeated-load claims in `REAL_ENVIRONMENT`.
+E2E UI evidence modes are `ASSERTIONS`, `SCREENSHOTS`, `FULL_MEDIA`. A material UI/UX integration journey uses FULL_MEDIA; screenshots remain sufficient for stable visible inspection/comparison claims. `RUNTIME-1` keeps real model/runtime/device/telemetry/thermal/repeated-load claims in `REAL_ENVIRONMENT`, and those claims gate release rather than entry into `dev`.
+
+`PRE_REAL_E2E` remains useful: it proves that the complete automatable cone is green before any real runtime/device run. It does not make real-runtime evidence an integration gate.
 
 ## Documentation and failure discipline
 
