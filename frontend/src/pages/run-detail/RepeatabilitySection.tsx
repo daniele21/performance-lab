@@ -9,7 +9,6 @@ import type {
 import { Button, Disclosure, SectionHeader, Status } from "../../components";
 
 function stateTone(state: RepeatabilityState) {
-  if (state === "available") return "success" as const;
   if (state === "insufficient_repeats") return "warning" as const;
   return "neutral" as const;
 }
@@ -18,6 +17,10 @@ function stateLabel(state: RepeatabilityState) {
   if (state === "available") return "Evidence available";
   if (state === "insufficient_repeats") return "Insufficient repeats";
   return "Evidence unavailable";
+}
+
+function repeatCountLabel(count: number) {
+  return `${count} exact-fingerprint ${count === 1 ? "run" : "runs"}`;
 }
 
 function formatValue(value: number, unit: string | null) {
@@ -30,7 +33,10 @@ function formatCv(value: number | null) {
   return `${(value * 100).toFixed(1)}%`;
 }
 
-function percentileLabel(metric: RepeatabilityMetricReadModel, percentile: "p90" | "p95") {
+function percentileLabel(
+  metric: RepeatabilityMetricReadModel,
+  percentile: "p90" | "p95",
+) {
   const estimate = metric.distribution[percentile];
   if (!estimate.qualified || estimate.value === null) {
     return estimate.qualification ?? "Not qualified";
@@ -39,6 +45,7 @@ function percentileLabel(metric: RepeatabilityMetricReadModel, percentile: "p90"
 }
 
 export function RepeatabilityEvidenceView({ evidence }: { evidence: RepeatabilityReadModel }) {
+  const profile = evidence.load_profile;
   return (
     <section className="run-detail__repeatability" aria-label="Repeatability evidence">
       <SectionHeader
@@ -48,8 +55,13 @@ export function RepeatabilityEvidenceView({ evidence }: { evidence: Repeatabilit
 
       <div className="run-detail__repeatability-header">
         <Status tone={stateTone(evidence.state)}>{stateLabel(evidence.state)}</Status>
-        <span>{evidence.run_count} exact-fingerprint runs</span>
+        <span>{repeatCountLabel(evidence.run_count)}</span>
       </div>
+
+      <p className="run-detail__repeatability-protocol">
+        Concurrency {profile.concurrency} · {profile.request_count} measured requests ·{" "}
+        {profile.warmup_requests} warmups · {profile.streaming ? "streaming" : "non-streaming"}
+      </p>
 
       <div className="run-detail__repeatability-counts" aria-label="Repeatability denominators">
         <div>
