@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 const API = { api_version: "v1", read_model_version: 1 } as const;
+const unavailableResources = {
+  ...API,
+  state: "unavailable",
+  measurements: [],
+  note: "No policy-eligible model-resource evidence is retained for this fixture.",
+} as const;
 
 function identity(modelId: string) {
   return {
@@ -48,6 +54,7 @@ function entry(index: number, modelId: string, value: number) {
     error_message: null,
     identity: identity(modelId),
     metrics: [metric(value)],
+    resources: unavailableResources,
   };
 }
 
@@ -213,6 +220,7 @@ const comparison = {
       comparable_to_reference: true,
       compatibility_reasons: [],
       evidence: evidence("run-1", "model-a", 1),
+      resources: unavailableResources,
       unavailable_reason: null,
     },
     {
@@ -227,6 +235,7 @@ const comparison = {
       comparable_to_reference: true,
       compatibility_reasons: [],
       evidence: evidence("run-2", "model-b", 0.9),
+      resources: unavailableResources,
       unavailable_reason: null,
     },
     {
@@ -250,6 +259,7 @@ const comparison = {
         },
       ],
       evidence: evidence("run-3", "model-c", 0.7),
+      resources: unavailableResources,
       unavailable_reason: null,
     },
   ],

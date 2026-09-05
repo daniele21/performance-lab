@@ -27,7 +27,23 @@ export interface CampaignDimensionReadModel extends UIModelIdentity {
   dimension: CampaignComparisonDimension;
   comparable: boolean;
   evidence_available: boolean;
+  evidence_note?: string | null;
   reasons: CampaignCompatibilityReasonReadModel[];
+}
+
+export interface CampaignResourceMeasurementReadModel extends UIModelIdentity {
+  name: string;
+  value: number;
+  unit: string;
+  scope: "sample" | "run";
+  provenance: "client" | "host" | "runtime";
+  protocol_version: string;
+}
+
+export interface CampaignResourceEvidenceReadModel extends UIModelIdentity {
+  state: "available" | "unavailable" | "not_comparable";
+  measurements: CampaignResourceMeasurementReadModel[];
+  note: string;
 }
 
 export interface CampaignRecommendationReadModel extends UIModelIdentity {
@@ -59,6 +75,7 @@ export interface CampaignEntryReadModel extends UIModelIdentity {
   error_message: string | null;
   identity: IdentitySummary | null;
   metrics: MetricReadModel[];
+  resources: CampaignResourceEvidenceReadModel;
 }
 
 export interface CampaignReadModel extends UIModelIdentity {
@@ -100,6 +117,7 @@ export interface CampaignCaseCandidateReadModel extends UIModelIdentity {
   comparable_to_reference: boolean;
   compatibility_reasons: CampaignCompatibilityReasonReadModel[];
   evidence: SampleEvidenceDetailReadModel | null;
+  resources: CampaignResourceEvidenceReadModel;
   unavailable_reason: string | null;
 }
 

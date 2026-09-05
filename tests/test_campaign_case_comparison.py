@@ -170,6 +170,8 @@ def test_campaign_case_comparison_projects_exact_retained_case_across_candidates
     assert [candidate.model_id for candidate in comparison.candidates] == ["model-a", "model-b"]
     assert all(candidate.comparable_to_reference for candidate in comparison.candidates)
     assert all(candidate.evidence is not None for candidate in comparison.candidates)
+    assert all(candidate.resources.state == "unavailable" for candidate in comparison.candidates)
+    assert all(not candidate.resources.measurements for candidate in comparison.candidates)
     assert all(
         candidate.evidence.response.state == "not_retained"
         for candidate in comparison.candidates
@@ -195,6 +197,7 @@ def test_campaign_case_comparison_explains_incompatible_protocol_without_a_concl
     candidate = next(item for item in comparison.candidates if item.model_id == "model-b")
     assert not candidate.comparable_to_reference
     assert candidate.evidence is not None
+    assert candidate.resources.state == "unavailable"
     assert [reason.code for reason in candidate.compatibility_reasons] == [
         "prompt_template_mismatch"
     ]

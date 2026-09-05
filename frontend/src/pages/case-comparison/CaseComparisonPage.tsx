@@ -127,9 +127,44 @@ function CandidateCard({ candidate }: { candidate: CampaignCaseCandidateReadMode
             )}
           </div>
 
+          <div className="case-comparison__measurements">
+            <strong>Decision-grade resources</strong>
+            <Status
+              tone={
+                candidate.resources.state === "available"
+                  ? "success"
+                  : candidate.resources.state === "not_comparable"
+                    ? "warning"
+                    : "neutral"
+              }
+            >
+              {candidate.resources.state === "available"
+                ? "Available"
+                : candidate.resources.state === "not_comparable"
+                  ? "Not comparable"
+                  : "Evidence unavailable"}
+            </Status>
+            <p>{candidate.resources.note}</p>
+            {candidate.resources.measurements.length ? (
+              <dl>
+                {candidate.resources.measurements.map((measurement) => (
+                  <div
+                    key={`${measurement.name}:${measurement.protocol_version}:${measurement.unit}`}
+                  >
+                    <dt>{measurement.name}</dt>
+                    <dd>
+                      {measurement.value} {measurement.unit} · {measurement.provenance}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+          </div>
+
           {evidence.measurements.length ? (
             <div className="case-comparison__measurements">
-              <strong>Sample measurements</strong>
+              <strong>All retained sample measurements</strong>
+              <p>Context telemetry remains inspectable here even when it is not decision-grade.</p>
               <dl>
                 {evidence.measurements.map((measurement) => (
                   <div key={`${measurement.name}:${measurement.protocol_version}`}>
@@ -216,7 +251,7 @@ export function CaseComparisonView({ detail }: { detail: CampaignCaseComparisonR
         <section className="case-comparison__section">
           <SectionHeader
             title="Candidate evidence"
-            description="Model + quantization + frozen configuration + immutable Run stay visible. No cross-case delta or forced winner is introduced."
+            description="Model + quantization + frozen configuration + immutable Run stay visible. Resource evidence is separated from contextual telemetry and never upgraded by the browser."
           />
           <div className="case-comparison__candidate-grid">
             {detail.candidates.map((candidate) => (
