@@ -75,6 +75,7 @@ describe("RepeatabilityEvidenceView", () => {
 
     expect(markup).toContain("Evidence available");
     expect(markup).toContain("3 exact-fingerprint runs");
+    expect(markup).toContain("Concurrency 1 · 4 measured requests · 0 warmups · non-streaming");
     expect(markup).toContain("2 succeeded · 1 failed · 0 cancelled");
     expect(markup).toContain("Show run-to-run variability");
     expect(markup).toContain("requires at least 10 samples; only 2 available");
@@ -101,7 +102,7 @@ describe("RepeatabilityEvidenceView", () => {
     const markup = renderToStaticMarkup(<RepeatabilityEvidenceView evidence={insufficient} />);
 
     expect(markup).toContain("Insufficient repeats");
-    expect(markup).toContain("1 exact-fingerprint runs");
+    expect(markup).toContain("1 exact-fingerprint run");
     expect(markup).toContain("Repeat this exact frozen test");
     expect(markup).not.toContain("Show run-to-run variability");
   });
