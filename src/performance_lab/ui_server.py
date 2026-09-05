@@ -22,6 +22,8 @@ from performance_lab.datasets import (
     build_workload_pack,
 )
 from performance_lab.domain import EndpointProfile, Target
+from performance_lab.regression import RegressionPolicy, RegressionPolicyError, load_regression_policy
+from performance_lab.regression_api import attach_regression_api
 from performance_lab.run_config import RunConfigError, StarterRunConfig, load_starter_run_config
 from performance_lab.storage import SQLiteCampaignStore, SQLiteRunStore
 from performance_lab.ui_api import create_ui_app
@@ -57,8 +59,9 @@ def build_local_ui_app(
     config: StarterRunConfig | None = None,
     *,
     assets_dir: Path | None = None,
+    regression_policies: tuple[RegressionPolicy, ...] = (),
 ) -> FastAPI:
-    """Build the real local UI graph with an optional preconfigured execution target.
+    """Build the real local UI graph with optional target and regression policies.
 
     A missing config is a supported first-run state: Performance Lab starts with its canonical
     local evidence store and no inference target. The browser may then register a bounded
@@ -94,6 +97,7 @@ def build_local_ui_app(
         endpoint_profiles=endpoint_profiles,
         suites=(bundle.suite,),
         dataset_snapshots=tuple(dataset.snapshot for dataset in bundle.datasets.values()),
+        policies=regression_policies,
         inspectable_datasets=tuple(bundle.datasets.values()),
         evaluators=tuple(bundle.evaluators.values()),
         starter_run_template=config,
@@ -117,6 +121,7 @@ def build_local_ui_app(
         campaign_jobs=campaign_jobs,
         campaign_queries=campaign_queries,
     )
+    attach_regression_api(app, queries)
 
     built_assets = _validated_assets_dir(assets_dir)
     if built_assets is not None:
@@ -129,6 +134,7 @@ def serve_local_ui(
     *,
     port: int = UI_SERVER_PORT,
     assets_dir: Path | None = None,
+    regression_policies: tuple[RegressionPolicy, ...] = (),
 ) -> None:
     """Serve the API and optional built frontend from one loopback-owned process."""
 
@@ -141,7 +147,11 @@ def serve_local_ui(
         ) from exc
 
     uvicorn.run(
-        build_local_ui_app(config, assets_dir=assets_dir),
+        build_local_ui_app(
+            config,
+            assets_dir=assets_dir,
+            regression_policies=regression_policies,
+        ),
         host=UI_SERVER_HOST,
         port=port,
         log_level="info",
@@ -158,6 +168,15 @@ def build_ui_parser() -> argparse.ArgumentParser:
         help=(
             "Optional versioned StarterRunConfig JSON defining a preconfigured endpoint and "
             "evidence store. Omit it to connect a loopback target from the UI."
+        ),
+    )
+    parser.add_argument(
+        "--regression-policy",
+        action="append",
+        default=[],
+        help=(
+            "Versioned regression policy JSON available to Compare. Repeat the option to expose "
+            "multiple explicit policies; no policy or threshold is invented by default."
         ),
     )
     parser.add_argument(
@@ -185,10 +204,11 @@ def main(
 
     try:
         config = load_starter_run_config(Path(args.config)) if args.config else None
+        policies = tuple(load_regression_policy(Path(path)) for path in args.regression_policy)
         if not 1 <= args.port <= 65535:
             raise ValueError("port must be between 1 and 65535")
         assets_dir = _validated_assets_dir(Path(args.assets)) if args.assets else None
-    except (RunConfigError, ValueError) as exc:
+    except (RegressionPolicyError, RunConfigError, ValueError) as exc:
         errors.write(f"error: {exc}\n")
         return 2
 
@@ -196,7 +216,16 @@ def main(
     first_run = " · connect a local target in the UI" if config is None else ""
     output.write(f"Performance Lab {mode}: http://{UI_SERVER_HOST}:{args.port}{first_run}\n")
     try:
-        serve_local_ui(config, port=args.port, assets_dir=assets_dir)
+        if policies:
+            serve_local_ui(
+                config,
+                port=args.port,
+                assets_dir=assets_dir,
+                regression_policies=policies,
+            )
+        else:
+            # Preserve the legacy call shape for callers/fakes that do not configure regression.
+            serve_local_ui(config, port=args.port, assets_dir=assets_dir)
     except (RuntimeError, OSError, ValueError) as exc:
         errors.write(f"error: {exc}\n")
         return 2
