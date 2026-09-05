@@ -53,6 +53,7 @@ class CampaignResourceEvidenceReadModel(UIModel):
 
 class CampaignRecommendationReadModel(UIModel):
     candidate_id: str = Field(min_length=1)
+    configuration_id: str = Field(min_length=1)
     run_id: str = Field(min_length=1)
     model_id: str = Field(min_length=1)
     rationale: str = Field(min_length=1)
@@ -69,7 +70,7 @@ class CampaignResultsReadModel(UIModel):
 class CampaignEntryReadModel(UIModel):
     entry_id: str = Field(min_length=1)
     candidate_id: str = Field(min_length=1)
-    configuration_id: str = Field(default="fixed-1", min_length=1)
+    configuration_id: str = Field(min_length=1)
     model_id: str = Field(min_length=1)
     config_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     status: CampaignEntryStatus
@@ -113,7 +114,7 @@ class CampaignCaseSummaryReadModel(UIModel):
 class CampaignCaseCandidateReadModel(UIModel):
     entry_id: str = Field(min_length=1)
     candidate_id: str = Field(min_length=1)
-    configuration_id: str = Field(default="fixed-1", min_length=1)
+    configuration_id: str = Field(min_length=1)
     model_id: str = Field(min_length=1)
     config_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     entry_status: CampaignEntryStatus
