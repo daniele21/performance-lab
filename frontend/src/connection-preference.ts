@@ -26,13 +26,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function normalizeConnectionPreference(value: unknown): ConnectionPreference | null {
+export function normalizeConnectionPreference(
+  value: unknown,
+): ConnectionPreference | null {
   if (!isRecord(value)) return null;
 
-  const displayName = typeof value.displayName === "string" ? value.displayName.trim() : "";
-  const host = typeof value.host === "string" ? value.host.trim().toLowerCase() : "";
+  const displayName =
+    typeof value.displayName === "string" ? value.displayName.trim() : "";
+  const host =
+    typeof value.host === "string" ? value.host.trim().toLowerCase() : "";
   const port = typeof value.port === "string" ? value.port.trim() : "";
-  const basePath = typeof value.basePath === "string" ? value.basePath.trim() : "";
+  const basePath =
+    typeof value.basePath === "string" ? value.basePath.trim() : "";
   const serverType = value.serverType;
   const timeoutSeconds =
     typeof value.timeoutSeconds === "string" ? value.timeoutSeconds.trim() : "";
@@ -80,11 +85,16 @@ export function getConnectionPreference(): ConnectionPreference | null {
   }
 }
 
-export function setConnectionPreference(preference: ConnectionPreference): boolean {
+export function setConnectionPreference(
+  preference: ConnectionPreference,
+): boolean {
   const normalized = normalizeConnectionPreference(preference);
   if (!normalized || typeof window === "undefined") return false;
   try {
-    window.localStorage.setItem(CONNECTION_PREFERENCE_STORAGE_KEY, JSON.stringify(normalized));
+    window.localStorage.setItem(
+      CONNECTION_PREFERENCE_STORAGE_KEY,
+      JSON.stringify(normalized),
+    );
     return true;
   } catch {
     return false;
