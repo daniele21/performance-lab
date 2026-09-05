@@ -16,6 +16,7 @@ FIDELITY = [
 ]
 MODES = ["assertions", "screenshots", "full_media"]
 TRIGGERS = {
+    "material_ui_integration_outcome",
     "motion_or_animation",
     "timing_or_progression",
     "navigation_or_transition_sequence",
@@ -37,8 +38,8 @@ def main() -> int:
         return 1
     if data.get("schema_version") != 1:
         errors.append("schema_version must be 1")
-    if data.get("contract_version") != "0.2.0":
-        errors.append("contract_version must be 0.2.0")
+    if data.get("contract_version") != "0.2.1":
+        errors.append("contract_version must be 0.2.1")
     app = data.get("applicability", {})
     if (
         app.get("status") not in {"required", "recommended", "n/a"}
@@ -57,6 +58,25 @@ def main() -> int:
     ):
         if principles.get(k) is not True:
             errors.append(f"principles.{k} must be true")
+    stage = data.get("stage_policy", {})
+    integration = stage.get("integration", {})
+    if integration.get("automated_e2e_before_shared_integration") is not True:
+        errors.append("integration automated E2E must run before shared integration")
+    if integration.get("real_environment_blocking") is not False:
+        errors.append("integration real environment must not block")
+    if integration.get("real_environment_deferred_to_release") is not True:
+        errors.append("integration real environment must defer to release")
+    if integration.get("material_ui_journey_minimum_evidence_mode") != "full_media":
+        errors.append("material integration UI must use full_media")
+    if integration.get("incidental_ui_may_use_assertions") is not True:
+        errors.append("incidental UI assertions must remain allowed")
+    release = stage.get("release", {})
+    if release.get("full_validation_required") is not True:
+        errors.append("release full validation required")
+    if release.get("release_critical_e2e_required") is not True:
+        errors.append("release critical E2E required")
+    if release.get("required_real_environment_blocking") is not True:
+        errors.append("release required real environment must block")
     ui = data.get("ui_evidence", {})
     if ui.get("modes") != MODES:
         errors.append("ui_evidence.modes invalid")

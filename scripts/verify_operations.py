@@ -39,8 +39,8 @@ def main() -> int:
         return 1
     if data.get("schema_version") != 1:
         errors.append("schema_version must be 1")
-    if data.get("contract_version") != "0.6.0":
-        errors.append("contract_version must be 0.6.0")
+    if data.get("contract_version") != "0.6.1":
+        errors.append("contract_version must be 0.6.1")
     commands = data.get("commands", {})
     for n in COMMANDS:
         e = commands.get(n)
@@ -62,10 +62,20 @@ def main() -> int:
     ):
         if v.get(k) is not True:
             errors.append(f"development_velocity.{k} must be true")
-    if v.get("integration", {}).get("exact_head_required") is not True:
+    integration = v.get("integration", {})
+    if integration.get("exact_head_required") is not True:
         errors.append("integration exact-head required")
-    if v.get("release", {}).get("full_validation_required") is not True:
+    if integration.get("automated_e2e_required_when_affected") is not True:
+        errors.append("integration affected automated E2E required")
+    if integration.get("real_environment_blocking") is not False:
+        errors.append("integration real environment must not block")
+    if integration.get("real_environment_deferred_to_release") is not True:
+        errors.append("integration real environment must defer to release")
+    release = v.get("release", {})
+    if release.get("full_validation_required") is not True:
         errors.append("release full validation required")
+    if release.get("required_real_environment_blocking") is not True:
+        errors.append("release required real environment must block")
     pub = data.get("publication_gate", {})
     if pub.get("applies_from_stage") != "integration":
         errors.append("publication gate must start at integration")

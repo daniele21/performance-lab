@@ -39,6 +39,7 @@ REQUIRED = (
     "docs/workstreams/README.md",
     "scripts/verify_operations.py",
     "scripts/verify_e2e.py",
+    "scripts/verify_stage_environment_policy.py",
     "scripts/verify_product_experience.py",
 )
 
@@ -67,10 +68,10 @@ def main() -> int:
         errors.append("baseline schema_version must be 1")
     if s.get("source") != "daniele21/repo-template-sw":
         errors.append("baseline source invalid")
-    if s.get("version") != "0.9.1":
-        errors.append("baseline standard.version must be 0.9.1")
-    if s.get("revision") != "3c6f7aaf48c47595596d1aa4854af8727e9273a7":
-        errors.append("baseline revision must match canonical 0.9.1")
+    if s.get("version") != "0.9.2":
+        errors.append("baseline standard.version must be 0.9.2")
+    if s.get("revision") != "8aa95d10254846e7d63f4bd5c60d61b18d21060c":
+        errors.append("baseline revision must match canonical 0.9.2")
     if b.get("target_level") not in {"L0", "L1", "L2"}:
         errors.append("target_level invalid")
     for n in CORE:
