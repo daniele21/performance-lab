@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from performance_lab.domain import LoadProfile
 
@@ -47,11 +46,18 @@ class RepeatabilityRunValueReadModel(UIModel):
 class RepeatabilityMetricReadModel(UIModel):
     metric_id: str = Field(min_length=1)
     label: str = Field(min_length=1)
-    dimension: Literal[MetricDimension.QUALITY, MetricDimension.PERFORMANCE]
+    dimension: MetricDimension
     unit: str | None = None
     higher_is_better: bool | None = None
     run_values: tuple[RepeatabilityRunValueReadModel, ...]
     distribution: RepeatabilityDistributionReadModel
+
+    @field_validator("dimension")
+    @classmethod
+    def quality_or_performance_only(cls, value: MetricDimension) -> MetricDimension:
+        if value == MetricDimension.RESOURCES:
+            raise ValueError("repeatability metrics currently support quality or performance only")
+        return value
 
 
 class RepeatabilityReadModel(UIModel):
