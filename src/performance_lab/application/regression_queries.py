@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from performance_lab.regression import BaselineRegressionEngine, apply_regression_policy, bind_baseline
+from performance_lab.regression import (
+    BaselineRegressionEngine,
+    apply_regression_policy,
+    bind_baseline,
+)
 
 from .execution_policy_queries import UIQueryService as ExecutionPolicyUIQueryService
 from .regression_models import RegressionEvaluationReadModel, RegressionRuleReadModel
