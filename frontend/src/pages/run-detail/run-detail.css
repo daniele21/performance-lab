@@ -97,6 +97,18 @@
   font-size: 0.78rem;
 }
 
+.run-detail__repeatability-protocol,
+.run-detail__repeatability-note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.run-detail__repeatability-protocol {
+  font-family: var(--font-mono);
+}
+
 .run-detail__repeatability-counts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -125,15 +137,10 @@
   font-size: 1.1rem;
 }
 
-.run-detail__repeatability-counts small,
-.run-detail__repeatability-note {
+.run-detail__repeatability-counts small {
   color: var(--color-text-secondary);
   font-size: 0.76rem;
   line-height: 1.5;
-}
-
-.run-detail__repeatability-note {
-  margin: 0;
 }
 
 .run-detail__repeatability-error {
