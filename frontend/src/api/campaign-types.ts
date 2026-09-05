@@ -48,6 +48,7 @@ export interface CampaignResourceEvidenceReadModel extends UIModelIdentity {
 
 export interface CampaignRecommendationReadModel extends UIModelIdentity {
   candidate_id: string;
+  configuration_id: string;
   run_id: string;
   model_id: string;
   rationale: string;
