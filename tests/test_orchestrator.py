@@ -8,6 +8,7 @@ from performance_lab.domain import (
     ExecutionFingerprint,
     GenerationConfig,
     LoadProfile,
+    MeasurementProvenance,
     ModelIdentity,
     Run,
     RunStatus,
@@ -148,6 +149,28 @@ def test_orchestrator_completes_and_emits_content_safe_progress() -> None:
     assert "ok" not in serialized_events
 
 
+def test_orchestrator_retains_client_measurements_from_the_same_inference_call() -> None:
+    materialized = dataset((DatasetRecord(sample_id="1", input="hello", expected="ok"),))
+    adapter = FakeInferenceAdapter(response_text="ok")
+
+    result = asyncio.run(
+        EvaluationOrchestrator(adapter, {"simple": SimpleEvaluator()}).run(
+            run_id="run-measured",
+            fingerprint=fingerprint(materialized.snapshot),
+            suite=suite(),
+            datasets={"demo": materialized},
+        )
+    )
+
+    assert len(adapter.requests) == 1
+    sample = result.samples[0]
+    assert sample.status.value == "succeeded"
+    measurements = {item.name: item for item in sample.measurements}
+    assert measurements["total_latency_ms"].provenance == MeasurementProvenance.CLIENT
+    assert measurements["total_latency_ms"].protocol_version == "single-request-v1"
+    assert "ttft_ms" not in measurements
+
+
 def test_orchestrator_executes_the_generation_frozen_in_the_fingerprint() -> None:
     materialized = dataset((DatasetRecord(sample_id="1", input="hello", expected="ok"),))
     frozen_generation = GenerationConfig(
@@ -195,7 +218,9 @@ def test_partial_endpoint_failure_is_typed_without_aborting_run() -> None:
     assert result.samples[0].error is not None
     assert result.samples[0].error.category == "inference"
     assert result.samples[0].error.retryable
+    assert result.samples[0].measurements == ()
     assert result.samples[1].error is None
+    assert result.samples[1].measurements
 
 
 def test_total_endpoint_failure_marks_run_failed() -> None:
