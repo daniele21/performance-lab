@@ -6,20 +6,21 @@ if (!inferenceBaseUrl) {
   throw new Error("PERFORMANCE_LAB_E2E_INFERENCE_BASE_URL is required for packaged J9");
 }
 
-test("J0/J9 campaign: packaged product executes the plan and compares one exact case", async ({
+const inferenceUrl = new URL(inferenceBaseUrl);
+
+test("J0/J9 distributed campaign: launch, connect, evaluate and compare one exact case", async ({
   page,
 }) => {
-  const probe = await page.request.post("/api/v1/endpoint-probes", {
-    data: {
-      display_name: "J9 discovered fixture",
-      base_url: inferenceBaseUrl,
-      server_type: "local_llm_server",
-      timeout_seconds: 5,
-    },
-  });
-  expect(probe.ok()).toBeTruthy();
-  const discovered = (await probe.json()) as { models: Array<{ model_id: string }> };
-  expect(discovered.models.map((model) => model.model_id)).toEqual(["fixture-good", "fixture-bad"]);
+  await page.goto("/#test-a-model");
+  await expect(page.getByRole("heading", { name: "Test a model" })).toBeVisible();
+  await expect(page.getByLabel("Model source")).toHaveValue("local");
+  await page.getByLabel("Connection name").fill("Distributed artifact fixture");
+  await expect(page.getByLabel("Server type")).toHaveValue("local_llm_server");
+  await page.getByLabel("Host").fill(inferenceUrl.hostname);
+  await page.getByLabel("Port").fill(inferenceUrl.port);
+  await page.getByRole("button", { name: "Connect & discover" }).click();
+  await expect(page.getByText("Connection discovered")).toBeVisible();
+  await expect(page.getByLabel("Model", { exact: true })).toHaveValue("fixture-good");
 
   await page.goto("/#find-best-setup");
   await expect(page.getByRole("heading", { name: "Find best setup" })).toBeVisible();
@@ -28,7 +29,7 @@ test("J0/J9 campaign: packaged product executes the plan and compares one exact 
   const targetSelect = page.getByLabel("Target / device");
   const discoveredTarget = targetSelect
     .locator("option")
-    .filter({ hasText: "J9 discovered fixture" });
+    .filter({ hasText: "Distributed artifact fixture" });
   const discoveredTargetId = await discoveredTarget.getAttribute("value");
   expect(discoveredTargetId).not.toBeNull();
   await targetSelect.selectOption(discoveredTargetId!);
