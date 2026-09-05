@@ -48,9 +48,7 @@ def recommend_strict_quality_dominance(
             candidate_id=None,
             configuration_id=None,
             run_id=None,
-            reason=(
-                "At least two completed setups are required for a comparative recommendation."
-            ),
+            reason=("At least two completed setups are required for a comparative recommendation."),
         )
 
     baseline = candidates[0][2]
