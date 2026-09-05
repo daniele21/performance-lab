@@ -24,6 +24,7 @@ from performance_lab.domain import (
     SampleStatus,
     Score,
 )
+from performance_lab.performance import MetricAvailability, measure_single_request
 from performance_lab.plugins import (
     ChatMessage,
     Evaluator,
@@ -255,20 +256,31 @@ class EvaluationOrchestrator:
             model=model_id,
         )
         try:
-            response = await self.adapter.generate(request)
+            measured = await measure_single_request(self.adapter, request, streaming=False)
+            response = measured.response
+            if response is None:
+                raise OrchestratorError("non-streaming measured inference returned no response")
             scores = evaluator.evaluate(actual=response.text, expected=expected)
+            measurements = tuple(
+                metric.measurement
+                for metric in measured.benchmark.metrics
+                if metric.availability == MetricAvailability.AVAILABLE
+                and metric.measurement is not None
+            )
             status = SampleStatus.SUCCEEDED
             error = None
-            input_tokens = response.usage.input_tokens if response.usage is not None else None
-            output_tokens = response.usage.output_tokens if response.usage is not None else None
+            input_tokens = measured.benchmark.input_tokens
+            output_tokens = measured.benchmark.output_tokens
         except InferenceAdapterError as exc:
             scores = ()
+            measurements = ()
             status = SampleStatus.FAILED
             error = ErrorInfo(code=exc.code.value, category="inference", retryable=exc.retryable)
             input_tokens = None
             output_tokens = None
         except (ValueError, TypeError) as exc:
             scores = ()
+            measurements = ()
             status = SampleStatus.FAILED
             error = ErrorInfo(code=type(exc).__name__, category="evaluation", retryable=False)
             input_tokens = None
@@ -281,6 +293,7 @@ class EvaluationOrchestrator:
             completed_at=datetime.now(UTC),
             input_tokens=input_tokens,
             output_tokens=output_tokens,
+            measurements=measurements,
             scores=scores,
             error=error,
         )

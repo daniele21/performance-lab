@@ -8,7 +8,12 @@ from time import perf_counter_ns
 from pydantic import BaseModel, ConfigDict, Field
 
 from performance_lab.domain import Measurement, MeasurementProvenance, MeasurementScope
-from performance_lab.plugins import InferenceAdapter, InferenceRequest, TokenUsage
+from performance_lab.plugins import (
+    InferenceAdapter,
+    InferenceRequest,
+    InferenceResponse,
+    TokenUsage,
+)
 
 
 class PerformanceModel(BaseModel):
@@ -50,14 +55,26 @@ class SingleRequestBenchmark(PerformanceModel):
         raise KeyError(name)
 
 
-async def benchmark_single_request(
+class MeasuredRequest(PerformanceModel):
+    """One measured inference plus the response when the protocol is non-streaming."""
+
+    benchmark: SingleRequestBenchmark
+    response: InferenceResponse | None = None
+
+
+async def measure_single_request(
     adapter: InferenceAdapter,
     request: InferenceRequest,
     *,
     run_temperature: RunTemperature = RunTemperature.MEASURED_WARM,
     streaming: bool = True,
-) -> SingleRequestBenchmark:
-    """Measure one inference call strictly at the Performance Lab client boundary."""
+) -> MeasuredRequest:
+    """Execute and measure one inference call at the Performance Lab client boundary.
+
+    The non-streaming path returns the exact ``InferenceResponse`` produced by the same adapter
+    call so evaluation can consume measured evidence without issuing a second inference request.
+    Streaming callers retain benchmark evidence while response assembly remains adapter-owned.
+    """
 
     protocol_version = "single-request-v1"
     request_started_ns = perf_counter_ns()
@@ -65,6 +82,7 @@ async def benchmark_single_request(
     first_token_ns: int | None = None
     usage: TokenUsage | None = None
     finish_reason: str | None = None
+    response: InferenceResponse | None = None
 
     if streaming:
         stream = adapter.stream(request)
@@ -148,15 +166,36 @@ async def benchmark_single_request(
         else:
             metrics.append(_unavailable("output_tokens_per_second", "timing window is zero"))
 
-    return SingleRequestBenchmark(
-        request_id=request.request_id,
+    return MeasuredRequest(
+        benchmark=SingleRequestBenchmark(
+            request_id=request.request_id,
+            run_temperature=run_temperature,
+            streaming=streaming,
+            metrics=tuple(metrics),
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            finish_reason=finish_reason,
+        ),
+        response=response,
+    )
+
+
+async def benchmark_single_request(
+    adapter: InferenceAdapter,
+    request: InferenceRequest,
+    *,
+    run_temperature: RunTemperature = RunTemperature.MEASURED_WARM,
+    streaming: bool = True,
+) -> SingleRequestBenchmark:
+    """Measure one inference call strictly at the Performance Lab client boundary."""
+
+    measured = await measure_single_request(
+        adapter,
+        request,
         run_temperature=run_temperature,
         streaming=streaming,
-        metrics=tuple(metrics),
-        input_tokens=input_tokens,
-        output_tokens=output_tokens,
-        finish_reason=finish_reason,
     )
+    return measured.benchmark
 
 
 def _available_ms(name: str, nanoseconds: int, protocol_version: str) -> RuntimeMetric:

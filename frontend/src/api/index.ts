@@ -33,6 +33,7 @@ export {
   subscribeCampaign,
   subscribeRunJob,
 } from "./client";
+export { getRunRepeatability } from "./repeatability-client";
 export type {
   CampaignCaseCandidateReadModel,
   CampaignCaseComparisonReadModel,
@@ -69,6 +70,15 @@ export type {
   RegressionRuleReadModel,
   RegressionRuleState,
 } from "./regression-types";
+export type {
+  RepeatabilityDistributionReadModel,
+  RepeatabilityLoadProfile,
+  RepeatabilityMetricReadModel,
+  RepeatabilityPercentileReadModel,
+  RepeatabilityReadModel,
+  RepeatabilityRunValueReadModel,
+  RepeatabilityState,
+} from "./repeatability-types";
 export type {
   BaselineSummaryReadModel,
   BenchmarkCaseReadModel,
