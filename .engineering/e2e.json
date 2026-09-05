@@ -1,22 +1,13 @@
 {
   "schema_version": 1,
-  "contract_version": "0.2.0",
+  "contract_version": "0.2.1",
   "applicability": {"status": "required", "reason": "Performance Lab has critical browser, CLI, persistence, regression and external-runtime workflows whose complete outcomes cannot be established by lower-level tests alone."},
-  "principles": {
-    "final_environment_should_confirm_not_discover": true,
-    "execution_capability_separate_from_environment_fidelity": true,
-    "lowest_sufficient_test_level": true,
-    "critical_journeys_only": true,
-    "built_artifact_when_material": true,
-    "residual_fidelity_gaps_explicit": true,
-    "ui_evidence_risk_based": true
+  "principles": {"final_environment_should_confirm_not_discover": true, "execution_capability_separate_from_environment_fidelity": true, "lowest_sufficient_test_level": true, "critical_journeys_only": true, "built_artifact_when_material": true, "residual_fidelity_gaps_explicit": true, "ui_evidence_risk_based": true},
+  "stage_policy": {
+    "integration": {"automated_e2e_before_shared_integration": true, "real_environment_blocking": false, "real_environment_deferred_to_release": true, "material_ui_journey_minimum_evidence_mode": "full_media", "incidental_ui_may_use_assertions": true},
+    "release": {"full_validation_required": true, "release_critical_e2e_required": true, "required_real_environment_blocking": true}
   },
-  "ui_evidence": {
-    "modes": ["assertions", "screenshots", "full_media"],
-    "default_mode": "assertions",
-    "assertions_allowed_when_ui_incidental": true,
-    "full_media_triggers": ["motion_or_animation", "timing_or_progression", "navigation_or_transition_sequence", "lifecycle_visibility", "release_acceptance"]
-  },
+  "ui_evidence": {"modes": ["assertions", "screenshots", "full_media"], "default_mode": "assertions", "assertions_allowed_when_ui_incidental": true, "full_media_triggers": ["material_ui_integration_outcome", "motion_or_animation", "timing_or_progression", "navigation_or_transition_sequence", "lifecycle_visibility", "release_acceptance"]},
   "fidelity_order": ["host_or_fake", "simulated_or_emulated", "representative_virtual", "representative_physical", "target_environment"],
   "target_environments": [
     {"id": "desktop-browser-product", "platform": "desktop-browser", "description": "Packaged local Performance Lab browser product with built frontend, installed Python wheel, real loopback API/process and SQLite evidence store.", "material_dimensions": ["packaged Python wheel and built frontend assets", "real loopback FastAPI/uvicorn process", "real Chromium browser interaction", "real SQLite persistence", "external inference endpoint protocol boundary"]},
