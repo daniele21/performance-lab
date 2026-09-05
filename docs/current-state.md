@@ -20,7 +20,7 @@ Deterministic software slices may integrate incrementally on `dev`; representati
 
 ## Integrated baseline
 
-Current integration head: `dev@01613d0fdc36f230e192ca8586ed360e65619b3a`.
+Current integration head: `dev@d92a0cdf6b425ab5afa9ab6aa2fc75283ee5c148`.
 
 `dev` contains the decision-first desktop product: Overview; Find best setup; Test a model; Live Run; Runs/Run Detail/Sample Evidence; Compare; Library/Settings; Light/Dark/System appearance; immutable package lifecycle and configless distributed launch.
 
@@ -32,10 +32,11 @@ Quality, Performance and Resources remain separate. Compatibility precedes recom
 - **VALUE-02 SOFTWARE DONE** — #129/#130/#131 integrated; #132 representative multi-model decision deferred.
 - **VALUE-03 ACTIVE** — declared generation domains and frozen `configuration_id` are integrated. Remaining: deterministic non-Fixed configuration expansion + Optimization/Review UX. Quick/Standard/Thorough/Custom sampling/cardinality semantics remain a material contract and must not be invented.
 - **VALUE-04 ACTIVE** — A/B integrated through PR #153 / `4c66541e2057f21afafc9e99828c6d7ed8518ce8`. Resources now distinguish policy-eligible evidence from contextual telemetry. Remaining: VALUE-04C versioned decision-policy extension; exact resource influence/tie-break semantics remain a material policy decision.
+- **VALUE-06 SOFTWARE DONE** — policy-backed regression projection, Compare outcome/rule rationale, explicit versioned policy loading and deterministic PASS/FAIL/NOT_COMPARABLE product acceptance are integrated through PR #164 / `d92a0cdf6b425ab5afa9ab6aa2fc75283ee5c148`. VALUE-06D / EVID-004 representative regression evidence is deferred.
 - **VALUE-08 A/B/C SOFTWARE DONE** — artifact-owned launcher, configless first run, safe loopback preferences and distributed ZIP acceptance are integrated. VALUE-08D representative install/use smoke is deferred.
 - **VALUE-07** — pre-cutover implementation/redirect is done; destructive migration remains blocked by its real cross-repository evidence gates.
 
-VALUE-05/06 are next for software decomposition around the already implemented performance/statistics and regression engines rather than new parallel implementations.
+VALUE-05 is next for software decomposition around the already implemented performance/statistics engine rather than a new parallel implementation.
 
 ## Current frontier
 
@@ -43,7 +44,7 @@ VALUE-05/06 are next for software decomposition around the already implemented p
 current dev
 -> finish remaining VALUE-03 software
 -> finish VALUE-04C policy software
--> close only missing VALUE-05/06 product orchestration/projection
+-> close only missing VALUE-05 product orchestration/projection
 -> keep VALUE-07 destructive cutover evidence-gated
 -> converge docs/contracts/tests on final dev
 -> fresh exact-head PRE_REAL/Built Product
@@ -73,7 +74,7 @@ Older PRE_REAL artifacts are historical diagnostics after later `dev` movement, 
 
 - fresh exact-head PRE_REAL/Built Product on final candidate `dev`;
 - VALUE-01D, VALUE-02D, VALUE-03D and VALUE-04D/EVID-003 representative runs;
-- VALUE-05 repeatability/variability and VALUE-06 real regression-policy evidence;
+- VALUE-05 repeatability/variability and VALUE-06D/EVID-004 real regression-policy evidence;
 - VALUE-08D clean install/use smoke;
 - representative human accessibility/usability acceptance;
 - LLS EV-3 + real PL replacement + post-disable cross-repository smoke before VALUE-07 cutover;
