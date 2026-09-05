@@ -94,13 +94,17 @@ def suite() -> EvaluationSuite:
     )
 
 
-def fingerprint(snapshot: DatasetSnapshot) -> ExecutionFingerprint:
+def fingerprint(
+    snapshot: DatasetSnapshot,
+    *,
+    generation: GenerationConfig | None = None,
+) -> ExecutionFingerprint:
     return ExecutionFingerprint(
         target_id="target",
         adapter_type="fake",
         endpoint_identity="fixture",
         model=ModelIdentity(model_id="model-a"),
-        generation=suite().generation,
+        generation=generation or suite().generation,
         prompt_template_version="chat-v1",
         dataset_snapshots=(snapshot,),
         evaluator_versions=(EvaluatorRef(evaluator_id="simple", version="1"),),
@@ -142,6 +146,31 @@ def test_orchestrator_completes_and_emits_content_safe_progress() -> None:
     assert "hello" not in serialized_events
     assert "world" not in serialized_events
     assert "ok" not in serialized_events
+
+
+def test_orchestrator_executes_the_generation_frozen_in_the_fingerprint() -> None:
+    materialized = dataset((DatasetRecord(sample_id="1", input="hello", expected="ok"),))
+    frozen_generation = GenerationConfig(
+        max_output_tokens=3,
+        temperature=0.7,
+        top_p=0.8,
+        seed=42,
+    )
+    adapter = FakeInferenceAdapter(response_text="ok")
+
+    result = asyncio.run(
+        EvaluationOrchestrator(adapter, {"simple": SimpleEvaluator()}).run(
+            run_id="run-frozen-generation",
+            fingerprint=fingerprint(materialized.snapshot, generation=frozen_generation),
+            suite=suite(),
+            datasets={"demo": materialized},
+        )
+    )
+
+    assert result.fingerprint.generation == frozen_generation
+    assert len(adapter.requests) == 1
+    assert adapter.requests[0].generation == frozen_generation
+    assert adapter.requests[0].generation != suite().generation
 
 
 def test_partial_endpoint_failure_is_typed_without_aborting_run() -> None:

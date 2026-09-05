@@ -104,6 +104,18 @@ export interface CapabilitySupportReadModel extends UIModelIdentity {
   detail: string | null;
 }
 
+export interface GenerationParameterDomainReadModel extends UIModelIdentity {
+  name: string;
+  kind: "float" | "integer" | "boolean";
+  scope: "request_generation";
+  source: "local_llm_server";
+  provenance: "registry_declared";
+  minimum: number | null;
+  maximum: number | null;
+  step: number | null;
+  values: boolean[];
+}
+
 export interface RuntimeParameterReadModel extends UIModelIdentity {
   name: string;
   scope: "runtime_load";
@@ -115,6 +127,7 @@ export interface RuntimeParameterReadModel extends UIModelIdentity {
 export interface DiscoveredModelReadModel extends UIModelIdentity {
   model_id: string;
   runtime_parameters: RuntimeParameterReadModel[];
+  generation_parameter_domains: GenerationParameterDomainReadModel[];
 }
 
 export interface EndpointProbeReadModel extends UIModelIdentity {
