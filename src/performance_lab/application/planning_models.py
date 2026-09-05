@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from performance_lab.domain import GenerationConfig
 
@@ -16,6 +16,8 @@ from .ui_models import (
     TargetSummaryReadModel,
     UIModel,
 )
+
+_GENERATION_PARAMETER_NAME_ALIASES = {"max_tokens": "max_output_tokens"}
 
 
 class CampaignSearchStrategy(StrEnum):
@@ -49,6 +51,28 @@ class CandidateModelReadModel(UIModel):
     runtime_config_digest: str | None = None
     generation_parameter_domains: tuple[GenerationParameterDomainReadModel, ...] = ()
     source: Literal["configured", "discovered"]
+
+    @field_validator("generation_parameter_domains")
+    @classmethod
+    def canonical_searchable_generation_domains(
+        cls,
+        value: tuple[GenerationParameterDomainReadModel, ...],
+    ) -> tuple[GenerationParameterDomainReadModel, ...]:
+        """Project producer domains onto names that immutable GenerationConfig can own."""
+        canonical: dict[str, GenerationParameterDomainReadModel] = {}
+        ambiguous: set[str] = set()
+        for domain in value:
+            name = _GENERATION_PARAMETER_NAME_ALIASES.get(domain.name, domain.name)
+            if name not in GenerationConfig.model_fields or name in ambiguous:
+                continue
+            if name in canonical:
+                canonical.pop(name)
+                ambiguous.add(name)
+                continue
+            canonical[name] = (
+                domain if name == domain.name else domain.model_copy(update={"name": name})
+            )
+        return tuple(canonical[name] for name in sorted(canonical))
 
 
 class ConfigurationSearchOptionReadModel(UIModel):

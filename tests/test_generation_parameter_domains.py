@@ -4,6 +4,7 @@ import asyncio
 
 from performance_lab.application import (
     CampaignSearchStrategy,
+    CandidateModelReadModel,
     DiscoveredModelReadModel,
     EndpointConnectionInput,
     GenerationParameterDomainReadModel,
@@ -137,7 +138,7 @@ def test_invalid_domain_metadata_is_ignored_without_losing_registry_model(monkey
     assert "invalid generation-domain metadata" in warning
 
 
-def test_planning_preserves_domains_but_does_not_enable_sweeps(tmp_path) -> None:
+def test_planning_canonicalizes_searchable_domains_without_enabling_sweeps(tmp_path) -> None:
     queries = UIQueryService(SQLiteRunStore(tmp_path / "runs.sqlite3"))
     temperature = GenerationParameterDomainReadModel(
         name="temperature",
@@ -146,19 +147,38 @@ def test_planning_preserves_domains_but_does_not_enable_sweeps(tmp_path) -> None
         maximum=0.8,
         step=0.1,
     )
+    max_tokens = GenerationParameterDomainReadModel(
+        name="max_tokens",
+        kind="integer",
+        minimum=64,
+        maximum=512,
+        step=64,
+    )
+    top_k = GenerationParameterDomainReadModel(
+        name="top_k",
+        kind="integer",
+        minimum=1,
+        maximum=100,
+        step=1,
+    )
+    discovered = DiscoveredModelReadModel(
+        model_id="org/demo",
+        generation_parameter_domains=(temperature, max_tokens, top_k),
+    )
+    assert [domain.name for domain in discovered.generation_parameter_domains] == [
+        "temperature",
+        "max_tokens",
+        "top_k",
+    ]
+
     target = queries.register_session_connection(
         EndpointConnectionInput(
             display_name="Declared-domain runtime",
             base_url="http://127.0.0.1:1235/v1",
             server_type="local_llm_server",
         ),
-        discovered_models=(
-            DiscoveredModelReadModel(
-                model_id="org/demo",
-                generation_parameter_domains=(temperature,),
-            ),
-        ),
-        supported_generation_parameters=("temperature",),
+        discovered_models=(discovered,),
+        supported_generation_parameters=("max_output_tokens", "temperature"),
     )
 
     target_context = next(
@@ -170,7 +190,17 @@ def test_planning_preserves_domains_but_does_not_enable_sweeps(tmp_path) -> None
     assert len(target_context.candidates) == 1
     candidate = target_context.candidates[0]
     assert candidate.model_id == "org/demo"
-    assert candidate.generation_parameter_domains == (temperature,)
+    assert [domain.name for domain in candidate.generation_parameter_domains] == [
+        "max_output_tokens",
+        "temperature",
+    ]
+    canonical_max_tokens = candidate.generation_parameter_domains[0]
+    assert canonical_max_tokens.kind == "integer"
+    assert canonical_max_tokens.minimum == 64
+    assert canonical_max_tokens.maximum == 512
+    assert canonical_max_tokens.step == 64
+    assert canonical_max_tokens.source == "local_llm_server"
+    assert canonical_max_tokens.provenance == "registry_declared"
     assert target_context.bounded_generation_parameter_ranges == ()
     quick = next(
         option
@@ -179,3 +209,24 @@ def test_planning_preserves_domains_but_does_not_enable_sweeps(tmp_path) -> None
     )
     assert not quick.available
     assert quick.blocked_reason is not None
+
+
+def test_planning_drops_ambiguous_generation_domain_aliases() -> None:
+    wire_domain = GenerationParameterDomainReadModel(
+        name="max_tokens",
+        kind="integer",
+        minimum=64,
+        maximum=512,
+        step=64,
+    )
+    canonical_domain = wire_domain.model_copy(update={"name": "max_output_tokens"})
+
+    candidate = CandidateModelReadModel(
+        candidate_id="candidate-a",
+        target_id="target-a",
+        model_id="org/demo",
+        generation_parameter_domains=(wire_domain, canonical_domain),
+        source="discovered",
+    )
+
+    assert candidate.generation_parameter_domains == ()
