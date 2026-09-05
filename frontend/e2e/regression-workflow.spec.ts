@@ -126,7 +126,11 @@ function evaluation(decision: Decision) {
 }
 
 async function fulfillJson(route: Route, payload: unknown, status = 200) {
-  await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(payload) });
+  await route.fulfill({
+    status,
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
 }
 
 async function installFixture(page: Page, decision: Decision) {
@@ -158,7 +162,11 @@ async function installFixture(page: Page, decision: Decision) {
       await fulfillJson(route, evaluation(decision));
       return;
     }
-    await fulfillJson(route, { detail: `Unhandled regression fixture route: ${path}` }, 500);
+    await fulfillJson(
+      route,
+      { detail: `Unhandled regression fixture route: ${path}` },
+      500,
+    );
   });
 }
 
@@ -174,16 +182,22 @@ async function openAndEvaluate(page: Page, decision: Decision) {
 
 test("policy-backed Compare renders PASS from backend policy evidence", async ({ page }) => {
   await openAndEvaluate(page, "pass");
-  await expect(page.locator(".compare-regression-summary").getByText("PASS", { exact: true })).toBeVisible();
+  await expect(
+    page.locator(".compare-regression-summary").getByText("PASS", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole("table", { name: "Regression policy rules" })).toContainText(
     "regression is within configured tolerance",
   );
-  await expect(page.getByRole("table", { name: "Capability / quality metric deltas" })).toBeVisible();
+  await expect(
+    page.getByRole("table", { name: "Capability / quality metric deltas" }),
+  ).toBeVisible();
 });
 
 test("policy-backed Compare renders FAIL with the owning rule reason", async ({ page }) => {
   await openAndEvaluate(page, "fail");
-  await expect(page.locator(".compare-regression-summary").getByText("FAIL", { exact: true })).toBeVisible();
+  await expect(
+    page.locator(".compare-regression-summary").getByText("FAIL", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole("table", { name: "Regression policy rules" })).toContainText(
     "absolute regression 0.1 exceeds 0.02",
   );
@@ -197,7 +211,7 @@ test("policy-backed Compare foregrounds NOT_COMPARABLE and hides invalid deltas"
   await expect(
     page.locator(".compare-regression-summary").getByText("NOT COMPARABLE", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("table", { name: "Capability / quality metric deltas" })).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByRole("table", { name: "Capability / quality metric deltas" }),
+  ).toHaveCount(0);
 });
