@@ -41,6 +41,20 @@ function candidate(candidateId: string, modelId: string) {
     runtime_name: null,
     runtime_version: null,
     runtime_config_digest: null,
+    generation_parameter_domains: [
+      {
+        ...API_IDENTITY,
+        name: modelId === "model-a" ? "temperature" : "top_p",
+        kind: "float",
+        scope: "request_generation",
+        source: "local_llm_server",
+        provenance: "registry_declared",
+        minimum: modelId === "model-a" ? 0 : 0.1,
+        maximum: modelId === "model-a" ? 2 : 1,
+        step: 0.1,
+        values: [],
+      },
+    ],
     source: "configured",
   };
 }
@@ -357,6 +371,16 @@ test("J0 campaign: four-stage setup executes and produces policy-backed results"
     page.getByText("will not invent sweep domains", { exact: false }).first(),
   ).toBeVisible();
   await expect(page.getByRole("radio", { name: /Single configuration/ })).toBeChecked();
+  await page.getByText("Customize parameters (advanced)", { exact: true }).click();
+  await expect(page.getByText("Declared request domains by model", { exact: true })).toBeVisible();
+  await expect(page.getByText("temperature", { exact: true })).toBeVisible();
+  await expect(page.getByText("0 → 2 · step 0.1", { exact: false })).toBeVisible();
+  await expect(page.getByText("top_p", { exact: true })).toBeVisible();
+  await expect(page.getByText("0.1 → 1 · step 0.1", { exact: false })).toBeVisible();
+  await expect(
+    page.getByText("does not combine model-specific domains", { exact: false }),
+  ).toBeVisible();
+  await expect(page.getByRole("radio", { name: /Quick/ })).toBeDisabled();
   await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(page.getByRole("heading", { name: "Review your evaluation" })).toBeVisible();
