@@ -11,7 +11,7 @@ from performance_lab.domain import (
     RunStatus,
     SampleStatus,
 )
-from performance_lab.performance import DistributionSummary, summarize_distribution
+from performance_lab.performance import PercentileEstimate, summarize_distribution
 
 from .regression_queries import UIQueryService as RegressionUIQueryService
 from .repeatability_models import (
@@ -89,7 +89,9 @@ class UIQueryService(RegressionUIQueryService):
 def _repeatability_metrics(runs: tuple[Run, ...]) -> tuple[RepeatabilityMetricReadModel, ...]:
     quality = _quality_metrics(runs)
     performance = _performance_metrics(runs)
-    return tuple(sorted((*quality, *performance), key=lambda item: (item.dimension.value, item.metric_id)))
+    return tuple(
+        sorted((*quality, *performance), key=lambda item: (item.dimension.value, item.metric_id))
+    )
 
 
 def _quality_metrics(runs: tuple[Run, ...]) -> tuple[RepeatabilityMetricReadModel, ...]:
@@ -181,8 +183,7 @@ def _distribution(values: tuple[float, ...]) -> RepeatabilityDistributionReadMod
     )
 
 
-def _percentile(value: object) -> RepeatabilityPercentileReadModel:
-    estimate = value
+def _percentile(estimate: PercentileEstimate) -> RepeatabilityPercentileReadModel:
     return RepeatabilityPercentileReadModel(
         percentile=estimate.percentile,
         value=estimate.value,
