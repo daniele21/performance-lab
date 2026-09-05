@@ -330,7 +330,9 @@ class UIQueryService(EvidenceUIQueryService):
             estimate=estimate,
             decision_policy=decision_policy,
             execution_available=capacity_issue is None,
-            execution_blocked_reason=(capacity_issue.message if capacity_issue is not None else None),
+            execution_blocked_reason=(
+                capacity_issue.message if capacity_issue is not None else None
+            ),
         )
 
     def prepare_campaign_launch(
