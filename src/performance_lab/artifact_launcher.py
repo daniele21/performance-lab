@@ -188,6 +188,16 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--regression-policy",
+        action="append",
+        default=[],
+        type=Path,
+        help=(
+            "Versioned regression policy JSON exposed to Compare. Repeat for multiple policies; "
+            "no threshold policy is bundled or inferred automatically."
+        ),
+    )
+    parser.add_argument(
         "--runtime-dir",
         type=Path,
         default=None,
@@ -202,6 +212,30 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def build_ui_command(
+    *,
+    python: Path,
+    root: Path,
+    port: int,
+    config: Path | None,
+    regression_policies: tuple[Path, ...],
+) -> list[str]:
+    command = [
+        str(python),
+        "-m",
+        "performance_lab.ui_server",
+        "--assets",
+        str(root / "web"),
+        "--port",
+        str(port),
+    ]
+    if config is not None:
+        command.extend(("--config", str(config)))
+    for policy in regression_policies:
+        command.extend(("--regression-policy", str(policy)))
+    return command
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     if sys.version_info < MIN_PYTHON:
         print("Performance Lab requires Python 3.12 or newer.", file=sys.stderr)
@@ -212,6 +246,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     config = args.config.expanduser().resolve() if args.config is not None else None
     if config is not None and not config.is_file():
         print(f"error: config does not exist: {config}", file=sys.stderr)
+        return 2
+    regression_policies = tuple(path.expanduser().resolve() for path in args.regression_policy)
+    missing_policy = next((path for path in regression_policies if not path.is_file()), None)
+    if missing_policy is not None:
+        print(f"error: regression policy does not exist: {missing_policy}", file=sys.stderr)
         return 2
     if not (root / "web" / "index.html").is_file():
         print("error: artifact is missing built web assets", file=sys.stderr)
@@ -232,17 +271,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Performance Lab runtime ready: {runtime_dir}")
         return 0
 
-    command = [
-        str(python),
-        "-m",
-        "performance_lab.ui_server",
-        "--assets",
-        str(root / "web"),
-        "--port",
-        str(args.port),
-    ]
-    if config is not None:
-        command.extend(("--config", str(config)))
+    command = build_ui_command(
+        python=python,
+        root=root,
+        port=args.port,
+        config=config,
+        regression_policies=regression_policies,
+    )
     os.execv(str(python), command)
     raise AssertionError("os.execv returned unexpectedly")
 
