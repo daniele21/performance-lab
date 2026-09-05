@@ -7,6 +7,7 @@ import type {
   CampaignPlanningContextReadModel,
   CampaignSearchStrategy,
   CampaignTargetPlanningReadModel,
+  GenerationParameterDomainReadModel,
 } from "../../api";
 import {
   AppShell,
@@ -58,6 +59,16 @@ function formatDuration(seconds: number | null, reason: string) {
   if (seconds === null) return reason;
   if (seconds < 60) return `~${Math.max(1, Math.round(seconds))} sec`;
   return `~${Math.max(1, Math.round(seconds / 60))} min`;
+}
+
+function formatDeclaredDomain(domain: GenerationParameterDomainReadModel) {
+  if (domain.kind === "boolean") {
+    if (!domain.values.length) return "Values unavailable";
+    return domain.values.map(String).join(" / ");
+  }
+  if (domain.minimum === null || domain.maximum === null) return "Bounds unavailable";
+  const step = domain.step === null ? "" : ` · step ${domain.step}`;
+  return `${domain.minimum} → ${domain.maximum}${step}`;
 }
 
 export function FindBestSetupView({
@@ -207,6 +218,10 @@ export function FindBestSetupView({
   const customOption = target?.configuration_search_options.find(
     (option) => option.strategy === "custom",
   );
+  const selectedCandidates =
+    target?.candidates.filter((candidate) =>
+      candidateIds.includes(candidate.candidate_id),
+    ) ?? [];
   const showFixedFallback = Boolean(
     fixedOption?.available && primaryOptions.every((option) => !option.available),
   );
@@ -467,11 +482,44 @@ export function FindBestSetupView({
                           : "No request-level parameter capability list was reported for this target."}
                       </p>
                       <p>
-                        Bounded search ranges:{" "}
+                        Combined target-level search ranges:{" "}
                         {target.bounded_generation_parameter_ranges.length
                           ? target.bounded_generation_parameter_ranges.join(", ")
-                          : "None reported"}
+                          : "Not derived from model-specific domains"}
                       </p>
+                    </div>
+                    <div className="best-setup-parameter-note">
+                      <strong>Declared request domains by model</strong>
+                      <p>
+                        Read-only backend evidence for the selected models. Performance Lab does not
+                        combine model-specific domains or enable a sweep until the search strategy
+                        defines an exact deterministic configuration matrix.
+                      </p>
+                      {selectedCandidates.map((candidate) => (
+                        <div key={candidate.candidate_id}>
+                          <strong>{candidate.model_id}</strong>
+                          {candidate.generation_parameter_domains.length ? (
+                            <dl className="best-setup-detail-list">
+                              {candidate.generation_parameter_domains.map((domain) => (
+                                <div key={domain.name}>
+                                  <dt>{domain.name}</dt>
+                                  <dd>
+                                    {formatDeclaredDomain(domain)}
+                                    {" · "}
+                                    {domain.scope}
+                                    {" · "}
+                                    {domain.source}
+                                    {" / "}
+                                    {domain.provenance}
+                                  </dd>
+                                </div>
+                              ))}
+                            </dl>
+                          ) : (
+                            <p>No canonical bounded request-generation domains are available.</p>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </Disclosure>
