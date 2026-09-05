@@ -1,0 +1,28 @@
+name: Format diagnostic
+
+on:
+  push:
+    branches: [feat/value-05-repeatability-evidence]
+
+permissions:
+  contents: read
+
+jobs:
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm --dir frontend install --frozen-lockfile
+      - name: Print exact Prettier diff
+        run: |
+          pnpm --dir frontend exec prettier --write src/api/repeatability-client.ts src/pages/run-detail/RepeatabilitySection.tsx
+          git diff -- frontend/src/api/repeatability-client.ts frontend/src/pages/run-detail/RepeatabilitySection.tsx
