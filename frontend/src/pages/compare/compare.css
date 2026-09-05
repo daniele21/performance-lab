@@ -6,6 +6,9 @@
 
 .compare-selection,
 .compare-identity,
+.compare-compatibility,
+.compare-regression,
+.compare-evidence-changes,
 .compare-dimension {
   display: grid;
   gap: var(--space-4);
@@ -18,8 +21,34 @@
 
 .compare-selectors {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
+  align-items: end;
+}
+
+.compare-policy-unavailable {
+  display: grid;
+  gap: var(--space-1);
+  min-height: 4.4rem;
+  align-content: center;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.compare-policy-unavailable > span,
+.compare-regression-summary span {
+  color: var(--color-text-tertiary);
+  font-size: 0.76rem;
+}
+
+.compare-policy-unavailable > strong {
+  font-size: 0.9rem;
+}
+
+.compare-policy-unavailable > small {
+  color: var(--color-text-secondary);
+  line-height: 1.4;
 }
 
 .compare-selection-actions {
@@ -48,9 +77,49 @@
   gap: var(--space-5);
 }
 
-.compare-identity {
+.compare-identity,
+.compare-compatibility,
+.compare-regression {
   padding-bottom: var(--space-5);
   border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.compare-compatibility-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.compare-compatibility-grid > article {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.compare-compatibility-grid > article > strong {
+  font-size: 0.88rem;
+}
+
+.compare-regression-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.compare-regression-summary > div {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  border-left: 2px solid var(--color-border-strong);
+  padding-left: var(--space-3);
+}
+
+.compare-regression-summary strong {
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
 }
 
 .compare-dimension {
@@ -88,8 +157,15 @@
   font-size: 0.86rem;
 }
 
+@media (max-width: 64rem) {
+  .compare-selectors,
+  .compare-compatibility-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 54rem) {
-  .compare-selectors {
+  .compare-regression-summary {
     grid-template-columns: 1fr;
   }
 

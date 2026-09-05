@@ -9,6 +9,7 @@ import type {
   CampaignPlanPreviewRequest,
   CampaignPlanningContextReadModel,
 } from "./planning-types";
+import type { RegressionEvaluationReadModel } from "./regression-types";
 import type {
   BaselineSummaryReadModel,
   BenchmarkDetailReadModel,
@@ -271,6 +272,25 @@ export function listBaselines(options?: RequestOptions) {
 
 export function listRegressionPolicies(options?: RequestOptions) {
   return getJson<PolicySummaryReadModel[]>("/api/v1/regression-policies", options);
+}
+
+export function evaluateRegression(
+  baselineRunId: string,
+  candidateRunId: string,
+  policyId: string,
+  policyVersion: string,
+  options?: RequestOptions,
+) {
+  const query = new URLSearchParams({
+    baseline_run_id: baselineRunId,
+    candidate_run_id: candidateRunId,
+    policy_id: policyId,
+    policy_version: policyVersion,
+  });
+  return getJson<RegressionEvaluationReadModel>(
+    `/api/v1/regression-evaluations?${query.toString()}`,
+    options,
+  );
 }
 
 export function listScenarios(options?: RequestOptions) {

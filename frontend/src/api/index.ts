@@ -3,6 +3,7 @@ export {
   cancelCampaign,
   cancelRunJob,
   compareRuns,
+  evaluateRegression,
   getBenchmark,
   getCampaign,
   getCampaignCaseComparison,
@@ -62,6 +63,12 @@ export type {
   DecisionPolicyReadModel,
   UseCaseReadModel,
 } from "./planning-types";
+export type {
+  RegressionDecision,
+  RegressionEvaluationReadModel,
+  RegressionRuleReadModel,
+  RegressionRuleState,
+} from "./regression-types";
 export type {
   BaselineSummaryReadModel,
   BenchmarkCaseReadModel,
