@@ -30,9 +30,7 @@ def main() -> int:
 
     try:
         root = Path(args.root).resolve()
-        policy = json.loads(
-            (root / ".engineering/documentation-policy.json").read_text()
-        )
+        policy = json.loads((root / ".engineering/documentation-policy.json").read_text())
         baseline = json.loads((root / ".engineering/baseline.json").read_text())
         if policy.get("schema_version") != 2:
             raise ValueError("documentation policy schema_version must be 2")
@@ -49,9 +47,7 @@ def main() -> int:
             if path not in cache:
                 if not path.is_file():
                     raise ValueError(f"missing context source: {path.relative_to(root)}")
-                cache[path] = math.ceil(
-                    len(path.read_text()) / characters_per_token
-                )
+                cache[path] = math.ceil(len(path.read_text()) / characters_per_token)
             return cache[path]
 
         excluded = set(policy.get("context_exclude_directories", []))
@@ -67,10 +63,7 @@ def main() -> int:
             guide
             for guide in scoped_guides
             if affected
-            and any(
-                guide.parent == path or guide.parent in path.parents
-                for path in affected
-            )
+            and any(guide.parent == path or guide.parent in path.parents for path in affected)
         }
 
         workstream = None
@@ -123,9 +116,7 @@ def main() -> int:
             policy.get("context_targets", {}).get("bootstrap_max_estimated_tokens", 0)
         )
         if bootstrap > bootstrap_limit:
-            errors.append(
-                f"bootstrap ~{bootstrap} exceeds {bootstrap_limit}"
-            )
+            errors.append(f"bootstrap ~{bootstrap} exceeds {bootstrap_limit}")
 
         output = {
             "measurement": "characters/policy-factor, not runtime tokens",
@@ -142,9 +133,7 @@ def main() -> int:
     else:
         print("Agent context health")
         for report in output.get("routes", []):
-            print(
-                f"{report['route']}: ~{report['estimated_tokens']} / {report['budget']}"
-            )
+            print(f"{report['route']}: ~{report['estimated_tokens']} / {report['budget']}")
         for error in output.get("errors", []):
             print("FAIL:", error)
         print("RESULT:", output["result"])
