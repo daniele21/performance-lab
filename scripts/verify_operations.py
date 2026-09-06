@@ -34,9 +34,7 @@ required_summary_fields = {
 if (
     reporting.get("schema_version") != 1
     or reporting.get("format") != "summary_with_evidence_references"
-    or not required_summary_fields.issubset(
-        set(reporting.get("required_summary_fields", []))
-    )
+    or not required_summary_fields.issubset(set(reporting.get("required_summary_fields", [])))
 ):
     errors.append("invalid agent_reporting")
 
