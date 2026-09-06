@@ -1,45 +1,53 @@
-# Performance Lab — coding agent guide
+# Performance Lab — Coding Agent Guide
 
-Repository-wide routing and durable invariants. Status belongs in `docs/current-state.md`; detailed behavior belongs in architecture/features/workstreams.
+Performance Lab evaluates externally served AI inference endpoints and determines which available model/configuration gives the best evidence-backed trade-off for a use case/device. It owns evaluation, evidence, comparison and regression; serving-runtime lifecycle remains external.
 
-## Read only what the task requires
+## Durable invariants
 
-Always read this guide, then the closest scoped `AGENTS.md`, owning implementation/tests and only relevant contracts: `.engineering/commands.json` for operations/stages/gates, `.engineering/e2e.json` for complete-workflow/fidelity claims, `design/*` for meaningful product UI, and `docs/README.md` for documentation ownership.
+- Execution fingerprints are explicit/immutable and completed evidence/datasets are versioned.
+- Quality, runtime and resource dimensions stay separate; compatibility is established before deltas, rankings or regression claims.
+- Endpoint provenance and lab provenance stay distinct; raw authorization is never persisted.
+- Python is the semantic owner; TypeScript projects those semantics rather than redefining them.
+- Local listeners/jobs/temp/artifacts are bounded and cleaned.
+- Hosted fixtures never become real model/runtime/device/telemetry/thermal evidence by implication.
 
-## Purpose and invariants
+## Ownership
 
-Performance Lab evaluates externally served AI inference endpoints and answers which available model/configuration gives the best evidence-backed trade-off for a use case/device. It owns evaluation, evidence, comparison and regression; serving-runtime lifecycle remains external.
+| Change | Owner | Inspect / prove |
+| --- | --- | --- |
+| Domain/comparability | `src/performance_lab/domain/` | domain/comparison tests |
+| Inference adapters | `adapters/` | adapter contracts |
+| Dataset/evaluation | `datasets/`, `evaluation/` | evidence/repeatability tests |
+| Benchmark/telemetry | `performance/`, `telemetry/` | metrics/provenance tests |
+| Persistence/regression | `storage/`, `regression/` | migration/regression tests |
+| App/API | `application/`, `ui_api.py`, `ui_server.py` | API/product tests |
+| Browser/UI | `frontend/AGENTS.md`, `design/` | browser/product journeys |
 
-Preserve explicit immutable execution fingerprints; versioned completed evidence/datasets; separate quality/runtime/resource dimensions; compatibility before deltas/rankings/regression; distinct endpoint/lab provenance; no persisted raw authorization; Python as semantic owner with TypeScript projections; bounded local listeners/jobs/temp/artifacts; truthful separation of hosted fixtures from real device/model evidence.
+Follow applicable scoped `AGENTS.md`; extend the canonical owner before adding state/policy and inspect material consumers for shared boundaries.
 
-## Ownership routing
+## Read by task
 
-Domain/comparability -> `src/performance_lab/domain/`; inference adapters -> `adapters/`; datasets/evaluation -> `datasets/`, `evaluation/`; benchmark/telemetry -> `performance/`, `telemetry/`; persistence/regression -> `storage/`, `regression/`; app/API -> `application/`, `ui_api.py`, `ui_server.py`; browser -> `frontend/AGENTS.md`; product experience -> `design/`.
+| Task | Read now |
+| --- | --- |
+| Pure docs/copy | affected source/links; `docs/README.md` only if ownership unclear |
+| Behavior/bug/contract | `skills/structured-change/SKILL.md`, `skills/validate-change/SKILL.md`, relevant commands |
+| Material UI | above + `skills/design-product-experience/SKILL.md`, relevant `design/*` |
+| Integration/release | `skills/preflight-change/SKILL.md`, commands, affected `.engineering/e2e.json` |
+| Missing deterministic remote gate | `skills/remote-preflight/SKILL.md` |
+| Persistent multi-session work | `skills/plan-workstream/SKILL.md` + active plan; finalize with `skills/finalize-workstream/SKILL.md` |
 
-## Delivery model
+## Delivery and evidence
 
-Performance Lab follows repo-template-sw **0.9.2**.
+- **ITERATION**: focused Python/frontend owner-local falsification; no exact-head/full-diff/docs/publication ceremony per edit.
+- **INTEGRATION** (`PR -> dev`): exact candidate/base, complete diff, affected durable docs, selected automated gates and affected critical E2E. Material UI/UX integration journeys require `FULL_MEDIA`. Required `REAL_ENVIRONMENT` evidence remains explicit but `DEFERRED_TO_RELEASE`.
+- **RELEASE** (`dev -> main`): `FULL` plus release-critical artifact/E2E and every applicable required residual real-environment confirmation.
 
-- `ITERATION`: focused owner-local Python/frontend checks while implementation changes. No exact-head/full-diff/doc ceremony and no browser/product/built-product gate merely because it exists.
-- `INTEGRATION` (`PR -> dev`): prove the affected observable outcome automatically. Exact head, full diff, affected durable docs, selected risk gates and affected critical E2E are required. Required `REAL_ENVIRONMENT` evidence is explicit but non-blocking and deferred to release.
-- `RELEASE` (`dev -> main`): FULL validation plus release-critical artifact/E2E and every applicable required residual real-environment confirmation.
+The native selector resolves risks -> concrete gates -> profile; profiles are shorthand. `.github/workflows/validate.yml` is the automatic PR owner and should avoid duplicate overlapping cones. `PRE_REAL_E2E` proves the complete automatable cone only; `RUNTIME-1` keeps real model/runtime/device/telemetry/thermal/repeated-load claims in release evidence.
 
-The selector maps **risk dimensions -> required gates -> profile shorthand**. `LEAN | SCOPED | STRONG | FULL` summarize the decision; concrete gates are authoritative.
+## Context, diagnosis and completion
 
-Parallel technical subtasks should converge early around vertical outcomes. Stacked publication is exceptional; avoid sync-only PR chains.
+`.engineering/documentation-policy.json` owns bounded context routes. Use `python3 scripts/verify_agent_context.py --route bug --format json`, optionally with `--path`/`--workstream`; routes estimate reading cost, not validation scope.
 
-## Validation
+For meaningful work state observable outcome, owner, invariants and proof. Classify failures before patching. Each failed repair needs a falsifiable hypothesis; after two failed repairs with the same signature, change diagnostic strategy and obtain new discriminating evidence before a third. On resume refresh head/tree/base; checkpoint evidence is a pointer, not current-source proof.
 
-`.github/workflows/validate.yml` is the automatic PR owner. It selects Python, frontend, product E2E, browser E2E and built-product gates. When `built-product` is required, it exercises the stronger integrated cone and satisfies overlapping frontend/product/browser gates rather than duplicating them in separate workflows. `browser-acceptance.yml` is manual diagnostic; `built-product.yml` is tag/manual release tooling.
-
-Successful integration evidence is reusable. Before merge it is exact-head evidence. After a content-preserving merge to `dev`, reuse is allowed only when Git tree, prior target/base, required gates and profile are equivalent. Direct pushes without trusted evidence validate normally. Release remains FULL.
-
-E2E UI evidence modes are `ASSERTIONS`, `SCREENSHOTS`, `FULL_MEDIA`. A material UI/UX integration journey uses FULL_MEDIA; screenshots remain sufficient for stable visible inspection/comparison claims. `RUNTIME-1` keeps real model/runtime/device/telemetry/thermal/repeated-load claims in `REAL_ENVIRONMENT`, and those claims gate release rather than entry into `dev`.
-
-`PRE_REAL_E2E` remains useful: it proves that the complete automatable cone is green before any real runtime/device run. It does not make real-runtime evidence an integration gate.
-
-## Documentation and failure discipline
-
-Affected durable documentation must be current at `INTEGRATION`, not after every private edit. README identity and usage are separate owners. `docs/current-state.md` owns integrated/blocked/next truth, not branch diaries; completed workstreams are deleted after durable truth moves.
-
-Classify failures as change regression, baseline, environment, flaky, base drift or assumption before editing. Fix the owning invariant; never suppress a legitimate gate for green CI or promote hosted evidence into a real-device claim.
+Before integration update affected canonical docs. Transfer durable truth and deferred release obligations before deleting completed plans. Never suppress legitimate gates, persist credentials, create competing semantic owners or promote hosted evidence into a real-device/runtime claim.
